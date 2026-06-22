@@ -1273,8 +1273,8 @@ class ProjectDocument(AuditMixin):
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey('projects.id', ondelete='CASCADE'),
     )
-    type: Mapped[Optional[str]] = mapped_column(default=None)
     name: Mapped[str] = mapped_column(nullable=False)
+    type: Mapped[Optional[str]] = mapped_column(default=None)
     number: Mapped[Optional[str]] = mapped_column(default=None)
     status: Mapped[str] = mapped_column(default='PENDING', nullable=False)
     responsible: Mapped[Optional[UUID]] = mapped_column(
