@@ -11,6 +11,8 @@ from iaEditais.schemas.taxonomy import TaxonomyPublic
 
 class TypificationSchema(BaseModel):
     name: str
+    document_group_id: Optional[UUID] = None
+    document_group_item_id: Optional[UUID] = None
 
 
 class TypificationCreate(TypificationSchema):

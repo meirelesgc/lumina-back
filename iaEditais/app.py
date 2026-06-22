@@ -17,6 +17,9 @@ from iaEditais.routers.audit import audit_logs
 from iaEditais.routers.check_tree import (
     branches,
     bundles,
+    document_groups,
+    project_documents,
+    projects,
     sources,
     taxonomies,
     typifications,
@@ -112,6 +115,9 @@ app.include_router(users.router)
 app.include_router(releases.router)
 app.include_router(kanban.router)
 app.include_router(sources.router)
+app.include_router(document_groups.router)
+app.include_router(projects.router)
+app.include_router(project_documents.router)
 app.include_router(bundles.router)
 
 app.include_router(audit_logs.router)

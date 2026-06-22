@@ -313,6 +313,12 @@ class Typification(AuditMixin):
         default_factory=uuid4,
     )
     name: Mapped[str] = mapped_column(nullable=False)
+    document_group_id: Mapped[Optional[UUID]] = mapped_column(
+        nullable=True, default=None
+    )
+    document_group_item_id: Mapped[Optional[UUID]] = mapped_column(
+        nullable=True, default=None
+    )
 
     tsv: Mapped[TSVECTOR] = mapped_column(
         TSVECTOR,
@@ -1226,6 +1232,65 @@ class BundleDocument(AuditMixin):
 
 
 @table_registry.mapped_as_dataclass
+class Project(AuditMixin):
+    __tablename__ = 'projects'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(default=None)
+    status: Mapped[str] = mapped_column(default='INICIADO', nullable=False)
+    document_group_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('document_groups.id'),
+        nullable=True,
+        default=None,
+    )
+
+    documents: Mapped[List['ProjectDocument']] = relationship(
+        'ProjectDocument',
+        back_populates='project',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+        cascade='all, delete-orphan',
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ProjectDocument(AuditMixin):
+    __tablename__ = 'project_documents'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    project_id: Mapped[UUID] = mapped_column(
+        ForeignKey('projects.id', ondelete='CASCADE'),
+    )
+    type: Mapped[Optional[str]] = mapped_column(default=None)
+    name: Mapped[str] = mapped_column(nullable=False)
+    number: Mapped[Optional[str]] = mapped_column(default=None)
+    status: Mapped[str] = mapped_column(default='PENDING', nullable=False)
+    responsible: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('users.id'),
+        nullable=True,
+        default=None,
+    )
+    sent_to_kanban: Mapped[bool] = mapped_column(default=False)
+
+    project: Mapped['Project'] = relationship(
+        back_populates='documents',
+        init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
 class Bundle(AuditMixin):
     __tablename__ = 'bundles'
 
@@ -1244,4 +1309,57 @@ class Bundle(AuditMixin):
         default_factory=list,
         init=False,
         cascade='all, delete-orphan',
+    )
+
+
+@table_registry.mapped_as_dataclass
+class DocumentGroup(AuditMixin):
+    __tablename__ = 'document_groups'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+
+    items: Mapped[List['DocumentGroupItem']] = relationship(
+        'DocumentGroupItem',
+        back_populates='group',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+        cascade='all, delete-orphan',
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_uq_document_groups_name_active',
+            'name',
+            unique=True,
+            postgresql_where=(column('deleted_at').is_(None)),
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class DocumentGroupItem(AuditMixin):
+    __tablename__ = 'document_group_items'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    group_id: Mapped[UUID] = mapped_column(
+        ForeignKey('document_groups.id', ondelete='CASCADE'),
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    icon_path: Mapped[Optional[str]] = mapped_column(default=None)
+
+    group: Mapped['DocumentGroup'] = relationship(
+        back_populates='items',
+        init=False,
     )
