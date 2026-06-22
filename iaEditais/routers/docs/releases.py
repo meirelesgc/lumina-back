@@ -70,7 +70,7 @@ async def create_release(
             detail='Document not found',
         )
 
-    if not db_doc.history or len(db_doc.typifications) == 0:
+    if not db_doc.history:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail='The document sent has integrity issues.',
