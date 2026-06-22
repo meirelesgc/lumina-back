@@ -23,7 +23,7 @@ class DocumentGroupItemSchema(BaseModel):
 
 
 class DocumentGroupItemCreate(DocumentGroupItemSchema):
-    group_id: UUID
+    pass
 
 
 class DocumentGroupItemUpdate(DocumentGroupItemSchema):
