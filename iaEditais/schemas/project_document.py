@@ -11,6 +11,7 @@ class ProjectDocumentSchema(BaseModel):
     number: Optional[str] = None
     status: Optional[str] = 'PENDING'
     responsible: Optional[UUID] = None
+    typification_ids: Optional[list[UUID]] = None
 
 
 class ProjectDocumentCreate(ProjectDocumentSchema):
@@ -25,6 +26,7 @@ class ProjectDocumentUpdate(BaseModel):
     status: Optional[str] = None
     responsible: Optional[UUID] = None
     sent_to_kanban: Optional[bool] = None
+    typification_ids: Optional[list[UUID]] = None
 
 
 class ProjectDocumentPublic(ProjectDocumentSchema):

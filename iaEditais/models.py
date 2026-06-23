@@ -1282,6 +1282,11 @@ class ProjectDocument(AuditMixin):
         nullable=True,
         default=None,
     )
+    typification_ids: Mapped[Optional[list[UUID]]] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
     sent_to_kanban: Mapped[bool] = mapped_column(default=False)
 
     project: Mapped['Project'] = relationship(
