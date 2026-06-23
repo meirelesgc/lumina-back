@@ -27,7 +27,9 @@ try:
 except ImportError:
     pass
 else:
-    set_json_dumps(json.dumps, cls=UUIDEncoder)
+    def _uuid_dumps(obj):
+        return json.dumps(obj, cls=UUIDEncoder)
+    set_json_dumps(_uuid_dumps)
 
 
 engine = create_async_engine(
