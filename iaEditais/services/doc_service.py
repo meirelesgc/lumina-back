@@ -37,6 +37,9 @@ async def create_doc(
         identifier=data.identifier,
         unit_id=current_user.unit_id,
         processing_status=DocumentProcessingStatus.IDLE,
+        grupo=data.grupo,
+        tipo_documento=data.tipo_documento,
+        projeto_nome=data.projeto_nome,
     )
     db_doc.set_creation_audit(current_user.id)
     doc_repo.add_document(session, db_doc)
@@ -110,6 +113,13 @@ async def update_doc(
     db_doc.name = data.name
     db_doc.description = data.description
     db_doc.identifier = data.identifier
+    if data.grupo is not None:
+        db_doc.grupo = data.grupo
+    if data.tipo_documento is not None:
+        db_doc.tipo_documento = data.tipo_documento
+    if data.projeto_nome is not None:
+        db_doc.projeto_nome = data.projeto_nome
+
 
     new_data = DocumentPublic.model_validate(db_doc).model_dump(mode='json')
 

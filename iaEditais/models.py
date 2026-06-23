@@ -629,6 +629,9 @@ class Document(AuditMixin):
     generation_id: Mapped[Optional[UUID]] = mapped_column(
         nullable=True, default=None
     )
+    grupo: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    tipo_documento: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    projeto_nome: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
     __table_args__ = (
         Index(
             'ix_uq_documents_identifier_active',

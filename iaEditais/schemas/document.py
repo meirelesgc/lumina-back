@@ -21,6 +21,9 @@ class DocumentSchema(BaseModel):
     name: str
     identifier: str
     description: Optional[str] = None
+    grupo: Optional[str] = None
+    tipo_documento: Optional[str] = None
+    projeto_nome: Optional[str] = None
 
 
 class DocumentCreate(DocumentSchema):
