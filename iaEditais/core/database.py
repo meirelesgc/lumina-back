@@ -1,3 +1,6 @@
+import json
+from uuid import UUID
+
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -11,7 +14,27 @@ from iaEditais.models import AuditMixin
 
 settings = Settings()
 
-engine = create_async_engine(settings.DATABASE_URL, future=True)
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
+
+
+try:
+    from psycopg.types.json import set_json_dumps
+except ImportError:
+    pass
+else:
+    set_json_dumps(json.dumps, cls=UUIDEncoder)
+
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    future=True,
+    json_serializer=lambda obj: json.dumps(obj, cls=UUIDEncoder),
+)
 
 async_session = async_sessionmaker(
     engine,
