@@ -87,6 +87,7 @@ async def update_group(
 
     db_group.name = data.name
     db_group.set_update_audit(user_id)
+    await session.flush()
 
     new_data = DocumentGroupPublic.model_validate(db_group).model_dump(mode='json')
 
