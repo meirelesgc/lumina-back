@@ -1,6 +1,9 @@
+import logging
 from enum import Enum
 from http import HTTPStatus
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -153,6 +156,9 @@ async def update_document_status(
     await session.commit()
     await session.refresh(doc)
 
-    await _publish_notification(session, target_user_ids, doc.name, new_status)
+    try:
+        await _publish_notification(session, target_user_ids, doc.name, new_status)
+    except Exception as e:
+        logger.warning('Falha ao enviar notificação WhatsApp: %s', e)
 
     return doc
