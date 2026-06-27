@@ -66,6 +66,8 @@ async def create_doc(
         db_doc.editors = list(editors)
 
     if data.project_document_id:
+        db_doc.project_document_id = data.project_document_id
+
         project_doc = await project_document_repo.get_by_id(
             session, data.project_document_id
         )
