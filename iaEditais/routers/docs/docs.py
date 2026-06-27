@@ -32,6 +32,15 @@ async def read_docs(
     return {'documents': docs}
 
 
+@router.get('/by-project-document/{project_document_id}', response_model=DocumentPublic)
+async def read_doc_by_project_document(
+    project_document_id: UUID, session: Session
+):
+    return await doc_service.get_doc_by_project_document_id(
+        session, project_document_id
+    )
+
+
 @router.get('/{doc_id}', response_model=DocumentPublic)
 async def read_doc(doc_id: UUID, session: Session):
     return await doc_service.get_doc_by_id(session, doc_id)

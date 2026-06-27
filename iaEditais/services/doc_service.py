@@ -106,6 +106,18 @@ async def get_doc_by_id(session: AsyncSession, doc_id: UUID) -> Document:
     return doc
 
 
+async def get_doc_by_project_document_id(
+    session: AsyncSession, project_document_id: UUID
+) -> Document:
+    doc = await doc_repo.get_by_project_document_id(session, project_document_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Document not found for this project document',
+        )
+    return doc
+
+
 async def update_doc(
     session: AsyncSession, current_user: CurrentUser, data: DocumentUpdate
 ) -> Document:

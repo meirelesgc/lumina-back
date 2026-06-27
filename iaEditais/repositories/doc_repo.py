@@ -16,6 +16,14 @@ async def get_by_id(session: AsyncSession, doc_id: UUID) -> Optional[Document]:
     return result.scalar_one_or_none()
 
 
+async def get_by_project_document_id(
+    session: AsyncSession, project_document_id: UUID
+) -> Optional[Document]:
+    stmt = select(Document).where(Document.project_document_id == project_document_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def get_by_identifier(
     session: AsyncSession, identifier: str, exclude_id: UUID = None
 ) -> Optional[Document]:
