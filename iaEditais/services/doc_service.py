@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from iaEditais.core.dependencies import CurrentUser
-from iaEditais.models import Document, DocumentHistory
+from iaEditais.models import Document, DocumentHistory, ProjectDocument
+from iaEditais.repositories import project_document_repo
 from iaEditais.repositories import doc_repo
 from iaEditais.schemas import (
     DocumentCreate,
@@ -63,6 +64,15 @@ async def create_doc(
     if data.editors_ids:
         editors = await doc_repo.get_users_by_ids(session, data.editors_ids)
         db_doc.editors = list(editors)
+
+    if data.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, data.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            project_doc.status = DocumentStatus.PENDING.value
+            project_doc.sent_to_kanban = True
+            project_doc.set_update_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,

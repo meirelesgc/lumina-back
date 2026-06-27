@@ -29,6 +29,7 @@ class DocumentSchema(BaseModel):
 class DocumentCreate(DocumentSchema):
     typification_ids: Optional[list[UUID]]
     editors_ids: Optional[list[UUID]]
+    project_document_id: Optional[UUID] = None
 
 
 class DocumentUpdate(DocumentSchema):

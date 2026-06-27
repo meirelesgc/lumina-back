@@ -632,6 +632,13 @@ class Document(AuditMixin):
     grupo: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
     tipo_documento: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
     projeto_nome: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    project_document_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('project_documents.id'), nullable=True, default=None
+    )
+    project_document: Mapped[Optional['ProjectDocument']] = relationship(
+        'ProjectDocument', init=False, lazy='selectin',
+        uselist=False,
+    )
     __table_args__ = (
         Index(
             'ix_uq_documents_identifier_active',
