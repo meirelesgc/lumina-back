@@ -27,7 +27,10 @@ async def get_by_project_document_id(
 async def get_by_identifier(
     session: AsyncSession, identifier: str, exclude_id: UUID = None
 ) -> Optional[Document]:
-    stmt = select(Document).where(Document.identifier == identifier)
+    stmt = select(Document).where(
+        Document.identifier == identifier,
+        Document.deleted_at.is_(None),
+    )
     if exclude_id:
         stmt = stmt.where(Document.id != exclude_id)
     return await session.scalar(stmt)
