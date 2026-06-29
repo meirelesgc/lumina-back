@@ -7,6 +7,7 @@ from sqlalchemy import (
     Computed,
     ForeignKey,
     Index,
+    String,
     Text,
     column,
     func,
@@ -1377,4 +1378,63 @@ class DocumentGroupItem(AuditMixin):
     group: Mapped['DocumentGroup'] = relationship(
         back_populates='items',
         init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatConversation(AuditMixin):
+    __tablename__ = 'chat_conversations'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey('documents.id', name='fk_chat_conv_document_id'),
+        nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_chat_conv_user_id'),
+        nullable=False,
+    )
+
+    document: Mapped['Document'] = relationship(
+        init=False, lazy='selectin'
+    )
+    user: Mapped['User'] = relationship(
+        init=False, lazy='selectin'
+    )
+    messages: Mapped[List['ChatMessage']] = relationship(
+        back_populates='conversation',
+        cascade='all, delete-orphan',
+        init=False,
+        lazy='selectin',
+        default_factory=list,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatMessage:
+    __tablename__ = 'chat_messages'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    conversation_id: Mapped[UUID] = mapped_column(
+        ForeignKey('chat_conversations.id', name='fk_chat_msg_conversation_id'),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
+    )
+
+    conversation: Mapped['ChatConversation'] = relationship(
+        back_populates='messages', init=False
     )

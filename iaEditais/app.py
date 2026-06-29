@@ -24,7 +24,7 @@ from iaEditais.routers.check_tree import (
     taxonomies,
     typifications,
 )
-from iaEditais.routers.docs import assistant, docs, kanban, messages, releases
+from iaEditais.routers.docs import assistant, chat, docs, kanban, messages, releases
 from iaEditais.routers.docs import ws as docs_ws
 
 PROJECT_FILE = Path(__file__).parent.parent / 'pyproject.toml'
@@ -118,6 +118,7 @@ app.include_router(sources.router)
 app.include_router(document_groups.router)
 app.include_router(projects.router)
 app.include_router(project_documents.router)
+app.include_router(chat.router)
 app.include_router(assistant.router)
 app.include_router(bundles.router)
 
