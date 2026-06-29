@@ -17,6 +17,22 @@ from iaEditais.models import (
 )
 
 
+async def get_releases_by_document(
+    session: AsyncSession, doc_id: UUID
+) -> list[DocumentRelease]:
+    stmt = (
+        select(DocumentRelease)
+        .join(DocumentHistory)
+        .where(
+            DocumentHistory.document_id == doc_id,
+            DocumentRelease.deleted_at.is_(None),
+        )
+        .order_by(DocumentRelease.created_at.desc())
+    )
+    result = await session.scalars(stmt)
+    return list(result.all())
+
+
 async def get_release_with_details(
     session: AsyncSession, release_id: UUID
 ) -> Optional[DocumentRelease]:
