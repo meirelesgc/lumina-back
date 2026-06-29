@@ -1404,7 +1404,7 @@ class ChatConversation(AuditMixin):
         init=False, lazy='selectin'
     )
     user: Mapped['User'] = relationship(
-        init=False, lazy='selectin'
+        init=False, lazy='selectin', foreign_keys=[user_id]
     )
     messages: Mapped[List['ChatMessage']] = relationship(
         back_populates='conversation',
