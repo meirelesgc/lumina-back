@@ -6,9 +6,19 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from iaEditais.core.settings import Settings
-from iaEditais.repositories import doc_repo, release_repo
+from iaEditais.repositories import chat_repo, doc_repo, release_repo
 
 SETTINGS = Settings()
+
+
+async def _extract_text(file_path: str) -> str:
+    loader = PyMuPDFLoader(file_path)
+    raw_docs = loader.load()
+    text = '\n\n'.join([d.page_content for d in raw_docs])
+    max_chars = 80000
+    if len(text) > max_chars:
+        text = text[-max_chars:]
+    return text
 
 
 async def chat_with_document(
@@ -17,42 +27,46 @@ async def chat_with_document(
     history: list[dict],
     model: BaseChatModel,
     session: AsyncSession,
+    conversation_id: str | None = None,
 ) -> dict:
     doc = await doc_repo.get_by_id(session, doc_id)
     if not doc or doc.deleted_at:
         raise HTTPException(status_code=404, detail='Documento não encontrado')
 
-    releases = await release_repo.get_releases_by_document(session, doc_id)
-    if not releases:
-        raise HTTPException(
-            status_code=400,
-            detail='Nenhum arquivo enviado para este documento',
-        )
+    document_text: str | None = None
 
-    latest = releases[0]
-    if not latest.file_path:
-        raise HTTPException(
-            status_code=400,
-            detail='Nenhum arquivo enviado para este documento',
-        )
+    if conversation_id:
+        conv = await chat_repo.get_conversation_by_id(session, conversation_id)
+        if conv and conv.context_text:
+            document_text = conv.context_text
 
-    filename = latest.file_path.split('/')[-1]
-    full_path = os.path.join(SETTINGS.UPLOAD_DIRECTORY, filename)
+    if document_text is None:
+        releases = await release_repo.get_releases_by_document(session, doc_id)
+        if not releases:
+            raise HTTPException(
+                status_code=400,
+                detail='Nenhum arquivo enviado para este documento',
+            )
 
-    if not os.path.exists(full_path):
-        raise HTTPException(
-            status_code=404, detail='Arquivo não encontrado no servidor'
-        )
+        latest = releases[0]
+        if not latest.file_path:
+            raise HTTPException(
+                status_code=400,
+                detail='Nenhum arquivo enviado para este documento',
+            )
 
-    loader = PyMuPDFLoader(full_path)
-    raw_docs = loader.load()
-    document_text = '\n\n'.join(
-        [d.page_content for d in raw_docs]
-    )
+        filename = latest.file_path.split('/')[-1]
+        full_path = os.path.join(SETTINGS.UPLOAD_DIRECTORY, filename)
 
-    max_chars = 80000
-    if len(document_text) > max_chars:
-        document_text = document_text[-max_chars:]
+        if not os.path.exists(full_path):
+            raise HTTPException(
+                status_code=404, detail='Arquivo não encontrado no servidor'
+            )
+
+        document_text = await _extract_text(full_path)
+
+        if conversation_id:
+            await chat_repo.update_conversation_context(session, conversation_id, document_text)
 
     system_prompt = f"""Você é a OiacIA, assistente especializado em análise de documentos de licitação e editais.
 

@@ -23,16 +23,18 @@ async def chat_with_document(
     history = body.get('history', [])
     conversation_id = body.get('conversation_id')
 
+    conv_uuid = UUID(conversation_id) if conversation_id else None
+
     result = await assistant_service.chat_with_document(
         doc_id=doc_id,
         message=message,
         history=history,
         model=model,
         session=session,
+        conversation_id=conv_uuid,
     )
 
-    if conversation_id:
-        conv_uuid = UUID(conversation_id)
+    if conv_uuid:
         await chat_repo.create_message(session, conv_uuid, 'user', message)
         await chat_repo.create_message(session, conv_uuid, 'assistant', result['response'])
         await chat_repo.update_conversation_timestamp(session, conv_uuid)

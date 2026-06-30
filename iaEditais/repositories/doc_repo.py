@@ -66,6 +66,9 @@ async def list_all(
     if filters.q:
         query = util.apply_text_search(query, Document, filters.q)
 
+    if filters.source:
+        query = query.where(Document.source == filters.source)
+
     query = query.offset(filters.offset).limit(filters.limit)
 
     result = await session.scalars(query)

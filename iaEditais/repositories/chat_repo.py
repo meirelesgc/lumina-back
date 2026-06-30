@@ -104,3 +104,14 @@ async def update_conversation_timestamp(
     conversation = result.scalar_one_or_none()
     if conversation:
         conversation.updated_at = func.now()
+
+
+async def update_conversation_context(
+    session: AsyncSession, conversation_id: UUID, context_text: str
+) -> None:
+    stmt = select(ChatConversation).where(ChatConversation.id == conversation_id)
+    result = await session.execute(stmt)
+    conversation = result.scalar_one_or_none()
+    if conversation:
+        conversation.context_text = context_text
+        conversation.updated_at = func.now()

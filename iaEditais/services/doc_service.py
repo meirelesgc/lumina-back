@@ -41,6 +41,7 @@ async def create_doc(
         grupo=data.grupo,
         tipo_documento=data.tipo_documento,
         projeto_nome=data.projeto_nome,
+        source=data.source,
     )
     db_doc.set_creation_audit(current_user.id)
     doc_repo.add_document(session, db_doc)
