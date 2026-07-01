@@ -1396,12 +1396,12 @@ class ChatConversation(AuditMixin):
         ForeignKey('documents.id', name='fk_chat_conv_document_id'),
         nullable=False,
     )
-    context_text: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, default=None
-    )
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey('users.id', name='fk_chat_conv_user_id'),
         nullable=False,
+    )
+    context_text: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
     )
 
     document: Mapped['Document'] = relationship(
