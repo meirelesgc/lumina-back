@@ -16,6 +16,7 @@ class MessageEntityType(str, Enum):
     TYPIFICATION = 'TYPIFICATION'
     TAXONOMY = 'TAXONOMY'
     BRANCH = 'BRANCH'
+    AI = 'AI'
 
 
 class MessageMention(BaseModel):
