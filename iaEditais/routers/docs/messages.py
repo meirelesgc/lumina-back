@@ -21,7 +21,11 @@ from iaEditais.schemas import (
     DocumentMessageUpdate,
 )
 from iaEditais.schemas.common import WSMessage
-from iaEditais.schemas.document_message import MessageFilter
+from iaEditais.schemas.document_message import (
+    MessageEntityType,
+    MessageFilter,
+    MessageMention,
+)
 from iaEditais.services import ai_service, message_service
 
 router = APIRouter(prefix='/doc', tags=['document verification, messages'])
@@ -75,11 +79,16 @@ async def create_document_ai_message(
         recent_messages=recent_messages,
     )
 
+    ai_data = DocumentMessageCreate(
+        content=response,
+        mentions=[MessageMention(id=doc_id, type=MessageEntityType.AI, label='OiacIA')],
+        quoted_message=None,
+    )
     ai_msg = await message_service.create_message(
         session=session,
         user_id=current_user.id,
         doc_id=doc_id,
-        data=DocumentMessageCreate(content=response, mentions=[], quoted_message=None),
+        data=ai_data,
     )
 
     return ai_msg
@@ -167,7 +176,9 @@ async def process_user_message(
         )
 
         ai_msg_create = DocumentMessageCreate(
-            content=response, mentions=[], quoted_message=None
+            content=response,
+            mentions=[MessageMention(id=doc_id, type=MessageEntityType.AI, label='OiacIA')],
+            quoted_message=None,
         )
         await message_service.create_message(
             session, user_id, doc_id, ai_msg_create
