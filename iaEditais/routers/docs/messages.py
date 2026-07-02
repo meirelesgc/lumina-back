@@ -43,6 +43,48 @@ async def create_document_message(
     )
 
 
+@router.post(
+    '/{doc_id}/message/ai',
+    status_code=HTTPStatus.CREATED,
+    response_model=DocumentMessagePublic,
+)
+async def create_document_ai_message(
+    doc_id: UUID,
+    msg: DocumentMessageCreate,
+    session: Session,
+    model: Model,
+    vstore: VStore,
+    current_user: CurrentUser,
+):
+    user_msg = await message_service.create_message(
+        session, current_user.id, doc_id, msg
+    )
+
+    filters = MessageFilter(limit=3)
+    recent_messages = await message_service.list_messages(
+        session, doc_id, filters
+    )
+
+    response = await ai_service.create_ai_response(
+        session=session,
+        user_id=current_user.id,
+        doc_id=doc_id,
+        data=msg,
+        model=model,
+        vstore=vstore,
+        recent_messages=recent_messages,
+    )
+
+    ai_msg = await message_service.create_message(
+        session=session,
+        user_id=current_user.id,
+        doc_id=doc_id,
+        data=DocumentMessageCreate(content=response, mentions=[], quoted_message=None),
+    )
+
+    return ai_msg
+
+
 @router.get(
     '/{doc_id}/messages',
     response_model=DocumentMessageList,
