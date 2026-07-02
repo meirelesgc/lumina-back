@@ -167,6 +167,19 @@ async def update_doc(
         }).model_dump(mode='json')['users']
 
     db_doc.set_update_audit(current_user.id)
+
+    if db_doc.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, db_doc.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            project_doc.name = db_doc.name
+            if data.tipo_documento is not None:
+                project_doc.type = db_doc.tipo_documento
+            if data.editors_ids is not None:
+                project_doc.responsibles = [str(uid) for uid in data.editors_ids]
+            project_doc.set_update_audit(current_user.id)
+
     await audit_service.register_action(
         session=session,
         user_id=current_user.id,
@@ -215,6 +228,15 @@ async def delete_doc(
 
     old_data = DocumentPublic.model_validate(db_doc).model_dump(mode='json')
     db_doc.set_deletion_audit(current_user.id)
+
+    if db_doc.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, db_doc.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            project_doc.sent_to_kanban = False
+            project_doc.status = 'PENDING'
+            project_doc.set_update_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,
