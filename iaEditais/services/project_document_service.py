@@ -32,6 +32,7 @@ async def create_document(
         number=data.number,
         status=data.status or 'PENDING',
         responsible=data.responsible,
+        responsibles=[str(user_id) for user_id in data.responsibles or []],
         typification_ids=data.typification_ids,
     )
     db_doc.set_creation_audit(user_id)
@@ -69,6 +70,8 @@ async def update_document(
         db_doc.status = data.status
     if data.responsible is not None:
         db_doc.responsible = data.responsible
+    if data.responsibles is not None:
+        db_doc.responsibles = [str(user_id) for user_id in data.responsibles]
     if data.sent_to_kanban is not None:
         db_doc.sent_to_kanban = data.sent_to_kanban
     if data.typification_ids is not None:

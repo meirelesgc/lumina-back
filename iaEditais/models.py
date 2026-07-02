@@ -1294,6 +1294,11 @@ class ProjectDocument(AuditMixin):
         nullable=True,
         default=None,
     )
+    responsibles: Mapped[Optional[list[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
     typification_ids: Mapped[Optional[list[str]]] = mapped_column(
         JSONB,
         nullable=True,
