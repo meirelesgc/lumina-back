@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from iaEditais.core.dependencies import CurrentUser
-from iaEditais.models import Document, DocumentHistory, ProjectDocument
+from iaEditais.models import Branch, Document, DocumentHistory, ProjectDocument
 from iaEditais.repositories import project_document_repo
 from iaEditais.repositories import doc_repo
 from iaEditais.schemas import (
@@ -248,3 +248,31 @@ async def delete_doc(
     )
 
     await session.commit()
+
+
+async def get_doc_context_items(
+    session: AsyncSession, doc_id: UUID
+) -> list[dict]:
+    doc = await doc_repo.get_by_id(session, doc_id)
+    if not doc or doc.deleted_at:
+        return []
+
+    items = []
+    for typification in doc.typifications:
+        if typification.deleted_at:
+            continue
+        for taxonomy in typification.taxonomies:
+            if taxonomy.deleted_at:
+                continue
+            for branch in taxonomy.branches:
+                if branch.deleted_at:
+                    continue
+                items.append({
+                    'id': str(branch.id),
+                    'label': f'{typification.name} > {taxonomy.title} > {branch.title}',
+                    'type': 'BRANCH',
+                    'typification_name': typification.name,
+                    'taxonomy_title': taxonomy.title,
+                    'branch_title': branch.title,
+                })
+    return items

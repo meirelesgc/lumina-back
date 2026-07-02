@@ -46,6 +46,12 @@ async def read_doc(doc_id: UUID, session: Session):
     return await doc_service.get_doc_by_id(session, doc_id)
 
 
+@router.get('/{doc_id}/context-items')
+async def read_doc_context_items(doc_id: UUID, session: Session):
+    items = await doc_service.get_doc_context_items(session, doc_id)
+    return {'items': items}
+
+
 @router.put('', response_model=DocumentPublic)
 async def update_doc(
     doc: DocumentUpdate, session: Session, current_user: CurrentUser

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from iaEditais import prompts as PROMPTS
 from iaEditais.core.dependencies import Model, VStore
 from iaEditais.models import DocumentMessage, DocumentRelease
+from iaEditais.repositories import doc_repo
 from iaEditais.schemas import DocumentMessageCreate
 from iaEditais.services import (
     branch_service,
@@ -106,6 +107,36 @@ O QUE FALOU:
     ])
 
 
+async def get_document_auto_context(
+    session: AsyncSession, doc_id: UUID
+) -> List[str]:
+    doc = await doc_repo.get_by_id(session, doc_id)
+    if not doc or doc.deleted_at:
+        return []
+
+    prompts_list = []
+    for typification in doc.typifications:
+        if typification.deleted_at:
+            continue
+        for taxonomy in typification.taxonomies:
+            if taxonomy.deleted_at:
+                continue
+            for branch in taxonomy.branches:
+                if branch.deleted_at:
+                    continue
+                prompt = f"""
+<CONTEXTO-BASE-CONHECIMENTO-BRANCH:{branch.id}>
+**Item Avaliado:** {typification.name}
+**Tópico de Referência:** {taxonomy.title}
+**Pergunta de Verificação:** O conteúdo necessário está presente **nos trechos recuperados** e cumpre integralmente o requisitos baseados em:
+{branch.title}
+{branch.description}
+<CONTEXTO-BASE-CONHECIMENTO-BRANCH:{branch.id}>
+"""
+                prompts_list.append(prompt)
+    return prompts_list
+
+
 async def create_ai_response(
     session: AsyncSession,
     user_id: UUID,
@@ -122,13 +153,15 @@ async def create_ai_response(
         session, releases_list[0].id
     )
 
-    branch_prompts = await get_context(session, data.content)
+    auto_prompts = await get_document_auto_context(session, doc_id)
+    explicit_prompts = await get_context(session, data.content)
+
     branch_context = await get_prompt_context(
-        vstore, db_release, '\n---\n'.join(branch_prompts)
+        vstore, db_release, '\n---\n'.join(explicit_prompts)
     )
 
     msg_context = await get_prompt_context(vstore, db_release, data.content)
-    context = '\n---\n'.join(msg_context + branch_context + branch_prompts)
+    context = '\n---\n'.join(msg_context + branch_context + auto_prompts + explicit_prompts)
 
     chat_context = build_chat_prompt(recent_messages)
 
