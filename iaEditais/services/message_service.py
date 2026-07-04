@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from http import HTTPStatus
 from uuid import UUID
@@ -5,13 +6,22 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from iaEditais.models import DocumentMessage, DocumentMessageMention
+from iaEditais.models import (
+    DocumentMessage,
+    DocumentMessageMention,
+)
 from iaEditais.repositories import message_repo
 from iaEditais.schemas import (
     DocumentMessageCreate,
     DocumentMessageUpdate,
 )
 from iaEditais.schemas.document_message import MessageFilter
+
+AI_PATTERN = re.compile(r'<ai:[^>]+>')
+
+
+def requires_ai_response(content: str) -> bool:
+    return bool(AI_PATTERN.search(content))
 
 
 async def create_message(

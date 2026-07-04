@@ -7,6 +7,7 @@ from sqlalchemy import (
     Computed,
     ForeignKey,
     Index,
+    String,
     Text,
     column,
     func,
@@ -632,6 +633,14 @@ class Document(AuditMixin):
     grupo: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
     tipo_documento: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
     projeto_nome: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    source: Mapped[Optional[str]] = mapped_column(nullable=True, default='manual')
+    project_document_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('project_documents.id'), nullable=True, default=None
+    )
+    project_document: Mapped[Optional['ProjectDocument']] = relationship(
+        'ProjectDocument', init=False, lazy='selectin',
+        uselist=False,
+    )
     __table_args__ = (
         Index(
             'ix_uq_documents_identifier_active',
@@ -1285,6 +1294,11 @@ class ProjectDocument(AuditMixin):
         nullable=True,
         default=None,
     )
+    responsibles: Mapped[Optional[list[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
     typification_ids: Mapped[Optional[list[str]]] = mapped_column(
         JSONB,
         nullable=True,
@@ -1370,4 +1384,66 @@ class DocumentGroupItem(AuditMixin):
     group: Mapped['DocumentGroup'] = relationship(
         back_populates='items',
         init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatConversation(AuditMixin):
+    __tablename__ = 'chat_conversations'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey('documents.id', name='fk_chat_conv_document_id'),
+        nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_chat_conv_user_id'),
+        nullable=False,
+    )
+    context_text: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+
+    document: Mapped['Document'] = relationship(
+        init=False, lazy='selectin'
+    )
+    user: Mapped['User'] = relationship(
+        init=False, lazy='selectin', foreign_keys=[user_id]
+    )
+    messages: Mapped[List['ChatMessage']] = relationship(
+        back_populates='conversation',
+        cascade='all, delete-orphan',
+        init=False,
+        lazy='selectin',
+        default_factory=list,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatMessage:
+    __tablename__ = 'chat_messages'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    conversation_id: Mapped[UUID] = mapped_column(
+        ForeignKey('chat_conversations.id', name='fk_chat_msg_conversation_id'),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
+    )
+
+    conversation: Mapped['ChatConversation'] = relationship(
+        back_populates='messages', init=False
     )

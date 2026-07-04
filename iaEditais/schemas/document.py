@@ -29,6 +29,8 @@ class DocumentSchema(BaseModel):
 class DocumentCreate(DocumentSchema):
     typification_ids: Optional[list[UUID]]
     editors_ids: Optional[list[UUID]]
+    project_document_id: Optional[UUID] = None
+    source: Optional[str] = 'manual'
 
 
 class DocumentUpdate(DocumentSchema):
@@ -47,6 +49,7 @@ class DocumentPublic(DocumentSchema):
     processing_status: DocumentProcessingStatus = DocumentProcessingStatus.IDLE
     generation_id: Optional[UUID] = None
     updated_at: Optional[datetime] = None
+    source: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -58,3 +61,4 @@ class DocumentFilter(UserFilter):
     unit_id: Optional[UUID] = None
     archived: Optional[bool] = False
     q: Optional[str] = None
+    source: Optional[str] = None

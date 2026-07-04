@@ -76,4 +76,8 @@ jobs:
             docker compose pull iaeditais_api
             docker compose up -d --force-recreate iaeditais_api
 
+            echo "Limpando imagens não utilizadas..."
+            docker image prune -af
+            docker builder prune -af
+
             docker compose ps

@@ -74,9 +74,8 @@ services:
 
   evolution_api:
     image: gleidsoncosta/evolution-api:v2.3.6
-    profiles: [ "prod" ]
     ports:
-      - "${PORT_EVO:-8080}:8080"
+      - "${PORT_EVO:-8082}:8080"
     env_file:
       - .evolution.env
     volumes:
