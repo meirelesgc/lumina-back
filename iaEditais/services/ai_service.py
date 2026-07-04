@@ -1,12 +1,15 @@
+import os
 import re
 from collections import defaultdict
 from typing import Any, List
 from uuid import UUID
 
+from langchain_community.document_loaders import PyMuPDFLoader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from iaEditais import prompts as PROMPTS
 from iaEditais.core.dependencies import Model, VStore
+from iaEditais.core.settings import Settings
 from iaEditais.models import DocumentMessage, DocumentRelease
 from iaEditais.repositories import doc_repo
 from iaEditais.schemas import DocumentMessageCreate
@@ -17,13 +20,33 @@ from iaEditais.services import (
 )
 
 MAX_CHUNKS = 2
+MAX_FULL_TEXT_CHARS = 80000
 CONTEXT_PATTERN = re.compile(r'<([^:]+):([^>]+)>')
+SETTINGS = Settings()
 
 
 def get_base_filter(db_release: DocumentRelease) -> dict:
     path = db_release.file_path.split('/')[-1]
     allowed_source = f'iaEditais/storage/uploads/{path}'
     return {'source': allowed_source}
+
+
+async def _load_document_text(db_release: DocumentRelease) -> str | None:
+    filename = db_release.file_path.split('/')[-1]
+    full_path = os.path.join(SETTINGS.UPLOAD_DIRECTORY, filename)
+
+    if not os.path.exists(full_path):
+        return None
+
+    try:
+        loader = PyMuPDFLoader(full_path)
+        raw_docs = loader.load()
+        text = '\n\n'.join([d.page_content for d in raw_docs])
+        if len(text) > MAX_FULL_TEXT_CHARS:
+            text = text[-MAX_FULL_TEXT_CHARS:]
+        return text
+    except Exception:
+        return None
 
 
 async def build_branch_prompt(session: AsyncSession, branch_id: str) -> str:
@@ -164,6 +187,10 @@ async def create_ai_response(
     context = '\n---\n'.join(msg_context + branch_context + auto_prompts + explicit_prompts)
 
     chat_context = build_chat_prompt(recent_messages)
+
+    full_text = await _load_document_text(db_release)
+    if full_text:
+        context = f"<CONTEUDO-COMPLETO-DO-DOCUMENTO>\n{full_text}\n</CONTEUDO-COMPLETO-DO-DOCUMENTO>\n\n---\n\n{context}"
 
     prompt = PROMPTS.CHAT.format(
         context=context,
