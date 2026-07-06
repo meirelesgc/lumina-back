@@ -2,13 +2,20 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ProjectSchema(BaseModel):
     name: str
     description: Optional[str] = None
     document_group_id: Optional[UUID] = None
+
+    @field_validator('document_group_id', mode='before')
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if v == '':
+            return None
+        return v
 
 
 class ProjectCreate(ProjectSchema):
