@@ -12,7 +12,15 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from iaEditais.core.cache import WebSocketManager
 from iaEditais.core.settings import Settings
-from iaEditais.routers import auth, reports, stats, system, units, users
+from iaEditais.routers import (
+    auth,
+    reports,
+    stats,
+    system,
+    template_abnt,
+    units,
+    users,
+)
 from iaEditais.routers.audit import audit_logs
 from iaEditais.routers.check_tree import (
     branches,
@@ -125,3 +133,4 @@ app.include_router(bundles.router)
 app.include_router(audit_logs.router)
 app.include_router(system.router)
 app.include_router(reports.router)
+app.include_router(template_abnt.router)
