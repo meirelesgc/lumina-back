@@ -279,7 +279,7 @@ async def generate_docs_from_bundle(
         if existing_doc:
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
-                detail=f'Doc with identifier "{doc_identifier}" already exists.',
+                detail=f'Já existe um documento com o identificador "{doc_identifier}".',
             )
 
         db_doc = Document(
