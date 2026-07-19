@@ -45,7 +45,7 @@ async def test_create_doc_conflict(logged_client, create_doc):
     assert response.status_code == HTTPStatus.CONFLICT
     assert (
         response.json()['detail']
-        == 'Doc with identifier "DOC-001" already exists.'
+        == 'Já existe um documento com o identificador "DOC-001".'
     )
 
     response = client.post(
@@ -61,7 +61,7 @@ async def test_create_doc_conflict(logged_client, create_doc):
     assert response.status_code == HTTPStatus.CONFLICT
     assert (
         response.json()['detail']
-        == 'Doc with identifier "DOC-001" already exists.'
+        == 'Já existe um documento com o identificador "DOC-001".'
     )
 
 
@@ -155,7 +155,7 @@ async def test_update_doc_conflict(
     assert response.status_code == HTTPStatus.CONFLICT
     assert (
         response.json()['detail']
-        == 'Doc with identifier "ID-A" already exists.'
+        == 'Já existe um documento com o identificador "ID-A".'
     )
 
 
