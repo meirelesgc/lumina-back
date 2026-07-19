@@ -29,7 +29,7 @@ async def create_doc(
     if existing_doc:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail=f'Doc with identifier "{data.identifier}" already exists.',
+            detail=f'Já existe um documento com o identificador "{data.identifier}".',
         )
 
     db_doc = Document(
@@ -132,7 +132,7 @@ async def update_doc(
     if conflict:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail=f'Doc with identifier "{data.identifier}" already exists.',
+            detail=f'Já existe um documento com o identificador "{data.identifier}".',
         )
 
     db_doc.name = data.name
