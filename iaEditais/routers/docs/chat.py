@@ -111,7 +111,12 @@ async def delete_conversation(
         raise HTTPException(status_code=404, detail='Conversation not found')
 
     deleted = await chat_repo.soft_delete_conversation(session, conversation_id)
-    await session.commit()
     if not deleted:
         raise HTTPException(status_code=404, detail='Conversation not found')
+
+    doc = conversation.document
+    if doc and not doc.deleted_at:
+        doc.set_deletion_audit(current_user.id)
+
+    await session.commit()
     return {'ok': True}
