@@ -102,15 +102,14 @@ async def create_release(
 
     await session.commit()
 
-    if db_doc.source != 'assistant':
-        background_tasks.add_task(
-            release_pipeline,
-            release_id=db_release.id,
-            session=session,
-            model=model,
-            vstore=vstore,
-            redis=redis,
-        )
+    background_tasks.add_task(
+        release_pipeline,
+        release_id=db_release.id,
+        session=session,
+        model=model,
+        vstore=vstore,
+        redis=redis,
+    )
 
     return db_release
 
