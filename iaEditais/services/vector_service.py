@@ -140,6 +140,9 @@ def _normalize_with_mapping(text: str):
     mapping = []
     previous_space = False
 
+    if not text:
+        return ''.join(normalized), mapping
+
     for original_idx, char in enumerate(text):
         nfkd = unicodedata.normalize('NFKD', char)
         chars = [c for c in nfkd if unicodedata.category(c) != 'Mn']
