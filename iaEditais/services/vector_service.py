@@ -171,8 +171,9 @@ def _split_by_sections(
     sections = _get_sections_with_model(documents, model)
 
     with open('/tmp/sections.py', 'w', encoding='utf-8') as py:
-        print('Salvando: [/tmp/sections.py]')
-        py.write(str(sections))
+        # print('Salvando: [/tmp/sections.py]')
+        # py.write(str(sections))
+        pass
 
     full_text = '\n'.join(doc.page_content for doc in documents)
     base_metadata = documents[0].metadata.copy()
