@@ -28,18 +28,18 @@ SPLITTER = RecursiveCharacterTextSplitter(
 
 def _clean_and_format_documents(documents: List[Document]) -> List[Document]:
     chunks = SPLITTER.split_documents(documents)
-    for i, chunk in enumerate(chunks):
-        text = re.sub(r'\s+', ' ', (chunk.page_content or '')).strip()
-        section = (chunk.metadata.get('section_title') or '').strip()
 
+    for i, chunk in enumerate(chunks):
+        text = chunk.page_content or ''
+        text = text.replace('\x00', '')
+        text = re.sub(r'\s+', ' ', text).strip()
+        section = (chunk.metadata.get('section_title') or '').strip()
         if section:
             chunk.page_content = f'SECTION: {section}\n\n{text}'
         else:
             chunk.page_content = text
-
         chunk.metadata['chunk_index'] = i
-        if 'source' not in chunk.metadata:
-            chunk.metadata['source'] = 'unknown'
+        chunk.metadata.setdefault('source', 'unknown')
     return chunks
 
 
@@ -73,6 +73,7 @@ def _get_sections_with_model(
     all_sections = []
 
     for idx, chunk in enumerate(chunks):
+        print(f'PROCESSANDO CHUNK [{idx}/{len(chunks)}]')
         contexto_prompt = ''
         if all_sections:
             nomes_secoes = [s['section'] for s in all_sections]
@@ -132,29 +133,6 @@ def _get_sections_with_model(
             all_sections[i]['end_text'] = proximo_inicio
 
     return all_sections
-
-
-def _normalize_for_search(text: str) -> str:
-    """
-    Normalização agressiva para comparação tolerante a artefatos de PDF:
-    - NFKD decompose + remove diacríticos (á→a, ã→a, ç→c)
-    - Remove caracteres de controle e não-imprimíveis
-    - Colapsa espaços
-    - Lowercase
-    """
-    # Decompõe e remove diacríticos (categoria Mn = Mark, Nonspacing)
-    nfkd = unicodedata.normalize('NFKD', text)
-    sem_acentos = ''.join(c for c in nfkd if unicodedata.category(c) != 'Mn')
-
-    # Remove não-imprimíveis exceto espaço
-    limpo = ''.join(
-        c
-        for c in sem_acentos
-        if c == ' ' or (c.isprintable() and not c.isspace()) or c == '\n'
-    )
-
-    # Colapsa espaços e lowercase
-    return re.sub(r'\s+', ' ', limpo).strip().lower()
 
 
 def _normalize_with_mapping(text: str):
@@ -276,8 +254,9 @@ async def process_file(full_path: str, vstore: VStore, model) -> None:
     section_documents = _split_by_sections(raw_documents, model)
     formatted_documents = _clean_and_format_documents(section_documents)
     with open('/tmp/formatted_documents.py', 'w', encoding='utf-8') as py:
-        print('Salvando: [/tmp/formatted_documents.py]')
-        py.write(str(formatted_documents))
+        # print('Salvando: [/tmp/formatted_documents.py]')
+        # py.write(str(formatted_documents))
+        pass
     await _anonymize_and_vectorize(formatted_documents, vstore)
 
 
