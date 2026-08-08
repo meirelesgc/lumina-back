@@ -10,6 +10,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from redis import Redis
 from sqlalchemy import select
 
@@ -27,6 +28,7 @@ from iaEditais.models import (
     DocumentHistory,
     DocumentRelease,
 )
+from iaEditais.repositories import project_document_repo
 from iaEditais.schemas import (
     DocumentReleaseList,
     DocumentReleasePublic,
@@ -82,6 +84,94 @@ async def create_release(
     db_release = DocumentRelease(
         history_id=latest_history.id,
         file_path=file_path,
+        created_by=current_user.id,
+    )
+
+    session.add(db_release)
+    db_doc.processing_status = DocumentProcessingStatus.QUEUED
+
+    if db_doc.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, db_doc.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            project_doc.file_path = file_path
+
+    await session.flush()
+    await session.refresh(db_release)
+
+    await audit_service.register_action(
+        session=session,
+        user_id=current_user.id,
+        action='CREATE',
+        table_name=DocumentRelease.__tablename__,
+        record_id=db_release.id,
+        old_data=None,
+    )
+
+    await session.commit()
+
+    background_tasks.add_task(
+        release_pipeline,
+        release_id=db_release.id,
+        session=session,
+        model=model,
+        vstore=vstore,
+        redis=redis,
+    )
+
+    return db_release
+
+
+class ReleaseFromFileCreate(BaseModel):
+    project_document_id: UUID
+
+
+@router.post(
+    '/from-file',
+    status_code=HTTPStatus.CREATED,
+    response_model=DocumentReleasePublic,
+)
+async def create_release_from_file(
+    doc_id: UUID,
+    payload: ReleaseFromFileCreate,
+    session: Session,
+    current_user: CurrentUser,
+    background_tasks: BackgroundTasks,
+    model: Model,
+    vstore: VStore,
+    redis: Redis = Depends(get_redis),
+):
+    result = await session.execute(
+        select(Document).where(Document.id == doc_id)
+    )
+    db_doc = result.scalar_one_or_none()
+    if not db_doc or db_doc.deleted_at:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Document not found',
+        )
+
+    if not db_doc.history:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='The document sent has integrity issues.',
+        )
+
+    project_doc = await project_document_repo.get_by_id(
+        session, payload.project_document_id
+    )
+    if not project_doc or project_doc.deleted_at or not project_doc.file_path:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='File not found for this project document',
+        )
+
+    latest_history = db_doc.history[0]
+
+    db_release = DocumentRelease(
+        history_id=latest_history.id,
+        file_path=project_doc.file_path,
         created_by=current_user.id,
     )
 
