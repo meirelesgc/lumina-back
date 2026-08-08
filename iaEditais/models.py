@@ -705,6 +705,10 @@ class DocumentRelease(AuditMixin):
 
     file_path: Mapped[str] = mapped_column(nullable=False)
 
+    version: Mapped[Optional[str]] = mapped_column(
+        nullable=True, default=None
+    )
+
     check_tree: Mapped[List['AppliedTypification']] = relationship(
         'AppliedTypification',
         lazy='selectin',

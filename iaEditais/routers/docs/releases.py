@@ -6,6 +6,7 @@ from fastapi import (
     BackgroundTasks,
     Depends,
     File,
+    Form,
     HTTPException,
     UploadFile,
 )
@@ -34,7 +35,7 @@ from iaEditais.schemas import (
     DocumentReleasePublic,
 )
 from iaEditais.schemas.document import DocumentProcessingStatus
-from iaEditais.services import audit_service, report_service
+from iaEditais.services import audit_service, release_service, report_service
 from iaEditais.workers.docs.releases import release_pipeline
 
 SETTINGS = Settings()
@@ -61,6 +62,7 @@ async def create_release(
     vstore: VStore,
     redis: Redis = Depends(get_redis),
     file: UploadFile = File(...),
+    bump: str = Form('patch'),
 ):
     result = await session.execute(
         select(Document).where(Document.id == doc_id)
@@ -81,9 +83,14 @@ async def create_release(
     unique_filename = f'{uuid4()}_{file.filename}'
     file_path = await storage.save(file, unique_filename)
 
+    version = await release_service.get_next_version(
+        session, doc_id, bump if bump in ('major', 'minor', 'patch') else 'patch'
+    )
+
     db_release = DocumentRelease(
         history_id=latest_history.id,
         file_path=file_path,
+        version=version,
         created_by=current_user.id,
     )
 
@@ -125,6 +132,7 @@ async def create_release(
 
 class ReleaseFromFileCreate(BaseModel):
     project_document_id: UUID
+    bump: str = 'patch'
 
 
 @router.post(
@@ -169,9 +177,18 @@ async def create_release_from_file(
 
     latest_history = db_doc.history[0]
 
+    version = await release_service.get_next_version(
+        session,
+        doc_id,
+        payload.bump
+        if payload.bump in ('major', 'minor', 'patch')
+        else 'patch',
+    )
+
     db_release = DocumentRelease(
         history_id=latest_history.id,
         file_path=project_doc.file_path,
+        version=version,
         created_by=current_user.id,
     )
 
