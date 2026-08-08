@@ -76,9 +76,10 @@ async def update_project(
     db_project.document_group_id = data.document_group_id
     if data.status is not None:
         db_project.status = data.status
-    db_project.set_update_audit(user_id)
 
     new_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
+
+    db_project.set_update_audit(user_id)
 
     await audit_service.register_action(
         session=session,
