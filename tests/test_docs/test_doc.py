@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from iaEditais.schemas import DocumentPublic
+from lumina.schemas import DocumentPublic
 
 
 @pytest.mark.asyncio

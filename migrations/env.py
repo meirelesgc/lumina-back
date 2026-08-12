@@ -8,8 +8,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from iaEditais.models import table_registry
-from iaEditais.core.settings import Settings
+from lumina.models import table_registry
+from lumina.core.settings import Settings
 
 config = context.config
 settings=Settings()

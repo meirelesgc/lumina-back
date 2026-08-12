@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from iaEditais.schemas.bundle import BundlePublic
+from lumina.schemas.bundle import BundlePublic
 
 
 @pytest.mark.asyncio

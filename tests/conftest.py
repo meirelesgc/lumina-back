@@ -23,21 +23,21 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from iaEditais.app import app
-from iaEditais.core.cache import (
+from lumina.app import app
+from lumina.core.cache import (
     WebSocketManager,
     get_redis,
     get_socket_manager,
 )
-from iaEditais.core.database import get_session
-from iaEditais.core.llm import get_model
-from iaEditais.core.security import (
+from lumina.core.database import get_session
+from lumina.core.llm import get_model
+from lumina.core.security import (
     create_access_token,
     get_password_hash,
 )
-from iaEditais.core.settings import Settings
-from iaEditais.core.vectorstore import get_vectorstore
-from iaEditais.models import (
+from lumina.core.settings import Settings
+from lumina.core.vectorstore import get_vectorstore
+from lumina.models import (
     Document,
     DocumentHistory,
     DocumentMessage,
@@ -48,7 +48,7 @@ from iaEditais.models import (
     Typification,
     table_registry,
 )
-from iaEditais.schemas import DocumentStatus, MessageEntityType
+from lumina.schemas import DocumentStatus, MessageEntityType
 from tests.factories import (
     BranchFactory,
     BundleDocumentFactory,
@@ -356,7 +356,7 @@ def create_release(session):
         file_content = b'Este eh um arquivo de teste.'
         file = {'file': ('test_release.txt', io.BytesIO(file_content))}
 
-        file_path = f'iaEditais/storage/temp/{uuid4()}.txt'
+        file_path = f'lumina/storage/temp/{uuid4()}.txt'
         with open(file_path, 'wb') as buffer:
             shutil.copyfileobj(file['file'][1], buffer)
 

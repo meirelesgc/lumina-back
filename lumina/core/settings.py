@@ -1,0 +1,44 @@
+from pathlib import Path
+from typing import List, Literal, Optional
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file='.env', env_file_encoding='utf-8', extra='ignore'
+    )
+
+    DATABASE_URL: str
+
+    SECRET_KEY: str = 'SECRET_KEY'
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ALGORITHM: str = 'HS256'
+
+    OPENAI_API_KEY: str = '...'
+
+    ALLOWED_ORIGINS: List[str] = [
+        'http://localhost:8000',
+        'http://localhost:3000',
+    ]
+
+    BROKER_URL: str = 'amqp://guest:guest@localhost:5672/'
+    CACHE_URL: str = 'redis://localhost:6379/0'
+
+    EVOLUTION_URL: str = 'http://localhost:8080/message/sendText/lumina'
+    EVOLUTION_KEY: str = 'secret'
+
+    ACCESS_TOKEN_COOKIE_NAME: str = 'access_token'
+    COOKIE_SECURE: bool = True
+    COOKIE_SAMESITE: str = 'lax'
+    COOKIE_PATH: str = '/'
+    COOKIE_DOMAIN: Optional[str] = None
+
+    LOG_LEVEL: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = (
+        'ERROR'
+    )
+
+    ROOT_PATH: Optional[str] = str()
+
+    UPLOAD_DIRECTORY: Path = 'lumina/storage/uploads'
+    STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'

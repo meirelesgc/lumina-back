@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from iaEditais.core.security import create_access_token
-from iaEditais.core.settings import Settings
+from lumina.core.security import create_access_token
+from lumina.core.settings import Settings
 
 SETTINGS = Settings()
 

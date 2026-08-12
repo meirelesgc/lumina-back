@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from iaEditais.schemas import TaxonomyPublic
+from lumina.schemas import TaxonomyPublic
 
 
 @pytest.mark.asyncio

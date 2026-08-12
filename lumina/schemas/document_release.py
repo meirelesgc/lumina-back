@@ -1,0 +1,75 @@
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from lumina.schemas.branch import BranchSchema
+from lumina.schemas.source import SourcePublic
+from lumina.schemas.taxonomy import TaxonomySchema
+from lumina.schemas.typification import TypificationSchema
+
+
+class DocumentReleaseFeedback(BaseModel):
+    feedback: str = Field(
+        description=(
+            'Parecer detalhado sobre a conformidade do edital com o '
+            'critério avaliado.'
+        )
+    )
+    fulfilled: bool = Field(
+        description=(
+            'Indica se o edital atende ao requisito especificado '
+            '(True para cumprido, False para não cumprido).'
+        )
+    )
+    score: int = Field(
+        ge=0,
+        le=10,
+        description=(
+            'Nota atribuída à conformidade do edital com o critério, '
+            'variando de 0 a 10.'
+        ),
+    )
+
+
+class DocumentReleaseFeedbackPublic(DocumentReleaseFeedback):
+    score: int = Field(...)
+
+
+class AppliedBranchPublic(BranchSchema):
+    id: UUID
+    evaluation: DocumentReleaseFeedbackPublic
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AppliedTaxonomyPublic(TaxonomySchema):
+    id: UUID
+    branches: list[AppliedBranchPublic]
+    sources: list[SourcePublic]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AppliedTypificationPublic(TypificationSchema):
+    id: UUID
+    sources: list[SourcePublic]
+    taxonomies: list[AppliedTaxonomyPublic]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentReleasePublic(BaseModel):
+    id: UUID
+    file_path: str
+    version: str | None
+    description: str | None
+    check_tree: list[AppliedTypificationPublic]
+
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentReleaseList(BaseModel):
+    releases: list[DocumentReleasePublic]

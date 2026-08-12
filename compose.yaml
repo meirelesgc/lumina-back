@@ -1,15 +1,15 @@
 services:
-  iaeditais_db:
+  db:
     image: pgvector/pgvector:pg17
     volumes:
       - dbdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: iaeditais
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: db_user
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: db_password
       TZ: America/Sao_Paulo
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: [ "CMD", "pg_isready", "-U", "db_user", "-d", "db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -17,8 +17,8 @@ services:
     ports:
       - "${PORT_DB:-5432}:5432"
 
-  iaeditais_api:
-    image: gleidsoncosta/fiotec-iaeditais:latest
+  api:
+    image: "${COMPOSE_PROJECT_NAME:-lumina}_api"
     entrypoint: ./entrypoint.sh
     ports:
       - "${PORT_API:-8000}:8000"
@@ -31,8 +31,8 @@ services:
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: otlp
       OTEL_LOGS_EXPORTER: otlp
-      CACHE_URL: 'redis://iaeditais_redis:6379/0'
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@iaeditais_db:5432/iaeditais
+      CACHE_URL: 'redis://redis:6379/0'
+      DATABASE_URL: postgresql+psycopg://pg_user:pg_password@db:5432/db
       TZ: America/Sao_Paulo
     env_file: ".env"
     healthcheck:
@@ -42,14 +42,14 @@ services:
       retries: 3
       start_period: 30s
     volumes:
-      - storage:/app/iaEditais/storage
+      - storage:/app/lumina/storage
     depends_on:
-      iaeditais_db:
+      db:
         condition: service_healthy
-      iaeditais_redis:
+      redis:
         condition: service_healthy
 
-  iaeditais_redis:
+  redis:
     image: redis:latest
     ports:
       - "${PORT_REDIS:-6379}:6379"
@@ -71,7 +71,7 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
-      iaeditais_db:
+      db:
         condition: service_healthy
 
 volumes:

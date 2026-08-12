@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from iaEditais.core.security import get_password_hash
-from iaEditais.models import AccessType, PasswordReset
+from lumina.core.security import get_password_hash
+from lumina.models import AccessType, PasswordReset
 
 
 @pytest.mark.asyncio

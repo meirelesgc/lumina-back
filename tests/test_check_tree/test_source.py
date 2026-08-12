@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 import pytest
 
-from iaEditais.schemas import SourcePublic
+from lumina.schemas import SourcePublic
 
 
 @pytest.mark.asyncio

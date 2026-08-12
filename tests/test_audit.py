@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 import pytest
 
-from iaEditais.models import AuditLog
+from lumina.models import AuditLog
 
 
 async def create_audit_log(session, user, **kwargs):

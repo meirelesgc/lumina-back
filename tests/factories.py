@@ -1,6 +1,6 @@
 import factory
 
-from iaEditais.models import (
+from lumina.models import (
     Branch,
     Bundle,
     BundleDocument,
@@ -12,8 +12,8 @@ from iaEditais.models import (
     Unit,
     User,
 )
-from iaEditais.schemas import AccessType
-from iaEditais.schemas.document import DocumentProcessingStatus
+from lumina.schemas import AccessType
+from lumina.schemas.document import DocumentProcessingStatus
 
 
 class UnitFactory(factory.Factory):
