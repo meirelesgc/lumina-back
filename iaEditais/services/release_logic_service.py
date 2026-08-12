@@ -38,6 +38,39 @@ def iter_branches(taxonomy: dict):
 # --- Funções de Busca Vetorial ---
 
 
+async def get_expanded_chunks(vstore: VStore, original_chunks: list) -> list:
+    docs_indices_map = {}
+    for chunk in original_chunks:
+        source = chunk.metadata.get('source')
+        current_idx = chunk.metadata.get('chunk_index')
+        if source is None or current_idx is None:
+            continue
+        if source not in docs_indices_map:
+            docs_indices_map[source] = set()
+
+        start = max(0, current_idx - MARGIN_SIZE)
+        end = current_idx + MARGIN_SIZE + 1
+        for i in range(start, end):
+            docs_indices_map[source].add(i)
+
+    expanded_chunks = []
+    for source, indices_set in docs_indices_map.items():
+        indices_list = list(indices_set)
+        filter_dict = {
+            'source': source,
+            'chunk_index': {'$in': indices_list},
+        }
+        found_chunks = await vstore.asimilarity_search(
+            '', k=len(indices_list), filter=filter_dict
+        )
+        expanded_chunks.extend(found_chunks)
+
+    if expanded_chunks:
+        expanded_chunks.sort(key=lambda x: x.metadata.get('chunk_index', 0))
+
+    return expanded_chunks
+
+
 async def expand_branch_sessions(vstore: VStore, eval_args: dict):
     for typification in iter_typifications(eval_args):
         for taxonomy in iter_taxonomies(typification):
@@ -46,36 +79,11 @@ async def expand_branch_sessions(vstore: VStore, eval_args: dict):
                 if not original_chunks:
                     continue
 
-                docs_indices_map = {}
-                for chunk in original_chunks:
-                    source = chunk.metadata.get('source')
-                    current_idx = chunk.metadata.get('chunk_index')
-                    if source is None or current_idx is None:
-                        continue
-                    if source not in docs_indices_map:
-                        docs_indices_map[source] = set()
-
-                    start = max(0, current_idx - MARGIN_SIZE)
-                    end = current_idx + MARGIN_SIZE + 1
-                    for i in range(start, end):
-                        docs_indices_map[source].add(i)
-
-                expanded_chunks = []
-                for source, indices_set in docs_indices_map.items():
-                    indices_list = list(indices_set)
-                    filter_dict = {
-                        'source': source,
-                        'chunk_index': {'$in': indices_list},
-                    }
-                    found_chunks = await vstore.asimilarity_search(
-                        '', k=len(indices_list), filter=filter_dict
-                    )
-                    expanded_chunks.extend(found_chunks)
+                expanded_chunks = await get_expanded_chunks(
+                    vstore, original_chunks
+                )
 
                 if expanded_chunks:
-                    expanded_chunks.sort(
-                        key=lambda x: x.metadata.get('chunk_index', 0)
-                    )
                     branch['sessions'] = expanded_chunks
 
 
@@ -94,7 +102,6 @@ async def get_branch_sessions(
                 b_desc = (branch.get('description') or '').strip()
                 query_text = f'{b_title}: {b_desc}'
                 query = PROMPTS.QUERY.format(section=t_title, query=query_text)
-
                 chunks = await vstore.asimilarity_search(
                     query, k=max_chunks, filter=base_filter
                 )
@@ -108,15 +115,10 @@ async def get_eval_args(
     eval_args = TypificationList.model_validate(payload).model_dump(
         mode='json'
     )
-    print(eval_args)
-
     base_filter = get_base_filter(db_release)
     await get_branch_sessions(vstore, eval_args, base_filter)
     await expand_branch_sessions(vstore, eval_args)
     return eval_args
-
-
-# --- Funções de LLM e Chain ---
 
 
 def get_chain(model: Model):

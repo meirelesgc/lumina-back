@@ -375,5 +375,5 @@ async def test_generate_bundle_documents_conflict(
 
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {
-        'detail': 'Doc with identifier "EXP-EDITAL" already exists.'
+        'detail': 'Já existe um documento com o identificador "EXP-EDITAL".'
     }

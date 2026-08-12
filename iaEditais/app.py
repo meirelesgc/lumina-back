@@ -12,16 +12,27 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from iaEditais.core.cache import WebSocketManager
 from iaEditais.core.settings import Settings
-from iaEditais.routers import auth, reports, stats, system, units, users
+from iaEditais.routers import (
+    auth,
+    reports,
+    stats,
+    system,
+    template_abnt,
+    units,
+    users,
+)
 from iaEditais.routers.audit import audit_logs
 from iaEditais.routers.check_tree import (
     branches,
     bundles,
+    document_groups,
+    project_documents,
+    projects,
     sources,
     taxonomies,
     typifications,
 )
-from iaEditais.routers.docs import docs, kanban, messages, releases
+from iaEditais.routers.docs import assistant, chat, docs, kanban, messages, releases
 from iaEditais.routers.docs import ws as docs_ws
 
 PROJECT_FILE = Path(__file__).parent.parent / 'pyproject.toml'
@@ -112,8 +123,14 @@ app.include_router(users.router)
 app.include_router(releases.router)
 app.include_router(kanban.router)
 app.include_router(sources.router)
+app.include_router(document_groups.router)
+app.include_router(projects.router)
+app.include_router(project_documents.router)
+app.include_router(chat.router)
+app.include_router(assistant.router)
 app.include_router(bundles.router)
 
 app.include_router(audit_logs.router)
 app.include_router(system.router)
 app.include_router(reports.router)
+app.include_router(template_abnt.router)

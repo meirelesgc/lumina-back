@@ -16,10 +16,21 @@ async def get_by_id(session: AsyncSession, doc_id: UUID) -> Optional[Document]:
     return result.scalar_one_or_none()
 
 
+async def get_by_project_document_id(
+    session: AsyncSession, project_document_id: UUID
+) -> Optional[Document]:
+    stmt = select(Document).where(Document.project_document_id == project_document_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def get_by_identifier(
     session: AsyncSession, identifier: str, exclude_id: UUID = None
 ) -> Optional[Document]:
-    stmt = select(Document).where(Document.identifier == identifier)
+    stmt = select(Document).where(
+        Document.identifier == identifier,
+        Document.deleted_at.is_(None),
+    )
     if exclude_id:
         stmt = stmt.where(Document.id != exclude_id)
     return await session.scalar(stmt)
@@ -54,6 +65,9 @@ async def list_all(
 
     if filters.q:
         query = util.apply_text_search(query, Document, filters.q)
+
+    if filters.source:
+        query = query.where(Document.source == filters.source)
 
     query = query.offset(filters.offset).limit(filters.limit)
 

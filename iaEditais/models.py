@@ -7,6 +7,7 @@ from sqlalchemy import (
     Computed,
     ForeignKey,
     Index,
+    String,
     Text,
     column,
     func,
@@ -313,6 +314,12 @@ class Typification(AuditMixin):
         default_factory=uuid4,
     )
     name: Mapped[str] = mapped_column(nullable=False)
+    document_group_id: Mapped[Optional[UUID]] = mapped_column(
+        nullable=True, default=None
+    )
+    document_group_item_id: Mapped[Optional[UUID]] = mapped_column(
+        nullable=True, default=None
+    )
 
     tsv: Mapped[TSVECTOR] = mapped_column(
         TSVECTOR,
@@ -623,6 +630,17 @@ class Document(AuditMixin):
     generation_id: Mapped[Optional[UUID]] = mapped_column(
         nullable=True, default=None
     )
+    grupo: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    tipo_documento: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    projeto_nome: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    source: Mapped[Optional[str]] = mapped_column(nullable=True, default='manual')
+    project_document_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('project_documents.id'), nullable=True, default=None
+    )
+    project_document: Mapped[Optional['ProjectDocument']] = relationship(
+        'ProjectDocument', init=False, lazy='selectin',
+        uselist=False,
+    )
     __table_args__ = (
         Index(
             'ix_uq_documents_identifier_active',
@@ -686,6 +704,10 @@ class DocumentRelease(AuditMixin):
     )
 
     file_path: Mapped[str] = mapped_column(nullable=False)
+
+    version: Mapped[Optional[str]] = mapped_column(
+        nullable=True, default=None
+    )
 
     check_tree: Mapped[List['AppliedTypification']] = relationship(
         'AppliedTypification',
@@ -1226,6 +1248,78 @@ class BundleDocument(AuditMixin):
 
 
 @table_registry.mapped_as_dataclass
+class Project(AuditMixin):
+    __tablename__ = 'projects'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(default=None)
+    status: Mapped[str] = mapped_column(default='INICIADO', nullable=False)
+    document_group_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('document_groups.id'),
+        nullable=True,
+        default=None,
+    )
+
+    documents: Mapped[List['ProjectDocument']] = relationship(
+        'ProjectDocument',
+        back_populates='project',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+        cascade='all, delete-orphan',
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ProjectDocument(AuditMixin):
+    __tablename__ = 'project_documents'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    project_id: Mapped[UUID] = mapped_column(
+        ForeignKey('projects.id', ondelete='CASCADE'),
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    type: Mapped[Optional[str]] = mapped_column(default=None)
+    number: Mapped[Optional[str]] = mapped_column(default=None)
+    status: Mapped[str] = mapped_column(default='PENDING', nullable=False)
+    responsible: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('users.id'),
+        nullable=True,
+        default=None,
+    )
+    responsibles: Mapped[Optional[list[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
+    typification_ids: Mapped[Optional[list[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
+    sent_to_kanban: Mapped[bool] = mapped_column(default=False)
+    file_path: Mapped[Optional[str]] = mapped_column(
+        default=None, nullable=True
+    )
+
+    project: Mapped['Project'] = relationship(
+        back_populates='documents',
+        init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
 class Bundle(AuditMixin):
     __tablename__ = 'bundles'
 
@@ -1244,4 +1338,119 @@ class Bundle(AuditMixin):
         default_factory=list,
         init=False,
         cascade='all, delete-orphan',
+    )
+
+
+@table_registry.mapped_as_dataclass
+class DocumentGroup(AuditMixin):
+    __tablename__ = 'document_groups'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+
+    items: Mapped[List['DocumentGroupItem']] = relationship(
+        'DocumentGroupItem',
+        back_populates='group',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+        cascade='all, delete-orphan',
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_uq_document_groups_name_active',
+            'name',
+            unique=True,
+            postgresql_where=(column('deleted_at').is_(None)),
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class DocumentGroupItem(AuditMixin):
+    __tablename__ = 'document_group_items'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    group_id: Mapped[UUID] = mapped_column(
+        ForeignKey('document_groups.id', ondelete='CASCADE'),
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    icon_path: Mapped[Optional[str]] = mapped_column(default=None)
+
+    group: Mapped['DocumentGroup'] = relationship(
+        back_populates='items',
+        init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatConversation(AuditMixin):
+    __tablename__ = 'chat_conversations'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey('documents.id', name='fk_chat_conv_document_id'),
+        nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_chat_conv_user_id'),
+        nullable=False,
+    )
+    context_text: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+
+    document: Mapped['Document'] = relationship(
+        init=False, lazy='selectin'
+    )
+    user: Mapped['User'] = relationship(
+        init=False, lazy='selectin', foreign_keys=[user_id]
+    )
+    messages: Mapped[List['ChatMessage']] = relationship(
+        back_populates='conversation',
+        cascade='all, delete-orphan',
+        init=False,
+        lazy='selectin',
+        default_factory=list,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class ChatMessage:
+    __tablename__ = 'chat_messages'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    conversation_id: Mapped[UUID] = mapped_column(
+        ForeignKey('chat_conversations.id', name='fk_chat_msg_conversation_id'),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
+    )
+
+    conversation: Mapped['ChatConversation'] = relationship(
+        back_populates='messages', init=False
     )

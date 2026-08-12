@@ -136,8 +136,9 @@ async def update_bundle(
             )
         db_bundle.name = data.name
 
-    db_bundle.set_update_audit(user_id)
     new_data = BundlePublic.model_validate(db_bundle).model_dump(mode='json')
+
+    db_bundle.set_update_audit(user_id)
 
     await audit_service.register_action(
         session=session,
@@ -279,7 +280,7 @@ async def generate_docs_from_bundle(
         if existing_doc:
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
-                detail=f'Doc with identifier "{doc_identifier}" already exists.',
+                detail=f'Já existe um documento com o identificador "{doc_identifier}".',
             )
 
         db_doc = Document(

@@ -3,7 +3,10 @@ name: CI/CD Pipeline - iaEditais Back
 on:
   push:
     branches: ["support/v3.x"]
+<<<<<<< HEAD
     tags: ["v*"]
+=======
+>>>>>>> support/v3.x
 
 env:
   IMAGE_NAME: gleidsoncosta/fiotec-iaeditais
@@ -35,8 +38,13 @@ jobs:
 
   build-and-push:
     needs: tests
+<<<<<<< HEAD
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+=======
+    runs-on: ubuntu-latest
+
+>>>>>>> support/v3.x
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,8 +66,13 @@ jobs:
 
   deploy:
     needs: build-and-push
+<<<<<<< HEAD
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+=======
+    runs-on: ubuntu-latest
+
+>>>>>>> support/v3.x
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -69,8 +82,23 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -euo pipefail
+<<<<<<< HEAD
             cd /home/${{ secrets.USERNAME }}/apps/develop/iaEditais-back
             git pull --ff-only
             docker compose pull iaeditais_api
             docker compose up -d --force-recreate iaeditais_api
+=======
+
+            cd /home/${{ secrets.USERNAME }}/apps/develop/iaEditais-back
+
+            git pull --ff-only
+
+            docker compose pull iaeditais_api
+            docker compose up -d --force-recreate iaeditais_api
+
+            echo "Limpando imagens não utilizadas..."
+            docker image prune -af
+            docker builder prune -af
+
+>>>>>>> support/v3.x
             docker compose ps

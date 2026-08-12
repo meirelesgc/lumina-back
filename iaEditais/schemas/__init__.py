@@ -7,6 +7,18 @@ from .branch import (
     BranchSchema,
     BranchUpdate,
 )
+from .document_group import (
+    DocumentGroupCreate,
+    DocumentGroupFilter,
+    DocumentGroupItemCreate,
+    DocumentGroupItemPublic,
+    DocumentGroupItemSchema,
+    DocumentGroupItemUpdate,
+    DocumentGroupList,
+    DocumentGroupPublic,
+    DocumentGroupSchema,
+    DocumentGroupUpdate,
+)
 from .bundle import (
     BundleCreate,
     BundleDocumentCreate,
@@ -71,6 +83,21 @@ from .taxonomy import (
     TaxonomySchema,
     TaxonomyUpdate,
 )
+from .project_document import (
+    ProjectDocumentCreate,
+    ProjectDocumentList,
+    ProjectDocumentPublic,
+    ProjectDocumentSchema,
+    ProjectDocumentUpdate,
+)
+from .project import (
+    ProjectCreate,
+    ProjectFilter,
+    ProjectList,
+    ProjectPublic,
+    ProjectSchema,
+    ProjectUpdate,
+)
 from .typification import (
     TypificationCreate,
     TypificationFilter,
@@ -103,6 +130,27 @@ from .user import (
 )
 
 __all__ = [
+    'DocumentGroupCreate',
+    'DocumentGroupFilter',
+    'DocumentGroupItemCreate',
+    'DocumentGroupItemPublic',
+    'DocumentGroupItemSchema',
+    'DocumentGroupItemUpdate',
+    'DocumentGroupList',
+    'DocumentGroupPublic',
+    'DocumentGroupSchema',
+    'DocumentGroupUpdate',
+    'ProjectCreate',
+    'ProjectFilter',
+    'ProjectList',
+    'ProjectPublic',
+    'ProjectSchema',
+    'ProjectUpdate',
+    'ProjectDocumentCreate',
+    'ProjectDocumentList',
+    'ProjectDocumentPublic',
+    'ProjectDocumentSchema',
+    'ProjectDocumentUpdate',
     'BranchCreate',
     'BranchFilter',
     'BranchList',

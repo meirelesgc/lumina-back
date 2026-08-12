@@ -1,11 +1,15 @@
+import logging
 from enum import Enum
 from http import HTTPStatus
 from uuid import UUID
 
+logger = logging.getLogger(__name__)
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from iaEditais.models import Document, DocumentHistory, User
+from iaEditais.models import Document, DocumentHistory, ProjectDocument, User
+from iaEditais.repositories import project_document_repo
 from iaEditais.repositories import kanban_repo
 from iaEditais.schemas import DocumentPublic, DocumentStatus
 from iaEditais.schemas.document_history import DocumentHistoryPublic
@@ -150,9 +154,20 @@ async def update_document_status(
         new_data=new_data,
     )
 
+    if doc.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, doc.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            project_doc.status = new_status.value
+            project_doc.set_update_audit(user_id)
+
     await session.commit()
     await session.refresh(doc)
 
-    await _publish_notification(session, target_user_ids, doc.name, new_status)
+    try:
+        await _publish_notification(session, target_user_ids, doc.name, new_status)
+    except Exception as e:
+        logger.warning('Falha ao enviar notificação WhatsApp: %s', e)
 
     return doc

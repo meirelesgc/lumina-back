@@ -31,7 +31,11 @@ async def create_typification(
             detail='Typification name already exists',
         )
 
-    db_typification = Typification(name=data.name)
+    db_typification = Typification(
+        name=data.name,
+        document_group_id=data.document_group_id,
+        document_group_item_id=data.document_group_item_id,
+    )
     db_typification.set_creation_audit(user_id)
 
     typification_repo.add_typification(session, db_typification)
@@ -116,6 +120,8 @@ async def update_typification(
         )
 
     db_typification.name = data.name
+    db_typification.document_group_id = data.document_group_id
+    db_typification.document_group_item_id = data.document_group_item_id
 
     new_data = TypificationPublic.model_validate(db_typification).model_dump(
         mode='json'
