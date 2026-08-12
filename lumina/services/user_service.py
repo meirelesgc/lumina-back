@@ -301,7 +301,7 @@ async def delete_user(
     db_user = await user_repo.get_by_id(session, user_id)
     if not db_user or db_user.deleted_at:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+            status_code=HTTPStatus.FORBIDDEN, detail='User not found'
         )
 
     old_data = UserPublic.model_validate(db_user).model_dump(mode='json')

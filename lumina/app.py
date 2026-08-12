@@ -24,7 +24,6 @@ from lumina.routers import (
 from lumina.routers.audit import audit_logs
 from lumina.routers.check_tree import (
     branches,
-    bundles,
     document_groups,
     project_documents,
     projects,
@@ -135,7 +134,6 @@ app.include_router(projects.router)
 app.include_router(project_documents.router)
 app.include_router(chat.router)
 app.include_router(assistant.router)
-app.include_router(bundles.router)
 
 app.include_router(audit_logs.router)
 app.include_router(system.router)
