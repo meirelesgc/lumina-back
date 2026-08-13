@@ -41,6 +41,7 @@ async def create_message(
 
     db_msg = DocumentMessage(
         content=data.content,
+        references=[r.model_dump() for r in data.references] if data.references else [],
         document_id=doc_id,
         release_id=latest_release.id if latest_release else None,
         author_id=user_id,
@@ -100,6 +101,7 @@ async def update_message(
     db_msg = await get_message_by_id(session, data.id)
 
     db_msg.content = data.content
+    db_msg.references = [r.model_dump() for r in data.references] if data.references else []
     db_msg.updated_by = user_id
     db_msg.updated_at = datetime.now(timezone.utc)
 

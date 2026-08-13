@@ -1,0 +1,13 @@
+[
+  {
+    "document_path": "conclusao_referencias.pdf",
+    "expected_sections": [
+      "Considerações finais",
+      "Referências"
+    ],
+    "metadata": {
+      "type": "section_extraction",
+      "description": "Validação se o split recupera as seções de considerações finais/conclusão e referências"
+    }
+  }
+]

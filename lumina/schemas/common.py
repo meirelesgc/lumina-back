@@ -21,3 +21,17 @@ class WSMessage(BaseModel):
     event: str
     message: str
     payload: Optional[dict]
+
+
+class DocumentRect(BaseModel):
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
+class DocumentReference(BaseModel):
+    chunk_id: Optional[str] = None
+    page: int
+    text_snippet: Optional[str] = None
+    rects: list[DocumentRect] = Field(default_factory=list)

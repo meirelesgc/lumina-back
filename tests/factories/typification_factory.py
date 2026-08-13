@@ -1,5 +1,7 @@
 import factory
-from lumina.models import Typification, Source
+
+from lumina.models import Source, Typification
+
 
 class SourceFactory(factory.Factory):
     class Meta:
@@ -7,6 +9,7 @@ class SourceFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f'Source {n}')
     description = factory.Sequence(lambda n: f'Description {n}')
+
 
 class TypificationFactory(factory.Factory):
     class Meta:

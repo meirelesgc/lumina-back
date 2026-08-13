@@ -1,7 +1,7 @@
 import os
 import re
 from collections import defaultdict
-from typing import Any, List
+from typing import Any, List, Dict
 from uuid import UUID
 
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -13,13 +13,14 @@ from lumina.core.settings import Settings
 from lumina.models import DocumentMessage, DocumentRelease
 from lumina.repositories import doc_repo
 from lumina.schemas import DocumentMessageCreate
+from lumina.schemas.ai import AnswerWithCitations, Citation
 from lumina.services import (
     branch_service,
     release_logic_service,
     release_service,
 )
 
-MAX_CHUNKS = 2
+MAX_CHUNKS = 5  # increased chunks for better RAG since chunks are now smaller (max 500 chars)
 MAX_FULL_TEXT_CHARS = 80000
 CONTEXT_PATTERN = re.compile(r'<([^:]+):([^>]+)>')
 SETTINGS = Settings()
@@ -77,21 +78,17 @@ async def get_context(session: AsyncSession, msg: str) -> List[str]:
 
 
 def build_chunk_prompts(chunks: List) -> List[str]:
-    grupos = defaultdict(list)
-
+    prompts_list = []
+    
     for chunk in chunks:
-        titulo = chunk.metadata.get('section_title', '')
+        chunk_id = chunk.metadata.get('chunk_id', 'unknown_id')
+        section = chunk.metadata.get('section_title', '')
         conteudo = chunk.page_content
 
-        if '\n\n' in conteudo:
+        if '\n\n' in conteudo and conteudo.startswith('SECTION:'):
             conteudo = conteudo.split('\n\n', 1)[1]
 
-        grupos[titulo].append(conteudo.strip())
-
-    prompts_list = []
-
-    for titulo, conteudos in grupos.items():
-        prompt = f'SECTION: {titulo}\n\n' + '\n\n---\n\n'.join(conteudos)
+        prompt = f"[FONTE] chunk_id: {chunk_id}\nSECTION: {section}\n{conteudo.strip()}"
         prompts_list.append(prompt)
 
     return prompts_list
@@ -99,9 +96,9 @@ def build_chunk_prompts(chunks: List) -> List[str]:
 
 async def get_prompt_context(
     vstore: VStore, db_release: DocumentRelease, msg: str
-) -> List[str]:
+) -> tuple[List[str], List[Any]]:
     if not msg:
-        return []
+        return [], []
 
     base_filter = get_base_filter(db_release)
     original_chunks = await vstore.asimilarity_search(
@@ -109,13 +106,13 @@ async def get_prompt_context(
     )
 
     if not original_chunks:
-        return []
+        return [], []
 
     expanded_chunks = await release_logic_service.get_expanded_chunks(
         vstore, original_chunks
     )
 
-    return build_chunk_prompts(expanded_chunks)
+    return build_chunk_prompts(expanded_chunks), expanded_chunks
 
 
 def build_chat_prompt(recent_messages: list[Any]) -> str:
@@ -160,6 +157,39 @@ async def get_document_auto_context(
     return prompts_list
 
 
+def resolve_citations(citations: List[Citation], retrieved_chunks: List[Any]) -> List[Dict]:
+    resolved = []
+    # Cria um mapa O(1) de chunk_id para metadados
+    chunk_map = {
+        chunk.metadata.get('chunk_id'): chunk.metadata
+        for chunk in retrieved_chunks
+        if chunk.metadata.get('chunk_id')
+    }
+    
+    seen = set()
+    for citation in citations:
+        if citation.chunk_id in seen:
+            continue
+            
+        if citation.chunk_id in chunk_map:
+            meta = chunk_map[citation.chunk_id]
+            raw_rects = meta.get('rects', [])
+            mapped_rects = []
+            for r in raw_rects:
+                if len(r) == 4:
+                    mapped_rects.append({"x1": r[0], "y1": r[1], "x2": r[2], "y2": r[3]})
+            
+            resolved.append({
+                "chunk_id": citation.chunk_id,
+                "text_snippet": citation.text_snippet,
+                "page": meta.get('page'),
+                "rects": mapped_rects,
+            })
+            seen.add(citation.chunk_id)
+            
+    return resolved
+
+
 async def create_ai_response(
     session: AsyncSession,
     user_id: UUID,
@@ -168,7 +198,7 @@ async def create_ai_response(
     model: Model,
     vstore: VStore,
     recent_messages: list[DocumentMessage],
-) -> str:
+) -> Dict:
     releases_list = await release_service.get_releases_by_document(
         session, doc_id
     )
@@ -179,25 +209,38 @@ async def create_ai_response(
     auto_prompts = await get_document_auto_context(session, doc_id)
     explicit_prompts = await get_context(session, data.content)
 
-    branch_context = await get_prompt_context(
+    branch_context, branch_chunks = await get_prompt_context(
         vstore, db_release, '\n---\n'.join(explicit_prompts)
     )
 
-    msg_context = await get_prompt_context(vstore, db_release, data.content)
+    msg_context, msg_chunks = await get_prompt_context(vstore, db_release, data.content)
+    
+    all_chunks = branch_chunks + msg_chunks
     context = '\n---\n'.join(
         msg_context + branch_context + auto_prompts + explicit_prompts
     )
 
     chat_context = build_chat_prompt(recent_messages)
 
-    full_text = await _load_document_text(db_release)
-    if full_text:
-        context = f'<CONTEUDO-COMPLETO-DO-DOCUMENTO>\n{full_text}\n</CONTEUDO-COMPLETO-DO-DOCUMENTO>\n\n---\n\n{context}'
+    # Opted to omit full document text because now chunks are perfectly mapped to coords 
+    # full_text is too big and breaks citations if the LLM cites it instead of chunks.
+    # full_text = await _load_document_text(db_release)
+    # if full_text:
+    #     context = f'<CONTEUDO-COMPLETO-DO-DOCUMENTO>\n{full_text}\n</CONTEUDO-COMPLETO-DO-DOCUMENTO>\n\n---\n\n{context}'
 
     prompt = PROMPTS.CHAT.format(
         context=context,
         content=data.content,
         recent_messages=chat_context,
     )
-    response = model.invoke(prompt)
-    return response.content
+    
+    structured_model = model.with_structured_output(AnswerWithCitations)
+    response: AnswerWithCitations = structured_model.invoke(prompt)
+    
+    # Resolve citations
+    resolved_citations = resolve_citations(response.citations, all_chunks)
+    
+    return {
+        "answer": response.answer,
+        "references": resolved_citations
+    }

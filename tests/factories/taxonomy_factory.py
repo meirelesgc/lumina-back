@@ -1,11 +1,14 @@
 import factory
+
 from lumina.models import Taxonomy, Typification
+
 
 class TypificationFactory(factory.Factory):
     class Meta:
         model = Typification
 
     name = factory.Sequence(lambda n: f'Typification {n}')
+
 
 class TaxonomyFactory(factory.Factory):
     class Meta:

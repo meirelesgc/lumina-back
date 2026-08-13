@@ -1,5 +1,7 @@
 import factory
+
 from lumina.models import Source
+
 
 class SourceFactory(factory.Factory):
     class Meta:

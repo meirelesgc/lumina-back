@@ -1,6 +1,8 @@
+from langchain_core.documents import Document
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableLambda
+from sqlalchemy import select
 
 from lumina import prompts as PROMPTS
 from lumina.core.dependencies import Model, VStore
@@ -38,6 +40,54 @@ def iter_branches(taxonomy: dict):
 # --- Funções de Busca Vetorial ---
 
 
+async def _fetch_chunks_by_indices(
+    vstore: VStore, source: str, indices: list[int]
+) -> list[Document]:
+    if not indices:
+        return []
+
+    if hasattr(vstore, '_make_async_session') and hasattr(vstore, 'EmbeddingStore'):
+        try:
+            async with vstore._make_async_session() as session:
+                collection = await vstore.aget_collection(session)
+                if not collection:
+                    return []
+
+                EmbeddingStore = vstore.EmbeddingStore
+                source_filter = EmbeddingStore.cmetadata['source'].astext == str(source)
+                indices_str = [str(i) for i in indices]
+                index_filter = EmbeddingStore.cmetadata['chunk_index'].astext.in_(indices_str)
+
+                stmt = (
+                    select(EmbeddingStore)
+                    .filter(
+                        EmbeddingStore.collection_id == collection.uuid,
+                        source_filter,
+                        index_filter,
+                    )
+                )
+                results = (await session.execute(stmt)).scalars().all()
+                return [
+                    Document(
+                        id=str(r.id),
+                        page_content=r.document,
+                        metadata=r.cmetadata,
+                    )
+                    for r in results
+                ]
+        except Exception:
+            pass
+
+    # Fallback para mocks em testes ou stores que não suportam _make_async_session
+    filter_dict = {
+        'source': source,
+        'chunk_index': {'$in': indices},
+    }
+    return await vstore.asimilarity_search(
+        '', k=len(indices), filter=filter_dict
+    )
+
+
 async def get_expanded_chunks(vstore: VStore, original_chunks: list) -> list:
     docs_indices_map = {}
     for chunk in original_chunks:
@@ -56,12 +106,8 @@ async def get_expanded_chunks(vstore: VStore, original_chunks: list) -> list:
     expanded_chunks = []
     for source, indices_set in docs_indices_map.items():
         indices_list = list(indices_set)
-        filter_dict = {
-            'source': source,
-            'chunk_index': {'$in': indices_list},
-        }
-        found_chunks = await vstore.asimilarity_search(
-            '', k=len(indices_list), filter=filter_dict
+        found_chunks = await _fetch_chunks_by_indices(
+            vstore, source, indices_list
         )
         expanded_chunks.extend(found_chunks)
 
@@ -163,7 +209,9 @@ def _format_context(branch: dict) -> str:
                     f'## CONTEXTO DA SESSÃO: {section_title}\n'
                 )
             current_section = section_title
-        formatted_parts.append(clean_text)
+        
+        chunk_id = doc.metadata.get('chunk_id', 'unknown_id')
+        formatted_parts.append(f'[FONTE] chunk_id: {chunk_id}\n{clean_text}')
     return ''.join(formatted_parts).strip()
 
 
@@ -194,6 +242,7 @@ def _create_eval_payload(taxonomy: dict, branch: dict) -> dict:
         'expected_session': expected_session,
         'query': f"Analise o item '{req_title}' na seção '{expected_session}'.",
         'presidio_mapping': full_mapping,
+        '_sessions': sessions,
     }
 
 
@@ -210,6 +259,9 @@ async def simplify_eval_args(eval_args: dict) -> list[dict]:
 
 
 async def apply_tree(chain: RunnableLambda, eval_args: list[dict]):
+    from lumina.schemas.ai import Citation
+    from lumina.services.ai_service import resolve_citations
+
     last_exception = None
     PROMPT = PROMPTS.DOCUMENT_ANALYSIS_PROMPT
     for _ in range(3):
@@ -220,6 +272,20 @@ async def apply_tree(chain: RunnableLambda, eval_args: list[dict]):
                 # Guarda o prompt formatado para debug/log
                 item['prompt'] = PROMPT.format(**item, format_instructions='')
                 item.update(result)
+
+                raw_citations = item.get('citations') or item.get('references') or []
+                sessions = item.get('_sessions') or []
+
+                citation_objs = []
+                for c in raw_citations:
+                    if isinstance(c, dict) and 'chunk_id' in c:
+                        citation_objs.append(Citation(**c))
+                    elif isinstance(c, Citation):
+                        citation_objs.append(c)
+
+                resolved_refs = resolve_citations(citation_objs, sessions)
+                item['references'] = resolved_refs
+
             return eval_args
         except Exception as e:
             last_exception = e

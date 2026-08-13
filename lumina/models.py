@@ -994,6 +994,9 @@ class AppliedBranch:
     presidio_mapping: Mapped[Optional[str]] = mapped_column(
         nullable=True, default=None
     )
+    references: Mapped[Any] = mapped_column(
+        JSONB, nullable=True, default_factory=list
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()
@@ -1011,6 +1014,7 @@ class AppliedBranch:
             'feedback': self.feedback,
             'fulfilled': self.fulfilled,
             'score': self.score,
+            'references': self.references or [],
         }
 
 
@@ -1068,6 +1072,9 @@ class DocumentMessage(AuditMixin):
         cascade='all, delete-orphan',
         init=False,
         default_factory=list,
+    )
+    references: Mapped[Any] = mapped_column(
+        JSONB, nullable=True, default_factory=list
     )
     __table_args__ = (
         Index(
@@ -1195,8 +1202,6 @@ class SystemSetting(AuditMixin):
     )
 
 
-
-
 @table_registry.mapped_as_dataclass
 class Project(AuditMixin):
     __tablename__ = 'projects'
@@ -1267,7 +1272,6 @@ class ProjectDocument(AuditMixin):
         back_populates='documents',
         init=False,
     )
-
 
 
 @table_registry.mapped_as_dataclass

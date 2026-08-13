@@ -1,11 +1,19 @@
 import factory
-from lumina.models import DocumentGroup, DocumentGroupItem, Project, ProjectDocument
+
+from lumina.models import (
+    DocumentGroup,
+    DocumentGroupItem,
+    Project,
+    ProjectDocument,
+)
+
 
 class DocumentGroupFactory(factory.Factory):
     class Meta:
         model = DocumentGroup
 
     name = factory.Sequence(lambda n: f'Group {n}')
+
 
 class DocumentGroupItemFactory(factory.Factory):
     class Meta:
@@ -14,6 +22,7 @@ class DocumentGroupItemFactory(factory.Factory):
     name = factory.Sequence(lambda n: f'Item {n}')
     group_id = None
 
+
 class ProjectFactory(factory.Factory):
     class Meta:
         model = Project
@@ -21,6 +30,7 @@ class ProjectFactory(factory.Factory):
     name = factory.Sequence(lambda n: f'Project {n}')
     description = factory.Sequence(lambda n: f'Description {n}')
     status = 'INICIADO'
+
 
 class ProjectDocumentFactory(factory.Factory):
     class Meta:

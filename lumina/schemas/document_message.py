@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from lumina.schemas.common import FilterPage
+from lumina.schemas.common import FilterPage, DocumentReference
 from lumina.schemas.user import UserPublic
 
 
@@ -40,6 +40,7 @@ class DocumentMessageSchema(BaseModel):
     content: str = Field()
     mentions: Optional[List[MessageMention]] = Field(default_factory=list)
     quoted_message: Optional[QuotedMessage] = Field(None)
+    references: List[DocumentReference] = Field(default_factory=list)
 
 
 class DocumentMessageCreate(DocumentMessageSchema):

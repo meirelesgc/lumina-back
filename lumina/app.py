@@ -54,8 +54,9 @@ BASE_DIR = os.path.dirname(__file__)
 STORAGE_DIR = os.path.join(BASE_DIR, 'storage')
 UPLOADS_DIR = os.path.join(STORAGE_DIR, 'uploads')
 TEMP_DIR = os.path.join(STORAGE_DIR, 'temp')
+DEMOS_DIR = os.path.join(STORAGE_DIR, 'demos')
 
-for directory in [STORAGE_DIR, UPLOADS_DIR, TEMP_DIR]:
+for directory in [STORAGE_DIR, UPLOADS_DIR, TEMP_DIR, DEMOS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
 
@@ -84,6 +85,7 @@ app = FastAPI(
 
 
 app.mount('/uploads', StaticFiles(directory=UPLOADS_DIR), name='uploads')
+app.mount('/demos', StaticFiles(directory=DEMOS_DIR, html=True), name='demos')
 
 app.add_middleware(
     ProxyHeadersMiddleware,

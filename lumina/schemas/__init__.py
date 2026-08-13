@@ -7,6 +7,16 @@ from .branch import (
     BranchSchema,
     BranchUpdate,
 )
+from .common import FilterPage, Message, Token, WSMessage
+from .document import (
+    DocumentCreate,
+    DocumentFilter,
+    DocumentList,
+    DocumentProcessingStatus,
+    DocumentPublic,
+    DocumentSchema,
+    DocumentUpdate,
+)
 from .document_group import (
     DocumentGroupCreate,
     DocumentGroupFilter,
@@ -18,16 +28,6 @@ from .document_group import (
     DocumentGroupPublic,
     DocumentGroupSchema,
     DocumentGroupUpdate,
-)
-from .common import FilterPage, Message, Token, WSMessage
-from .document import (
-    DocumentCreate,
-    DocumentFilter,
-    DocumentList,
-    DocumentProcessingStatus,
-    DocumentPublic,
-    DocumentSchema,
-    DocumentUpdate,
 )
 from .document_history import (
     DocumentHistoryPublic,
@@ -50,6 +50,21 @@ from .document_release import (
     DocumentReleaseList,
     DocumentReleasePublic,
 )
+from .project import (
+    ProjectCreate,
+    ProjectFilter,
+    ProjectList,
+    ProjectPublic,
+    ProjectSchema,
+    ProjectUpdate,
+)
+from .project_document import (
+    ProjectDocumentCreate,
+    ProjectDocumentList,
+    ProjectDocumentPublic,
+    ProjectDocumentSchema,
+    ProjectDocumentUpdate,
+)
 from .source import (
     SourceCreate,
     SourceList,
@@ -70,21 +85,6 @@ from .taxonomy import (
     TaxonomyPublic,
     TaxonomySchema,
     TaxonomyUpdate,
-)
-from .project_document import (
-    ProjectDocumentCreate,
-    ProjectDocumentList,
-    ProjectDocumentPublic,
-    ProjectDocumentSchema,
-    ProjectDocumentUpdate,
-)
-from .project import (
-    ProjectCreate,
-    ProjectFilter,
-    ProjectList,
-    ProjectPublic,
-    ProjectSchema,
-    ProjectUpdate,
 )
 from .typification import (
     TypificationCreate,

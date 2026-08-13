@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PDF Evidence Highlight Validator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; margin: 0; padding: 0; background-color: #2b2b2b; color: #333; }
+    #sidebar { width: 400px; padding: 25px; background: #f8f9fa; height: 100vh; box-sizing: border-box; overflow-y: auto; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; }
+    #pdf-container { position: relative; padding: 30px; overflow-y: auto; height: 100vh; flex: 1; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;}
+    
+    .page-wrapper { position: relative; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); background: white; }
+    
+    /* Highlight config */
+    .highlight { 
+      position: absolute; 
+      background-color: rgba(255, 225, 0, 0.35); 
+      border-bottom: 2px solid rgba(255, 140, 0, 0.8); 
+      mix-blend-mode: multiply; 
+      pointer-events: none;
+      transition: background-color 0.3s ease;
+    }
+    
+    .citation-link { 
+      color: #0056b3; 
+      cursor: pointer; 
+      font-weight: 600; 
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid #0056b3;
+      display: inline-block;
+      margin-top: 5px;
+      text-decoration: none;
+    }
+    .citation-link:hover { background-color: #0056b3; color: white; }
+    .eval-box { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; line-height: 1.5; font-size: 14px;}
+    .fulfilled-true { border-left: 4px solid #28a745; }
+    .fulfilled-false { border-left: 4px solid #dc3545; }
+    
+    .header-control { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    input[type="text"] { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { width: 100%; padding: 10px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #004494; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="header-control">
+        <h3 style="margin-top:0;">Carregar Avaliação</h3>
+        <label style="font-size: 12px; font-weight: bold;">Token de Autenticação (Bearer):</label>
+        <input type="text" id="auth-token" placeholder="Insira o Token JWT (opcional se não tiver auth)" />
+        <label style="font-size: 12px; font-weight: bold;">Document ID (UUID):</label>
+        <input type="text" id="doc-id" placeholder="ex: 123e4567-e89b-12d3-a456-426614174000" />
+        <button onclick="fetchRelease()">Carregar Dados da API</button>
+        <div id="loading-status" style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;"></div>
+    </div>
+    
+    <div id="evaluations-list" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Evaluatons injetadas aqui -->
+    </div>
+  </div>
+  
+  <div id="pdf-container">
+    <h2 style="color:white; margin-top: 20vh;">Informe um Document ID para carregar o PDF e a avaliação estruturada.</h2>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentReferences = [];
+
+    async function fetchRelease() {
+        const docId = document.getElementById('doc-id').value.trim();
+        const token = document.getElementById('auth-token').value.trim();
+        const statusDiv = document.getElementById('loading-status');
+        
+        if(!docId) {
+            alert('Por favor, informe o Document ID');
+            return;
+        }
+
+        statusDiv.innerText = 'Buscando release na API...';
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if(token) headers['Authorization'] = `Bearer ${token}`;
+
+        try {
+            const response = await fetch(`/doc/${docId}/release`, { headers });
+            
+            if(!response.ok) {
+                throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if(!data.releases || data.releases.length === 0) {
+                statusDiv.innerText = 'Nenhuma release encontrada para este documento.';
+                return;
+            }
+
+            const release = data.releases[0];
+            statusDiv.innerText = `Release ${release.version} carregada com sucesso!`;
+            
+            // Renderizar painel
+            renderEvaluations(release.check_tree);
+            
+            // Descobrir arquivo PDF
+            const filename = release.file_path.split('/').pop();
+            const pdfUrl = `/uploads/${filename}`;
+            
+            // Coletar todas as referencias do documento inteiro para pintar o PDF
+            currentReferences = extractAllReferences(release.check_tree);
+            
+            // Iniciar renderização do PDF
+            document.getElementById('pdf-container').innerHTML = ''; // limpa placeholder
+            statusDiv.innerText = 'Renderizando o PDF... isso pode demorar alguns segundos.';
+            await renderFullPDF(pdfUrl);
+            statusDiv.innerText = 'Pronto!';
+            
+        } catch (e) {
+            console.error(e);
+            statusDiv.innerText = `Erro: ${e.message}`;
+            alert("Falha ao buscar a avaliação. Verifique o console.");
+        }
+    }
+
+    function extractAllReferences(checkTree) {
+        let refs = [];
+        checkTree.forEach(typification => {
+            typification.taxonomies.forEach(tax => {
+                tax.branches.forEach(branch => {
+                    if(branch.evaluation && branch.evaluation.references) {
+                        branch.evaluation.references.forEach(r => {
+                            // Adicionamos um ID virtual pra gerenciar o DOM
+                            r._virtual_id = Math.random().toString(36).substr(2, 9);
+                            refs.push(r);
+                        });
+                    }
+                });
+            });
+        });
+        return refs;
+    }
+
+    function renderEvaluations(checkTree) {
+        const listDiv = document.getElementById('evaluations-list');
+        listDiv.innerHTML = ''; // Clear
+
+        checkTree.forEach(typification => {
+            typification.taxonomies.forEach(tax => {
+                tax.branches.forEach(branch => {
+                    if(!branch.evaluation) return;
+                    
+                    const eval = branch.evaluation;
+                    const evalBox = document.createElement('div');
+                    evalBox.className = `eval-box fulfilled-${eval.fulfilled}`;
+                    
+                    let refsHtml = '';
+                    if(eval.references && eval.references.length > 0) {
+                        eval.references.forEach(r => {
+                            refsHtml += `<a class="citation-link" onclick="scrollToReference('${r._virtual_id}')">Pág ${r.page + 1} - Evidência</a> `;
+                        });
+                    } else {
+                        refsHtml = '<span style="font-size:12px; color:#999;">Sem evidências mapeadas.</span>';
+                    }
+
+                    evalBox.innerHTML = `
+                        <div style="font-size:12px; color:#666; margin-bottom:5px;">${tax.title} > ${branch.title}</div>
+                        <strong>Status:</strong> ${eval.fulfilled ? '<span style="color:#28a745">Atende</span>' : '<span style="color:#dc3545">Não Atende</span>'} (Nota: ${eval.score})<br>
+                        <div style="margin: 10px 0; padding: 10px; background: #f1f1f1; border-radius: 4px; font-size: 13px;">${eval.feedback}</div>
+                        <div>${refsHtml}</div>
+                    `;
+                    
+                    listDiv.appendChild(evalBox);
+                });
+            });
+        });
+    }
+
+    async function renderFullPDF(url) {
+      try {
+        pdfDoc = await pdfjsLib.getDocument(url).promise;
+        const container = document.getElementById('pdf-container');
+        
+        const scale = 1.3; 
+        
+        // Renderizar todas as páginas seqüencialmente
+        for(let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: scale });
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-wrapper';
+            wrapper.id = `page-wrapper-${pageNum}`;
+            wrapper.style.width = viewport.width + 'px';
+            wrapper.style.height = viewport.height + 'px';
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.display = 'block';
+            wrapper.appendChild(canvas);
+            
+            const highlightLayer = document.createElement('div');
+            highlightLayer.style.position = 'absolute';
+            highlightLayer.style.top = '0';
+            highlightLayer.style.left = '0';
+            highlightLayer.style.width = '100%';
+            highlightLayer.style.height = '100%';
+            wrapper.appendChild(highlightLayer);
+            
+            container.appendChild(wrapper);
+            
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            
+            // Filtrar as referencias que pertencem a essa pagina (0-indexed)
+            const pageRefs = currentReferences.filter(r => r.page === pageNum - 1);
+            
+            pageRefs.forEach(cit => {
+                cit.rects.forEach(rect => {
+                    // O novo contrato é DocumentRect: {x1, y1, x2, y2}
+                    const screenX = rect.x1 * scale;
+                    const screenY = rect.y1 * scale;
+                    const screenWidth = (rect.x2 - rect.x1) * scale;
+                    const screenHeight = (rect.y2 - rect.y1) * scale;
+                    
+                    const hl = document.createElement('div');
+                    hl.className = `highlight highlight-cit-${cit._virtual_id}`;
+                    hl.style.left = screenX + 'px';
+                    hl.style.top = screenY + 'px';
+                    hl.style.width = screenWidth + 'px';
+                    hl.style.height = screenHeight + 'px';
+                    
+                    highlightLayer.appendChild(hl);
+                });
+            });
+        }
+      } catch (e) {
+        console.error("Erro ao carregar o PDF: ", e);
+        document.getElementById('pdf-container').innerHTML = `<h2 style="color:white">Erro ao processar PDF: ${e.message}</h2>`;
+      }
+    }
+
+    window.scrollToReference = function(virtualId) {
+      const hls = document.querySelectorAll(`.highlight-cit-${virtualId}`);
+      if (hls.length > 0) {
+        hls[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        hls.forEach(h => {
+          h.style.backgroundColor = 'rgba(255, 50, 0, 0.7)';
+          setTimeout(() => {
+            h.style.backgroundColor = 'rgba(255, 225, 0, 0.35)';
+          }, 1200);
+        });
+      }
+    };
+  </script>
+</body>
+</html>

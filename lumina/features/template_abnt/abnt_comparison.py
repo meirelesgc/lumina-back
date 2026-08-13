@@ -32,6 +32,7 @@ AI_MODEL = 'gpt-5'
 # Schema (autocontido neste arquivo -- ver nota no topo).
 # --------------------------------------------------------------------------
 
+
 class AbntCriterionItem(BaseModel):
     criterio: str
     norma: str
@@ -62,7 +63,11 @@ class AbntReport(BaseModel):
     criterios: list[AbntCriterionItem]
 
 
-def build_report(metadata: AbntMetadata, criterios: list[AbntCriterionItem], description: str) -> AbntReport:
+def build_report(
+    metadata: AbntMetadata,
+    criterios: list[AbntCriterionItem],
+    description: str,
+) -> AbntReport:
     passed = sum(1 for c in criterios if c.match)
     summary = AbntSummary(
         is_compliant=bool(criterios) and passed == len(criterios),
@@ -179,7 +184,9 @@ def upload_pdf(client: OpenAI, path: str) -> str:
     file_path = Path(path)
     if not file_path.exists():
         raise FileNotFoundError(file_path)
-    uploaded = client.files.create(file=open(file_path, 'rb'), purpose='user_data')
+    uploaded = client.files.create(
+        file=open(file_path, 'rb'), purpose='user_data'
+    )
     return uploaded.id
 
 
@@ -189,9 +196,11 @@ def build_input(article_id: str) -> list[dict]:
             'role': 'user',
             'content': [
                 {'type': 'input_file', 'file_id': article_id},
-                {'type': 'input_text',
-                 'text': 'Audite este documento quanto aos aspectos textuais, estruturais, de '
-                         'citações e referências indicados nas instruções.'},
+                {
+                    'type': 'input_text',
+                    'text': 'Audite este documento quanto aos aspectos textuais, estruturais, de '
+                    'citações e referências indicados nas instruções.',
+                },
             ],
         }
     ]
@@ -209,14 +218,18 @@ def request_criteria(article_path: str) -> list[AbntCriterionItem]:
     )
     body = response.output_parsed
     if body is None:
-        raise RuntimeError('Modelo não retornou saída estruturada (possível refusal).')
+        raise RuntimeError(
+            'Modelo não retornou saída estruturada (possível refusal).'
+        )
     return body.criterios
 
 
 # Orquestração.
 def compare(article_path: str) -> AbntReport:
     criterios = request_criteria(article_path)
-    metadata = AbntMetadata(approach='abnt', model=AI_MODEL, article_file=article_path)
+    metadata = AbntMetadata(
+        approach='abnt', model=AI_MODEL, article_file=article_path
+    )
     description = (
         f'Auditoria via engenharia de prompt (IA, modelo {AI_MODEL}), focada em elementos textuais, '
         f'estruturais, citações e referências ABNT. Os {len(criterios)} critérios foram definidos '

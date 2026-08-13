@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 from datetime import datetime
 
+pytest_plugins = ['tests.ai.fixtures.ai_fixtures']
+
 import factory
 import pytest
 import pytest_asyncio
