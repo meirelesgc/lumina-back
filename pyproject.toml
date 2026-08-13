@@ -46,6 +46,9 @@ quote-style = 'single'
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = 'function'
+markers = [
+    "ai: Testes que utilizam IA/LLMs reais e consomem tokens (desativados por padrão)",
+]
 filterwarnings = [
     "ignore:.*Specifying 'lifespan_context' manually is no longer necessary.*:RuntimeWarning",
     "ignore::DeprecationWarning:testcontainers.*",
@@ -59,5 +62,9 @@ concurrency = ["thread", "greenlet"]
 run = 'fastapi dev lumina/app.py'
 
 test = 'pytest -s -x --cov=lumina -vv'
+
+test-ai = 'pytest -s -x --run-ai -m ai -vv'
+
+test-all = 'pytest -s -x --run-ai --cov=lumina -vv'
 
 cov = 'coverage html'
