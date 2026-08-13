@@ -23,14 +23,6 @@ services:
     ports:
       - "${PORT_API:-8000}:8000"
     environment:
-      OTEL_SERVICE_NAME: iaEditais
-      OTEL_EXPORTER_OTLP_ENDPOINT: iaeditais_otel:4317
-      OTEL_EXPORTER_OTLP_INSECURE: true
-      OTEL_PYTHON_LOG_LEVEL: info
-      OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: true
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_METRICS_EXPORTER: otlp
-      OTEL_LOGS_EXPORTER: otlp
       CACHE_URL: 'redis://redis:6379/0'
       DATABASE_URL: postgresql+psycopg://pg_user:pg_password@db:5432/db
       TZ: America/Sao_Paulo
