@@ -18,6 +18,7 @@ services:
       - "${PORT_DB:-5432}:5432"
 
   api:
+    build: .
     image: "${COMPOSE_PROJECT_NAME:-lumina}_api"
     entrypoint: ./entrypoint.sh
     ports:
@@ -59,7 +60,8 @@ services:
     ports:
       - "${PORT_EVO:-8082}:8080"
     env_file:
-      - .evolution.env
+      - path: .evolution.env
+        required: false
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:

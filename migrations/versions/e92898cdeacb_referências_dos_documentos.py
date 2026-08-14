@@ -26,7 +26,6 @@ def upgrade() -> None:
     op.drop_table('bundle_document_typifications')
     op.drop_table('bundle_documents')
     op.drop_table('bundles')
-    op.drop_column('applied_branches', 'citations')
     op.create_foreign_key('fk_chat_conversations_deleted_by', 'chat_conversations', 'users', ['deleted_by'], ['id'], use_alter=True)
     op.create_foreign_key('fk_chat_conversations_updated_by', 'chat_conversations', 'users', ['updated_by'], ['id'], use_alter=True)
     op.create_foreign_key('fk_chat_conversations_created_by', 'chat_conversations', 'users', ['created_by'], ['id'], use_alter=True)
@@ -81,7 +80,6 @@ def downgrade() -> None:
     op.drop_constraint('fk_chat_conversations_created_by', 'chat_conversations', type_='foreignkey')
     op.drop_constraint('fk_chat_conversations_updated_by', 'chat_conversations', type_='foreignkey')
     op.drop_constraint('fk_chat_conversations_deleted_by', 'chat_conversations', type_='foreignkey')
-    op.add_column('applied_branches', sa.Column('citations', postgresql.JSONB(astext_type=sa.Text()), autoincrement=False, nullable=True))
     op.create_table('bundle_documents',
     sa.Column('id', sa.UUID(), autoincrement=False, nullable=False),
     sa.Column('bundle_id', sa.UUID(), autoincrement=False, nullable=False),
