@@ -1,29 +1,37 @@
 """
 Template: Teste de Integração (Repository)
 
-Foco: Funcionalidade de consultas complexas no Banco de Dados.
+Foco: Funcionalidade de consultas no Banco de Dados.
 Usa a `session` real injetada pelo conftest.
 """
+
 import pytest
 
-# from lumina.repositories.project_repo import ProjectRepository
+from lumina.models import Project
+from lumina.repositories import project_repo
+from lumina.schemas.project import ProjectFilter
+
 
 @pytest.mark.asyncio
-async def test_repository_complex_query(session, project_factory, user_factory):
+async def test_repository_list_and_get_by_name(session, user):
     """
-    Testa se uma consulta com JOIN e GROUP BY traz os dados corretos.
+    Testa se uma consulta de repositório filtra e retorna os dados corretos.
     """
-    # Arrange: Popula banco usando Factories
-    # owner = await user_factory.create(session)
-    # project_1 = await project_factory.create(session, owner=owner, name="Proj A")
-    # project_2 = await project_factory.create(session, owner=owner, name="Proj B")
-    
-    # repo = ProjectRepository(session)
-    
+    # Arrange: Popula banco vinculando à auditoria do usuário
+    project = Project(name='Projeto Integracao', description='Descricao')
+    project.set_creation_audit(user.id)
+    project_repo.add_project(session, project)
+    await session.commit()
+
     # Act
-    # results = await repo.get_user_projects_summary(user_id=owner.id)
-    
+    filters = ProjectFilter(q='Integracao', offset=0, limit=10)
+    results = await project_repo.list_all(session, filters)
+    found_project = await project_repo.get_by_name(
+        session, 'Projeto Integracao'
+    )
+
     # Assert
-    # assert len(results) == 2
-    # assert results[0].name == "Proj A"
-    pass
+    assert len(results) >= 1
+    assert any(p.name == 'Projeto Integracao' for p in results)
+    assert found_project is not None
+    assert found_project.id == project.id
