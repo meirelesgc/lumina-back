@@ -49,7 +49,9 @@ async def add_icon(
 
 @router.get('', response_model=UserList)
 async def read_users(
-    session: Session, filters: Annotated[UserFilter, Depends()]
+    session: Session,
+    current_user: CurrentUser,
+    filters: Annotated[UserFilter, Depends()],
 ):
     users = await user_service.get_users(session, filters)
     return {'users': users}
@@ -61,7 +63,11 @@ async def read_me(current_user: CurrentUser):
 
 
 @router.get('/{user_id}', response_model=UserPublic)
-async def read_user(user_id: UUID, session: Session):
+async def read_user(
+    user_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
     return await user_service.get_user_by_id(session, user_id)
 
 

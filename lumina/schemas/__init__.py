@@ -1,3 +1,18 @@
+from .advisorship import (
+    AdviseeCardPublic,
+    AdviseeListPublic,
+    AdvisorCardPublic,
+    AdvisorListPublic,
+    AdvisorshipCreate,
+    AdvisorshipFilter,
+    AdvisorshipList,
+    AdvisorshipPublic,
+    AdvisorshipRoleType,
+    AdvisorshipSchema,
+    AdvisorshipStatus,
+    AdvisorshipUpdate,
+    DocumentAcademicContextPublic,
+)
 from .audit_log import AuditLogFilter, AuditLogList, AuditLogPublic
 from .branch import (
     BranchCreate,
@@ -202,4 +217,17 @@ __all__ = [
     'SystemSettingList',
     'SystemSettingPublic',
     'SystemSettingUpdate',
+    'AdviseeCardPublic',
+    'AdviseeListPublic',
+    'AdvisorCardPublic',
+    'AdvisorListPublic',
+    'AdvisorshipCreate',
+    'AdvisorshipFilter',
+    'AdvisorshipList',
+    'AdvisorshipPublic',
+    'AdvisorshipRoleType',
+    'AdvisorshipSchema',
+    'AdvisorshipStatus',
+    'AdvisorshipUpdate',
+    'DocumentAcademicContextPublic',
 ]

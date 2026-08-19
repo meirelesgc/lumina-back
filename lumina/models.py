@@ -141,6 +141,23 @@ class User(AuditMixin):
         init=False,
     )
 
+    advising_relationships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys='Advisorship.advisor_id',
+        lazy='selectin',
+        back_populates='advisor',
+        default_factory=list,
+        init=False,
+    )
+    advisee_relationships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys='Advisorship.advisee_id',
+        lazy='selectin',
+        back_populates='advisee',
+        default_factory=list,
+        init=False,
+    )
+
     __table_args__ = (
         Index(
             'ix_uq_users_phone_number_active',
@@ -570,6 +587,18 @@ class Document(AuditMixin):
         init=False,
         lazy='selectin',
         uselist=False,
+    )
+    advisorship_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('advisorships.id', name='fk_documents_advisorship_id'),
+        nullable=True,
+        default=None,
+    )
+    advisorship: Mapped[Optional['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys=[advisorship_id],
+        back_populates='documents',
+        init=False,
+        lazy='selectin',
     )
     __table_args__ = (
         Index(
@@ -1158,6 +1187,13 @@ class Project(AuditMixin):
         init=False,
         cascade='all, delete-orphan',
     )
+    advisorships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        back_populates='project',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+    )
 
 
 @table_registry.mapped_as_dataclass
@@ -1315,4 +1351,73 @@ class ChatMessage:
 
     conversation: Mapped['ChatConversation'] = relationship(
         back_populates='messages', init=False
+    )
+
+
+@table_registry.mapped_as_dataclass
+class Advisorship(AuditMixin):
+    __tablename__ = 'advisorships'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    advisor_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_advisorship_advisor_id'),
+        nullable=False,
+    )
+    advisee_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_advisorship_advisee_id'),
+        nullable=False,
+    )
+    project_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('projects.id', name='fk_advisorship_project_id'),
+        nullable=True,
+        default=None,
+    )
+    role_type: Mapped[str] = mapped_column(
+        default='MAIN_ADVISOR', nullable=False
+    )
+    topic: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    status: Mapped[str] = mapped_column(default='ACTIVE', nullable=False)
+
+    advisor: Mapped['User'] = relationship(
+        'User',
+        foreign_keys=[advisor_id],
+        lazy='selectin',
+        init=False,
+    )
+    advisee: Mapped['User'] = relationship(
+        'User',
+        foreign_keys=[advisee_id],
+        lazy='selectin',
+        init=False,
+    )
+    project: Mapped[Optional['Project']] = relationship(
+        'Project',
+        foreign_keys=[project_id],
+        lazy='selectin',
+        init=False,
+        back_populates='advisorships',
+    )
+    documents: Mapped[List['Document']] = relationship(
+        'Document',
+        lazy='selectin',
+        back_populates='advisorship',
+        default_factory=list,
+        init=False,
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_uq_advisorship_active',
+            'advisor_id',
+            'advisee_id',
+            'project_id',
+            'role_type',
+            unique=True,
+            postgresql_where=(column('deleted_at').is_(None)),
+        ),
     )

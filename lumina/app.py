@@ -13,6 +13,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from lumina.core.cache import WebSocketManager
 from lumina.core.settings import Settings
 from lumina.routers import (
+    advisorship,
     auth,
     reports,
     stats,
@@ -125,6 +126,7 @@ app.include_router(branches.router)
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(advisorship.router)
 app.include_router(releases.router)
 app.include_router(kanban.router)
 app.include_router(sources.router)

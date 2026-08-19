@@ -20,16 +20,21 @@ def test_create_user(client):
     assert response.json()['phone_number'] == '5501999999999'
 
 
-def test_read_users(client):
+def test_read_users_unauthorized(client):
     response = client.get('/user')
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_read_users(client, token):
+    response = client.get('/user', headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'users': []}
+    assert len(response.json()['users']) >= 1
 
 
-def test_read_users_with_users(client, user):
+def test_read_users_with_users(client, user, token):
     user_schema = UserPublic.model_validate(user).model_dump(mode='json')
-    response = client.get('/user')
-    assert response.json() == {'users': [user_schema]}
+    response = client.get('/user', headers={'Authorization': f'Bearer {token}'})
+    assert any(u['id'] == user_schema['id'] for u in response.json()['users'])
 
 
 def test_update_user(client, user, token):
