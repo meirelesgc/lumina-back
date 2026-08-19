@@ -94,14 +94,6 @@ from .typification import (
     TypificationSchema,
     TypificationUpdate,
 )
-from .unit import (
-    UnitCreate,
-    UnitFilter,
-    UnitList,
-    UnitPublic,
-    UnitSchema,
-    UnitUpdate,
-)
 from .user import (
     AccessType,
     ForgotPasswordRequest,
@@ -181,11 +173,6 @@ __all__ = [
     'TypificationPublic',
     'TypificationSchema',
     'TypificationUpdate',
-    'UnitCreate',
-    'UnitList',
-    'UnitPublic',
-    'UnitSchema',
-    'UnitUpdate',
     'AccessType',
     'UserCreate',
     'UserFilter',
@@ -206,7 +193,6 @@ __all__ = [
     'AuditLogPublic',
     'ForgotPasswordRequest',
     'ResetPasswordRequest',
-    'UnitFilter',
     'TypificationFilter',
     'TaxonomyFilter',
     'BranchFilter',

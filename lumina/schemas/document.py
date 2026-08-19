@@ -58,7 +58,6 @@ class DocumentList(BaseModel):
 
 
 class DocumentFilter(UserFilter):
-    unit_id: Optional[UUID] = None
     archived: Optional[bool] = False
     q: Optional[str] = None
     source: Optional[str] = None

@@ -20,7 +20,6 @@ class UserSchema(BaseModel):
     email: EmailStr
     phone_number: str
     access_level: AccessType = AccessType.DEFAULT
-    unit_id: Optional[UUID] = None
 
 
 class UserCreate(UserSchema):
@@ -50,7 +49,6 @@ class UserList(BaseModel):
 
 
 class UserFilter(FilterPage):
-    unit_id: Optional[UUID] = None
     q: Optional[str] = None
 
 

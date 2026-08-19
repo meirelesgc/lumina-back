@@ -80,8 +80,8 @@ async def create_document_ai_message(
     )
 
     ai_data = DocumentMessageCreate(
-        content=response["answer"],
-        references=response.get("references", []),
+        content=response['answer'],
+        references=response.get('references', []),
         mentions=[
             MessageMention(
                 id=doc_id, type=MessageEntityType.AI, label='OiacIA'
@@ -181,8 +181,8 @@ async def process_user_message(
         )
 
         ai_msg_create = DocumentMessageCreate(
-            content=response["answer"],
-            references=response.get("references", []),
+            content=response['answer'],
+            references=response.get('references', []),
             mentions=[
                 MessageMention(
                     id=doc_id, type=MessageEntityType.AI, label='OiacIA'
@@ -194,7 +194,6 @@ async def process_user_message(
             session, user_id, doc_id, ai_msg_create
         )
 
-        import json
         response_str = ai_msg_created.model_dump_json()
 
         await broadcast_event(

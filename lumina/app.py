@@ -18,7 +18,6 @@ from lumina.routers import (
     stats,
     system,
     template_abnt,
-    units,
     users,
 )
 from lumina.routers.audit import audit_logs
@@ -108,8 +107,6 @@ async def health():
         'version': get_version(),
     }
 
-
-app.include_router(units.router)
 
 app.include_router(stats.router)
 

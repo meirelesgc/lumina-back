@@ -40,9 +40,6 @@ async def get_conflict_user(
 async def list_all(session: AsyncSession, filters: UserFilter) -> list[User]:
     query = select(User).order_by(User.created_at.desc())
 
-    if filters.unit_id:
-        query = query.where(User.unit_id == filters.unit_id)
-
     if filters.q:
         query = util.apply_text_search(query, User, filters.q, config='simple')
 

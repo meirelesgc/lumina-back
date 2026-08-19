@@ -93,60 +93,6 @@ class AuditMixin:
 
 
 @table_registry.mapped_as_dataclass
-class Unit(AuditMixin):
-    __tablename__ = 'units'
-
-    id: Mapped[UUID] = mapped_column(
-        init=False,
-        primary_key=True,
-        insert_default=uuid4,
-        default_factory=uuid4,
-    )
-    name: Mapped[str] = mapped_column(nullable=False)
-    location: Mapped[Optional[str]] = mapped_column(default=None)
-
-    tsv: Mapped[TSVECTOR] = mapped_column(
-        TSVECTOR,
-        Computed(
-            "setweight(to_tsvector('portuguese', name), 'A') || "
-            "setweight(to_tsvector('portuguese', coalesce(location, '')), 'B')",
-            persisted=True,
-        ),
-        init=False,
-        deferred=True,
-    )
-
-    users: Mapped[List['User']] = relationship(
-        back_populates='unit',
-        default_factory=list,
-        init=False,
-        foreign_keys='User.unit_id',
-        lazy='selectin',
-    )
-    documents: Mapped[List['Document']] = relationship(
-        back_populates='unit',
-        default_factory=list,
-        init=False,
-        foreign_keys='Document.unit_id',
-        lazy='selectin',
-    )
-
-    __table_args__ = (
-        Index(
-            'ix_uq_units_name_active',
-            'name',
-            unique=True,
-            postgresql_where=(column('deleted_at').is_(None)),
-        ),
-        Index(
-            'ix_units_tsv',
-            'tsv',
-            postgresql_using='gin',
-        ),
-    )
-
-
-@table_registry.mapped_as_dataclass
 class User(AuditMixin):
     __tablename__ = 'users'
 
@@ -173,11 +119,6 @@ class User(AuditMixin):
         deferred=True,
     )
 
-    unit_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey('units.id', name='fk_user_unit_id'),
-        default=None,
-        nullable=True,
-    )
     icon_id: Mapped[Optional[UUID]] = mapped_column(
         ForeignKey(
             'user_images.id', name='fk_users_icon_id', ondelete='SET NULL'
@@ -187,9 +128,6 @@ class User(AuditMixin):
     )
     icon: Mapped[Optional['UserImage']] = relationship(
         foreign_keys=[icon_id], init=False, lazy='selectin'
-    )
-    unit: Mapped[Optional['Unit']] = relationship(
-        back_populates='users', init=False, foreign_keys=[unit_id]
     )
 
     editable_documents: Mapped[List['Document']] = relationship(
@@ -572,15 +510,6 @@ class Document(AuditMixin):
         ),
         init=False,
         deferred=True,
-    )
-
-    unit_id: Mapped[UUID] = mapped_column(
-        ForeignKey('units.id'), nullable=False
-    )
-    unit: Mapped['Unit'] = relationship(
-        back_populates='documents',
-        lazy='selectin',
-        init=False,
     )
 
     history: Mapped[List['DocumentHistory']] = relationship(

@@ -46,7 +46,9 @@ async def _fetch_chunks_by_indices(
     if not indices:
         return []
 
-    if hasattr(vstore, '_make_async_session') and hasattr(vstore, 'EmbeddingStore'):
+    if hasattr(vstore, '_make_async_session') and hasattr(
+        vstore, 'EmbeddingStore'
+    ):
         try:
             async with vstore._make_async_session() as session:
                 collection = await vstore.aget_collection(session)
@@ -54,17 +56,18 @@ async def _fetch_chunks_by_indices(
                     return []
 
                 EmbeddingStore = vstore.EmbeddingStore
-                source_filter = EmbeddingStore.cmetadata['source'].astext == str(source)
+                source_filter = EmbeddingStore.cmetadata[
+                    'source'
+                ].astext == str(source)
                 indices_str = [str(i) for i in indices]
-                index_filter = EmbeddingStore.cmetadata['chunk_index'].astext.in_(indices_str)
+                index_filter = EmbeddingStore.cmetadata[
+                    'chunk_index'
+                ].astext.in_(indices_str)
 
-                stmt = (
-                    select(EmbeddingStore)
-                    .filter(
-                        EmbeddingStore.collection_id == collection.uuid,
-                        source_filter,
-                        index_filter,
-                    )
+                stmt = select(EmbeddingStore).filter(
+                    EmbeddingStore.collection_id == collection.uuid,
+                    source_filter,
+                    index_filter,
                 )
                 results = (await session.execute(stmt)).scalars().all()
                 return [
@@ -209,7 +212,7 @@ def _format_context(branch: dict) -> str:
                     f'## CONTEXTO DA SESSÃO: {section_title}\n'
                 )
             current_section = section_title
-        
+
         chunk_id = doc.metadata.get('chunk_id', 'unknown_id')
         formatted_parts.append(f'[FONTE] chunk_id: {chunk_id}\n{clean_text}')
     return ''.join(formatted_parts).strip()
@@ -273,7 +276,9 @@ async def apply_tree(chain: RunnableLambda, eval_args: list[dict]):
                 item['prompt'] = PROMPT.format(**item, format_instructions='')
                 item.update(result)
 
-                raw_citations = item.get('citations') or item.get('references') or []
+                raw_citations = (
+                    item.get('citations') or item.get('references') or []
+                )
                 sessions = item.get('_sessions') or []
 
                 citation_objs = []

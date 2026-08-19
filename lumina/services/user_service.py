@@ -62,7 +62,6 @@ async def create_user(session: AsyncSession, data: UserCreate) -> User:
         phone_number=norm_phone,
         password=hashed_password,
         access_level=data.access_level,
-        unit_id=data.unit_id,
     )
 
     user_repo.add_user(session, db_user)
@@ -205,7 +204,6 @@ async def update_user(
 
     if is_admin:
         db_user.access_level = data.access_level
-        db_user.unit_id = data.unit_id
 
     new_data = UserPublic.model_validate(db_user).model_dump(mode='json')
 

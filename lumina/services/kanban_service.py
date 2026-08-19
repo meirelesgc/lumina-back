@@ -19,7 +19,7 @@ from lumina.workers.utils import send_message
 class NotifyTarget(str, Enum):
     EDITORS = 'editors'
     CREATOR = 'creator'
-    UNIT_AUDITORS = 'unit_auditors'
+    AUDITORS = 'auditors'
 
 
 NOTIFICATION_RULES: dict[
@@ -35,7 +35,7 @@ NOTIFICATION_RULES: dict[
     },
     DocumentStatus.WAITING_FOR_REVIEW: {
         'enabled': True,
-        'targets': [NotifyTarget.CREATOR, NotifyTarget.UNIT_AUDITORS],
+        'targets': [NotifyTarget.CREATOR, NotifyTarget.AUDITORS],
     },
     DocumentStatus.COMPLETED: {
         'enabled': True,
@@ -73,17 +73,9 @@ async def _resolve_notification_targets(
             if creator_cache:
                 targets.append(creator_cache)
 
-        elif target_type == NotifyTarget.UNIT_AUDITORS and doc.created_by:
-            if not creator_cache:
-                creator_cache = await kanban_repo.get_user(
-                    session, doc.created_by
-                )
-
-            if creator_cache and creator_cache.unit_id:
-                auditors = await kanban_repo.get_unit_auditors(
-                    session, creator_cache.unit_id
-                )
-                targets.extend(auditors)
+        elif target_type == NotifyTarget.AUDITORS:
+            auditors = await kanban_repo.get_auditors(session)
+            targets.extend(auditors)
 
     unique_ids = {user.id for user in targets if user.id}
     return list(unique_ids)
