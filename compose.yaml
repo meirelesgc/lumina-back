@@ -18,13 +18,14 @@ services:
       - "${PORT_DB:-5432}:5432"
 
   api:
+    build: .
     image: "${COMPOSE_PROJECT_NAME:-lumina}_api"
     entrypoint: ./entrypoint.sh
     ports:
       - "${PORT_API:-8000}:8000"
     environment:
       CACHE_URL: 'redis://redis:6379/0'
-      DATABASE_URL: postgresql+psycopg://pg_user:pg_password@db:5432/db
+      DATABASE_URL: postgresql+psycopg://db_user:db_password@db:5432/db
       TZ: America/Sao_Paulo
     env_file: ".env"
     healthcheck:
@@ -59,7 +60,8 @@ services:
     ports:
       - "${PORT_EVO:-8082}:8080"
     env_file:
-      - .evolution.env
+      - path: .evolution.env
+        required: false
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:

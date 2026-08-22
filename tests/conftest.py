@@ -18,6 +18,28 @@ from lumina.core.settings import Settings
 from lumina.models import Unit, User, table_registry
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        '--run-ai',
+        action='store_true',
+        default=False,
+        help='Executa testes de IA que consomem tokens e chamam LLMs.',
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption('--run-ai'):
+        skip_ai = pytest.mark.skip(
+            reason=(
+                'Testes de IA desativados por padrão para economizar tokens. '
+                'Use --run-ai ou task test-ai para executar.'
+            )
+        )
+        for item in items:
+            if item.get_closest_marker('ai') is not None:
+                item.add_marker(skip_ai)
+
+
 @pytest.fixture
 def client(session):
     def get_session_override():

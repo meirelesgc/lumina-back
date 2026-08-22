@@ -39,7 +39,9 @@ def test_split_by_sections_with_ground_truth():
 
     loader = PyMuPDFLoader(str(pdf_path), mode='single')
     documents = loader.load()
-    assert len(documents) > 0, 'O documento PDF deve carregar ao menos 1 página'
+    assert len(documents) > 0, (
+        'O documento PDF deve carregar ao menos 1 página'
+    )
 
     mock_model = MagicMock()
     mock_structured_model = MagicMock()
@@ -69,18 +71,18 @@ def test_split_by_sections_with_ground_truth():
 
     split_documents = _split_by_sections(documents, mock_model)
 
-    assert len(split_documents) == len(
-        expected_sections
-    ), f'Esperado {len(expected_sections)} seções, mas obtido {len(split_documents)}'
+    assert len(split_documents) == len(expected_sections), (
+        f'Esperado {len(expected_sections)} seções, mas obtido {len(split_documents)}'
+    )
 
     retrieved_section_titles = [
         doc.metadata.get('section_title') for doc in split_documents
     ]
 
     for expected in expected_sections:
-        assert (
-            expected in retrieved_section_titles
-        ), f"A seção '{expected}' definida no Ground Truth não foi recuperada."
+        assert expected in retrieved_section_titles, (
+            f"A seção '{expected}' definida no Ground Truth não foi recuperada."
+        )
 
     cons_doc = next(
         doc
@@ -98,6 +100,7 @@ def test_split_by_sections_with_ground_truth():
     assert 'Referências' in ref_doc.page_content
 
 
+@pytest.mark.ai
 @pytest.mark.asyncio
 async def test_split_by_sections_real_llm_evaluation():
     """
@@ -123,19 +126,22 @@ async def test_split_by_sections_real_llm_evaluation():
     # Executa a função chamando o modelo LLM real
     split_documents = _split_by_sections(documents, real_model)
 
-    assert len(split_documents) >= len(
-        expected_sections
-    ), f'O modelo real retornou {len(split_documents)} seções, esperava pelo menos {len(expected_sections)}.'
+    assert len(split_documents) >= len(expected_sections), (
+        f'O modelo real retornou {len(split_documents)} seções, esperava pelo menos {len(expected_sections)}.'
+    )
 
     retrieved_section_titles = [
-        (doc.metadata.get('section_title') or '').lower() for doc in split_documents
+        (doc.metadata.get('section_title') or '').lower()
+        for doc in split_documents
     ]
 
     # Valida se cada seção esperada do Ground Truth foi encontrada (case-insensitive)
     for expected in expected_sections:
         assert any(
             expected.lower() in title for title in retrieved_section_titles
-        ), f"O modelo LLM real não conseguiu recuperar a seção '{expected}'. Seções obtidas: {retrieved_section_titles}"
+        ), (
+            f"O modelo LLM real não conseguiu recuperar a seção '{expected}'. Seções obtidas: {retrieved_section_titles}"
+        )
 
     # Garante que cada documento recuperado pela LLM real tem conteúdo válido
     for doc in split_documents:
