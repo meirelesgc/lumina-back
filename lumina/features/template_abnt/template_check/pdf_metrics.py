@@ -1,10 +1,10 @@
-# Funções pequenas e puras para extrair métricas de formatação de uma página PDF.
-# Cada função faz UMA coisa. Usado pela abordagem 2 (script determinístico).
+# Funções pequenas e puras para extrair métricas de formatação de UMA página
+# de PDF (geometria, tipografia, colunas, espaçamento, numeração). Cada função
+# faz uma única coisa; extract_page_metrics/aggregate_page_metrics orquestram.
 
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections import Counter
 from statistics import median
 
@@ -16,6 +16,13 @@ MM_PER_INCH = 25.4
 # Bits de estilo em span["flags"] do PyMuPDF.
 FLAG_ITALIC = 1 << 1  # 2
 FLAG_BOLD = 1 << 4  # 16
+
+_PAGE_NUM_PATTERNS = [
+    re.compile(r'^\d+$'),
+    re.compile(r'^(p\.?|página|page)\s*\d+$', re.I),
+    re.compile(r'^\d+\s*(/|of|de)\s*\d+$', re.I),
+    re.compile(r'^[ivxlcdm]+$', re.I),
+]
 
 
 # Conversões e utilidades numéricas
@@ -40,9 +47,7 @@ def page_size_pt(page) -> tuple[float, float]:
     return page.rect.width, page.rect.height
 
 
-def detect_page_format(
-    width_mm: float, height_mm: float, tol: float = 6.0
-) -> str:
+def detect_page_format(width_mm: float, height_mm: float, tol: float = 6.0) -> str:
     if is_close(width_mm, 210.0, tol) and is_close(height_mm, 297.0, tol):
         return 'A4'
     if is_close(width_mm, 215.9, tol) and is_close(height_mm, 279.4, tol):
@@ -74,9 +79,7 @@ def body_font_size(spans: list[dict]) -> float | None:
 
 
 def body_spans(spans: list[dict], size: float) -> list[dict]:
-    return [
-        s for s in spans if round(s['size'], 1) == size and s['text'].strip()
-    ]
+    return [s for s in spans if round(s['size'], 1) == size and s['text'].strip()]
 
 
 # Fonte principal: família, estilo e cor
@@ -97,22 +100,14 @@ def primary_font_family(body: list[dict]) -> str | None:
 def font_is_bold(body: list[dict]) -> bool:
     if not body:
         return False
-    bold = sum(
-        1
-        for s in body
-        if (s['flags'] & FLAG_BOLD) or 'bold' in s['font'].lower()
-    )
+    bold = sum(1 for s in body if (s['flags'] & FLAG_BOLD) or 'bold' in s['font'].lower())
     return bold > len(body) / 2
 
 
 def font_is_italic(body: list[dict]) -> bool:
     if not body:
         return False
-    italic = sum(
-        1
-        for s in body
-        if (s['flags'] & FLAG_ITALIC) or 'italic' in s['font'].lower()
-    )
+    italic = sum(1 for s in body if (s['flags'] & FLAG_ITALIC) or 'italic' in s['font'].lower())
     return italic > len(body) / 2
 
 
@@ -163,9 +158,7 @@ def body_lines(page, size: float) -> list[dict]:
     lines = []
     for block in data['blocks']:
         for line in block.get('lines', []):
-            line_sizes = [
-                round(s['size'], 1) for s in line['spans'] if s['text'].strip()
-            ]
+            line_sizes = [round(s['size'], 1) for s in line['spans'] if s['text'].strip()]
             if not line_sizes:
                 continue
             if Counter(line_sizes).most_common(1)[0][0] == size:
@@ -178,9 +171,7 @@ def line_x_ranges(lines: list[dict]) -> list[tuple[float, float]]:
     return [(line['bbox'][0], line['bbox'][2]) for line in lines]
 
 
-def merge_intervals(
-    ranges: list[tuple[float, float]], gap: float
-) -> list[list[float]]:
+def merge_intervals(ranges: list[tuple[float, float]], gap: float) -> list[list[float]]:
     if not ranges:
         return []
     ordered = sorted(ranges)
@@ -219,11 +210,7 @@ def gutter_mm(cols: list[list[float]]) -> float:
 # Espaçamento entre linhas
 def line_spacing_pt(lines: list[dict], size: float) -> float | None:
     tops = sorted(line['bbox'][1] for line in lines)
-    diffs = [
-        round(b - a, 1)
-        for a, b in zip(tops, tops[1:])
-        if 0 < (b - a) < size * 3
-    ]
+    diffs = [round(b - a, 1) for a, b in zip(tops, tops[1:]) if 0 < (b - a) < size * 3]
     if not diffs:
         return None
     return Counter(diffs).most_common(1)[0][0]
@@ -246,9 +233,7 @@ def classify_spacing(ratio: float | None) -> str:
 def first_line_indent_pt(lines: list[dict], cols: list[list[float]]) -> float:
     indents = []
     for left, right in cols:
-        col_lines = [
-            line for line in lines if left - 2 <= line['bbox'][0] <= right
-        ]
+        col_lines = [line for line in lines if left - 2 <= line['bbox'][0] <= right]
         xs = [round(line['bbox'][0]) for line in col_lines]
         if not xs:
             continue
@@ -271,8 +256,7 @@ def text_alignment(lines: list[dict], cols: list[list[float]]) -> str:
         if span <= 0:
             continue
         col_lines = [
-            line
-            for line in lines
+            line for line in lines
             if left - 2 <= line['bbox'][0] and line['bbox'][2] <= right + 2
         ]
         for line in col_lines:
@@ -282,10 +266,7 @@ def text_alignment(lines: list[dict], cols: list[list[float]]) -> str:
             right_gap = right - lx1
             if right_gap <= 0.03 * span:
                 justified += 1
-            elif (
-                abs(left_gap - right_gap) <= 0.02 * span
-                and left_gap > 0.05 * span
-            ):
+            elif abs(left_gap - right_gap) <= 0.02 * span and left_gap > 0.05 * span:
                 centered += 1
     if counted == 0:
         return 'indeterminado'
@@ -297,14 +278,6 @@ def text_alignment(lines: list[dict], cols: list[list[float]]) -> str:
 
 
 # Numeração de páginas
-_PAGE_NUM_PATTERNS = [
-    re.compile(r'^\d+$'),
-    re.compile(r'^(p\.?|página|page)\s*\d+$', re.I),
-    re.compile(r'^\d+\s*(/|of|de)\s*\d+$', re.I),
-    re.compile(r'^[ivxlcdm]+$', re.I),
-]
-
-
 def is_page_number_text(text: str) -> bool:
     t = text.strip()
     if not t or len(t) > 20:
@@ -335,11 +308,7 @@ def page_numbering(page) -> dict:
             if not is_page_number_text(text):
                 continue
             x0, y0, x1, y1 = line['bbox']
-            vertical = (
-                'rodapé'
-                if y0 > height * 0.85
-                else ('cabeçalho' if y1 < height * 0.15 else 'corpo')
-            )
+            vertical = 'rodapé' if y0 > height * 0.85 else ('cabeçalho' if y1 < height * 0.15 else 'corpo')
             if vertical == 'corpo':
                 continue
             horizontal = numbering_horizontal((x0 + x1) / 2, width)
@@ -351,242 +320,7 @@ def page_numbering(page) -> dict:
     return {'exists': False, 'position': 'nenhuma', 'format': 'nenhum'}
 
 
-# Localização da seção de referências (por conteúdo, não por número de página)
-_REFERENCES_HEADING = re.compile(
-    r'^(\d+\.?\s*)?(referencias(\s+bibliograficas)?|bibliografia|references|bibliography|'
-    r'works cited|literature cited)\.?$',
-    re.I,
-)
-_SECTION_END_HEADING = re.compile(
-    r'^(\d+\.?\s*)?(apendice(s)?|anexo(s)?|appendix(es)?|supplementary material)\.?$',
-    re.I,
-)
-
-
-# LaTeX PDFs codificam acentos como letras modificadoras soltas (ex.: Referˆencias).
-_LATEX_MODIFIER = re.compile(
-    r'[\u02c6\u02c7\u02c8\u02ca\u02cb\u02cc\u02cd\u02ce\u02cf'
-    r'\u02d8\u02d9\u02da\u02db\u02dc\u02dd\u02de\u02df'
-    r'\u02e0\u02e1\u02e2\u02e3\u02e4\u02e5\u02e6\u02e7'
-    r'\u02ec\u02ed\u02ee\u02ef'
-    r']'
-)
-
-
-def strip_accents(text: str) -> str:
-    normalized = unicodedata.normalize('NFKD', text)
-    without_combining = ''.join(
-        ch for ch in normalized if not unicodedata.combining(ch)
-    )
-    return _LATEX_MODIFIER.sub('', without_combining)
-
-
-def line_text(line: dict) -> str:
-    return ''.join(s['text'] for s in line['spans']).strip()
-
-
-def find_heading_line(
-    doc,
-    pattern: re.Pattern,
-    start_page: int,
-    skip_before_y: float | None = None,
-) -> dict | None:
-    for page_number in range(start_page, doc.page_count + 1):
-        page = load_page(doc, page_number)
-        for block in page.get_text('dict')['blocks']:
-            for line in block.get('lines', []):
-                text = strip_accents(line_text(line))
-                if not text or len(text) > 60 or not pattern.match(text):
-                    continue
-                if (
-                    page_number == start_page
-                    and skip_before_y is not None
-                    and line['bbox'][1] <= skip_before_y
-                ):
-                    continue
-                return {
-                    'page': page_number,
-                    'y0': line['bbox'][1],
-                    'y1': line['bbox'][3],
-                }
-    return None
-
-
-def references_start_via_toc(doc) -> int | None:
-    try:
-        entries = doc.get_toc()
-    except Exception:
-        return None
-    for _level, title, page in entries:
-        if _REFERENCES_HEADING.match(strip_accents(title.strip())):
-            return page
-    return None
-
-
-def find_references_bounds(doc) -> dict | None:
-    # O TOC (se existir) só restringe a página inicial da busca; a posição exata do
-    # heading vem sempre da busca textual, pois a página do TOC pode conter o fim
-    # de outra seção antes do título de referências.
-    toc_page = references_start_via_toc(doc)
-    start = (
-        find_heading_line(doc, _REFERENCES_HEADING, toc_page)
-        if toc_page
-        else None
-    )
-    if not start:
-        start = find_heading_line(doc, _REFERENCES_HEADING, 1)
-    if not start:
-        return None
-    end = find_heading_line(
-        doc, _SECTION_END_HEADING, start['page'], skip_before_y=start['y1']
-    )
-    return {
-        'start_page': start['page'],
-        'start_y': start['y1'],
-        'end_page': end['page'] if end else doc.page_count,
-        'end_y': end['y0'] if end else None,
-    }
-
-
-# Métricas escopadas à seção de referências
-_BARE_NUMBER = re.compile(r'^\d+$')
-
-
-def references_lines(doc, bounds: dict) -> list[dict]:
-    lines = []
-    for page_number in range(bounds['start_page'], bounds['end_page'] + 1):
-        page = load_page(doc, page_number)
-        for block in page.get_text('dict')['blocks']:
-            for line in block.get('lines', []):
-                y0 = line['bbox'][1]
-                if (
-                    page_number == bounds['start_page']
-                    and y0 <= bounds['start_y']
-                ):
-                    continue
-                if (
-                    page_number == bounds['end_page']
-                    and bounds['end_y'] is not None
-                    and y0 >= bounds['end_y']
-                ):
-                    continue
-                # Descarta numeração de linha de manuscrito na margem (ex: "169", "170").
-                if _BARE_NUMBER.match(line_text(line)):
-                    continue
-                lines.append(line)
-    return lines
-
-
-# Agrupa as linhas por x0 (arredondado) e devolve os 2 agrupamentos mais comuns.
-# Cobre tanto o recuo clássico (1a linha na base, continuação mais à direita)
-# quanto o rótulo "outdentado" (número à esquerda do texto, ex: listas do MDPI).
-def indent_clusters(
-    lines: list[dict], cols: list[list[float]]
-) -> list[tuple[float, int]]:
-    if not cols:
-        return []
-    left, right = cols[0]
-    xs = [
-        round(line['bbox'][0])
-        for line in lines
-        if left - 2 <= line['bbox'][0] <= right
-    ]
-    return Counter(xs).most_common(2)
-
-
-def hanging_indent_pt(lines: list[dict], cols: list[list[float]]) -> float:
-    clusters = indent_clusters(lines, cols)
-    if len(clusters) < 2:
-        return 0.0
-    delta = abs(clusters[0][0] - clusters[1][0])
-    return float(delta) if 2 < delta < 40 else 0.0
-
-
-def numbering_marker_lines(
-    lines: list[dict], cols: list[list[float]]
-) -> list[dict]:
-    if not cols:
-        return []
-    left, right = cols[0]
-    candidates = [
-        line for line in lines if left - 2 <= line['bbox'][0] <= right
-    ]
-    clusters = indent_clusters(lines, cols)
-    if not clusters:
-        return []
-    marker_x = min(x for x, _ in clusters)
-    return [
-        line
-        for line in candidates
-        if abs(round(line['bbox'][0]) - marker_x) <= 1
-    ]
-
-
-_NUMBERING_PATTERNS = {
-    'colchetes': re.compile(r'^\[\d+\]'),
-    'numerica': re.compile(r'^\d+\.'),
-    'parenteses': re.compile(r'^\(\d+\)'),
-}
-
-
-def detect_numbering_style(lines: list[dict], cols: list[list[float]]) -> str:
-    markers = numbering_marker_lines(lines, cols)
-    texts = [line_text(line) for line in markers]
-    if not texts:
-        return 'indeterminado'
-    for label, pattern in _NUMBERING_PATTERNS.items():
-        hits = sum(1 for t in texts if pattern.match(t))
-        if hits / len(texts) >= 0.5:
-            return label
-    return 'sem numeracao'
-
-
-def references_pseudo_column(lines: list[dict]) -> list[list[float]]:
-    if not lines:
-        return []
-    x0s = [line['bbox'][0] for line in lines]
-    x1s = [line['bbox'][2] for line in lines]
-    return [[min(x0s), max(x1s)]]
-
-
-def extract_references_metrics(doc, bounds: dict | None) -> dict | None:
-    if not bounds:
-        return None
-    lines = references_lines(doc, bounds)
-    if not lines:
-        return None
-    spans = [s for line in lines for s in line['spans']]
-    size = body_font_size(spans)
-    body = body_spans(spans, size) if size else []
-    cols = references_pseudo_column(lines)
-    spacing = line_spacing_pt(lines, size) if size else None
-    ratio = spacing_ratio(spacing, size)
-    return {
-        'font_family': primary_font_family(body) or 'indeterminado',
-        'font_size_pt': size or 0.0,
-        'font_bold': font_is_bold(body),
-        'spacing_mode': classify_spacing(ratio),
-        'text_alignment': text_alignment(lines, cols),
-        'hanging_indent_mm': pt_to_mm(hanging_indent_pt(lines, cols)),
-        'numbering_style': detect_numbering_style(lines, cols),
-    }
-
-
-# Amostragem de páginas do corpo e agregação (robustez contra páginas atípicas)
-def select_body_pages(
-    doc, start_page: int, sample_size: int, exclude: set[int] | None = None
-) -> list[int]:
-    exclude = exclude or set()
-    candidates = [
-        p for p in range(start_page, doc.page_count + 1) if p not in exclude
-    ]
-    if not candidates:
-        candidates = [
-            p for p in range(1, doc.page_count + 1) if p not in exclude
-        ]
-    return candidates[:sample_size] or [min(start_page, doc.page_count)]
-
-
+# Agregação entre páginas (robustez contra páginas atípicas)
 def most_common(values: list) -> object:
     return Counter(values).most_common(1)[0][0]
 
@@ -600,9 +334,12 @@ def median_columns(lists: list[list[float]]) -> list[float]:
     return [median(values[i] for values in same_length) for i in range(length)]
 
 
+def numbering_key(entry: dict) -> tuple:
+    return entry['exists'], entry['position'], entry['format']
+
+
 def aggregate_numbering(entries: list[dict]) -> dict:
-    key = lambda e: (e['exists'], e['position'], e['format'])
-    exists, position, fmt = most_common([key(e) for e in entries])
+    exists, position, fmt = most_common([numbering_key(e) for e in entries])
     return {'exists': exists, 'position': position, 'format': fmt}
 
 
@@ -611,17 +348,13 @@ def aggregate_page_metrics(pages: list[dict]) -> dict:
         return pages[0]
     modal_columns = most_common([p['column_count'] for p in pages])
     same_columns = [p for p in pages if p['column_count'] == modal_columns]
-    ratios = [
-        p['spacing_ratio'] for p in pages if p['spacing_ratio'] is not None
-    ]
+    ratios = [p['spacing_ratio'] for p in pages if p['spacing_ratio'] is not None]
     return {
         'page_format': most_common([p['page_format'] for p in pages]),
         'width_mm': median(p['width_mm'] for p in pages),
         'height_mm': median(p['height_mm'] for p in pages),
         'column_count': modal_columns,
-        'column_widths_mm': median_columns([
-            p['column_widths_mm'] for p in same_columns
-        ]),
+        'column_widths_mm': median_columns([p['column_widths_mm'] for p in same_columns]),
         'gutter_mm': median(p['gutter_mm'] for p in same_columns),
         'margins_mm': {
             side: median(p['margins_mm'][side] for p in pages)
@@ -634,13 +367,9 @@ def aggregate_page_metrics(pages: list[dict]) -> dict:
         'font_color': most_common([p['font_color'] for p in pages]),
         'spacing_ratio': median(ratios) if ratios else None,
         'spacing_mode': most_common([p['spacing_mode'] for p in pages]),
-        'first_line_indent_mm': median(
-            p['first_line_indent_mm'] for p in pages
-        ),
+        'first_line_indent_mm': median(p['first_line_indent_mm'] for p in pages),
         'text_alignment': most_common([p['text_alignment'] for p in pages]),
-        'page_numbering': aggregate_numbering([
-            p['page_numbering'] for p in pages
-        ]),
+        'page_numbering': aggregate_numbering([p['page_numbering'] for p in pages]),
     }
 
 
@@ -666,8 +395,7 @@ def extract_page_metrics(doc, page_number: int) -> dict:
         'column_count': column_count(cols),
         'column_widths_mm': column_widths_mm(cols),
         'gutter_mm': gutter_mm(cols),
-        'margins_mm': margins_mm(page)
-        or {'left': 0, 'right': 0, 'top': 0, 'bottom': 0},
+        'margins_mm': margins_mm(page) or {'left': 0, 'right': 0, 'top': 0, 'bottom': 0},
         'font_family': primary_font_family(body) or 'indeterminado',
         'font_size_pt': size or 0.0,
         'font_bold': font_is_bold(body),
@@ -679,28 +407,3 @@ def extract_page_metrics(doc, page_number: int) -> dict:
         'text_alignment': text_alignment(lines, cols),
         'page_numbering': page_numbering(page),
     }
-
-
-# Agregador de alto nível: perfil do documento (amostragem multi-página + referências)
-def build_document_profile(
-    path: str, start_page: int, sample_size: int
-) -> dict:
-    doc = open_document(path)
-    try:
-        bounds = find_references_bounds(doc)
-        exclude = (
-            set(range(bounds['start_page'], bounds['end_page'] + 1))
-            if bounds
-            else set()
-        )
-        pages = select_body_pages(
-            doc, start_page, sample_size, exclude=exclude
-        )
-        profile = aggregate_page_metrics([
-            extract_page_metrics(doc, p) for p in pages
-        ])
-        profile['sampled_pages'] = pages
-        profile['references'] = extract_references_metrics(doc, bounds)
-        return profile
-    finally:
-        doc.close()
