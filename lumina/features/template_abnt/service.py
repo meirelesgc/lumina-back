@@ -1,3 +1,7 @@
+# Orquestração da feature "Conformidade com Template e ABNT": caminhos de
+# armazenamento, upload de artigos e disparo/consulta do processamento em
+# background (chamado pelos endpoints em lumina/routers/template_abnt.py).
+
 from __future__ import annotations
 
 import logging
@@ -5,8 +9,13 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
-from lumina.features.template_abnt import abnt_comparison, hybrid_comparison
+from fastapi import BackgroundTasks
+
+from lumina.features.template_abnt.abnt_check import abnt as abnt_check
 from lumina.features.template_abnt.json_store import JsonResultStore
+from lumina.features.template_abnt.template_check import (
+    template as template_check,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +36,9 @@ for directory in (
     directory.mkdir(parents=True, exist_ok=True)
 
 DEFAULT_TEMPLATE_NAME = 'MDPI Article Template.pdf'
+DEFAULT_ARTICLE_FILENAME = 'artigo.pdf'
+UPLOAD_PREFIX_TEMPLATE = 'template'
+UPLOAD_PREFIX_ABNT = 'abnt'
 
 
 @lru_cache
@@ -107,14 +119,25 @@ def _mark_error(store: JsonResultStore, doc_id: str, error: str) -> None:
     )
 
 
-async def run_template_analysis(
-    doc_id: str, template_path: Path, article_path: Path
-) -> None:
+def receive_upload(
+    doc_id: str,
+    filename: str | None,
+    content: bytes,
+    *,
+    prefix: str,
+    store: JsonResultStore,
+) -> Path:
+    # Salva o PDF recebido e já marca o processamento como "em andamento",
+    # reaproveitado pelos dois endpoints POST (template e ABNT).
+    article_path = save_upload(doc_id, filename or DEFAULT_ARTICLE_FILENAME, content, prefix=prefix)
+    mark_processing(store, doc_id)
+    return article_path
+
+
+async def run_template_analysis(doc_id: str, template_path: Path, article_path: Path) -> None:
     store = get_template_store()
     try:
-        report = await hybrid_comparison.compare(
-            str(template_path), str(article_path)
-        )
+        report = await template_check.compare(str(template_path), str(article_path))
         _mark_completed(store, doc_id, report.model_dump())
     except Exception as exc:
         logger.exception(
@@ -127,10 +150,27 @@ async def run_template_analysis(
 def run_abnt_analysis(doc_id: str, article_path: Path) -> None:
     store = get_abnt_store()
     try:
-        report = abnt_comparison.compare(str(article_path))
+        report = abnt_check.compare(str(article_path))
         _mark_completed(store, doc_id, report.model_dump())
     except Exception as exc:
         logger.exception(
             'Falha na verificação de conformidade ABNT (doc_id=%s)', doc_id
         )
         _mark_error(store, doc_id, str(exc))
+
+
+def start_template_analysis(
+    doc_id: str, filename: str | None, content: bytes,
+    template_path: Path, background_tasks: BackgroundTasks,
+) -> None:
+    store = get_template_store()
+    article_path = receive_upload(doc_id, filename, content, prefix=UPLOAD_PREFIX_TEMPLATE, store=store)
+    background_tasks.add_task(run_template_analysis, doc_id, template_path, article_path)
+
+
+def start_abnt_analysis(
+    doc_id: str, filename: str | None, content: bytes, background_tasks: BackgroundTasks,
+) -> None:
+    store = get_abnt_store()
+    article_path = receive_upload(doc_id, filename, content, prefix=UPLOAD_PREFIX_ABNT, store=store)
+    background_tasks.add_task(run_abnt_analysis, doc_id, article_path)
