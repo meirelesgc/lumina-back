@@ -21,10 +21,10 @@ from lumina.features.template_abnt.schemas import (
     TemplatesListResponse,
 )
 
-router = APIRouter(
-    prefix='/template-abnt',
-    tags=['conformidade com template e normas ABNT'],
-)
+router = APIRouter()
+
+TEMPLATE_TAG = 'conformidade com template'
+ABNT_TAG = 'conformidade com abnt'
 
 TEMPLATE_NOT_FOUND_DETAIL = 'Template não encontrado.'
 TEMPLATE_RESULT_NOT_FOUND_DETAIL = 'Nenhum processamento de template encontrado para este documento.'
@@ -38,20 +38,21 @@ def get_result_or_404(store: JsonResultStore, doc_id: str, not_found_detail: str
     return result
 
 
-@router.get('/templates', response_model=TemplatesListResponse)
+@router.get('/templates', response_model=TemplatesListResponse, tags=[TEMPLATE_TAG])
 async def list_templates():
     return {'templates': service.list_templates()}
 
 
 @router.post(
-    '/{doc_id}/template',
+    '/templates/{doc_id}/conformidade',
     status_code=HTTPStatus.ACCEPTED,
     response_model=ProcessingAccepted,
+    tags=[TEMPLATE_TAG],
 )
 async def process_template_compliance(
     doc_id: str,
     background_tasks: BackgroundTasks,
-    template_name: Annotated[str, Form()] = service.DEFAULT_TEMPLATE_NAME,
+    template_name: Annotated[str, Form()],
     file: UploadFile = File(...),
 ):
     template_path = service.resolve_template_path(template_name)
@@ -63,15 +64,16 @@ async def process_template_compliance(
     return {'doc_id': doc_id, 'status': 'processing'}
 
 
-@router.get('/{doc_id}/template', response_model=ProcessingResult)
+@router.get('/templates/{doc_id}/conformidade', response_model=ProcessingResult, tags=[TEMPLATE_TAG])
 async def get_template_result(doc_id: str):
     return get_result_or_404(service.get_template_store(), doc_id, TEMPLATE_RESULT_NOT_FOUND_DETAIL)
 
 
 @router.post(
-    '/{doc_id}/abnt',
+    '/abnt/{doc_id}/conformidade',
     status_code=HTTPStatus.ACCEPTED,
     response_model=ProcessingAccepted,
+    tags=[ABNT_TAG],
 )
 async def process_abnt_compliance(
     doc_id: str,
@@ -83,6 +85,6 @@ async def process_abnt_compliance(
     return {'doc_id': doc_id, 'status': 'processing'}
 
 
-@router.get('/{doc_id}/abnt', response_model=ProcessingResult)
+@router.get('/abnt/{doc_id}/conformidade', response_model=ProcessingResult, tags=[ABNT_TAG])
 async def get_abnt_result(doc_id: str):
     return get_result_or_404(service.get_abnt_store(), doc_id, ABNT_RESULT_NOT_FOUND_DETAIL)

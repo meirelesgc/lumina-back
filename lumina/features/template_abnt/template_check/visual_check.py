@@ -95,8 +95,8 @@ async def render_pages(template_path: str, template_page: int | None, article_pa
 def skipped_criterion(visual_id: str, visual_title: str) -> Criterion:
     return make_visual_criterion(
         visual_id, visual_title, True,
-        [VisualCriterionItem(criterio='Verificação visual',
-                             justificativa='Comparação visual não executada (--skip-visual).')],
+        [VisualCriterionItem(criteria_item='Verificação visual',
+                             justification='Comparação visual não executada (--skip-visual).')],
     )
 
 
@@ -104,8 +104,8 @@ def missing_page_render_criterion(visual_id: str, visual_title: str, missing_sid
     return make_visual_criterion(
         visual_id, visual_title, False,
         [VisualCriterionItem(
-            criterio='Disponibilidade da página',
-            justificativa=f'Não foi possível renderizar a página correspondente no {missing_side}.',
+            criteria_item='Disponibilidade da página',
+            justification=f'Não foi possível renderizar a página correspondente no {missing_side}.',
         )],
     )
 
@@ -113,8 +113,8 @@ def missing_page_render_criterion(visual_id: str, visual_title: str, missing_sid
 def failed_query_criterion(visual_id: str, visual_title: str, exc: Exception) -> Criterion:
     return make_visual_criterion(
         visual_id, visual_title, False,
-        [VisualCriterionItem(criterio='Consulta ao modelo de visão',
-                             justificativa=f'Falha ao consultar o modelo: {exc}')],
+        [VisualCriterionItem(criteria_item='Consulta ao modelo de visão',
+                             justification=f'Falha ao consultar o modelo: {exc}')],
     )
 
 
@@ -137,4 +137,4 @@ async def run_visual_check(client: AsyncOpenAI | None, section_id: str, label: s
     except Exception as exc:
         return failed_query_criterion(visual_id, visual_title, exc)
 
-    return make_visual_criterion(visual_id, visual_title, result.match, result.criterios)
+    return make_visual_criterion(visual_id, visual_title, result.match, result.criteria)

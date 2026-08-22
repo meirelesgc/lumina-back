@@ -195,16 +195,16 @@ EXPECTED_BRANCH_COUNT = len(BRANCH_ORDER)
 
 
 class AbntCriterionItem(BaseModel):
-    criterio: str
-    norma: str
-    justificativa: str
+    criteria_item: str
+    standard: str
+    justification: str
     match: bool
 
 
 class AbntSummary(BaseModel):
     is_compliant: bool
-    criterios_total: int
-    criterios_passed: int
+    criteria_total: int
+    criteria_passed: int
     description: str
 
 
@@ -217,7 +217,7 @@ class AbntMetadata(BaseModel):
 class AbntReport(BaseModel):
     metadata: AbntMetadata
     summary: AbntSummary
-    criterios: list[AbntCriterionItem]
+    criteria: list[AbntCriterionItem]
 
 
 def flatten_ai_body(body: AbntAiBody) -> list[AbntCriterionItem]:
@@ -227,9 +227,9 @@ def flatten_ai_body(body: AbntAiBody) -> list[AbntCriterionItem]:
         result = getattr(group, field_name)
         items.append(
             AbntCriterionItem(
-                criterio=label,
-                norma=result.norma,
-                justificativa=result.justificativa,
+                criteria_item=label,
+                standard=result.norma,
+                justification=result.justificativa,
                 match=result.match,
             )
         )
@@ -247,8 +247,8 @@ def build_summary(
     passed = count_passed(criterios)
     return AbntSummary(
         is_compliant=bool(criterios) and passed == len(criterios),
-        criterios_total=len(criterios),
-        criterios_passed=passed,
+        criteria_total=len(criterios),
+        criteria_passed=passed,
         description=description,
     )
 
@@ -262,5 +262,5 @@ def build_report(
     return AbntReport(
         metadata=metadata,
         summary=summary,
-        criterios=criterios,
+        criteria=criterios,
     )

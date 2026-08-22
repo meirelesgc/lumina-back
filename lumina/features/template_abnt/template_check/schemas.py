@@ -14,8 +14,8 @@ class Check(BaseModel):
 
 
 class VisualCriterionItem(BaseModel):
-    criterio: str
-    justificativa: str
+    criteria_item: str
+    justification: str
 
 
 class Criterion(BaseModel):
@@ -24,7 +24,7 @@ class Criterion(BaseModel):
     match: bool
     is_visual: bool = False
     checks: list[Check] = []
-    criterios: list[VisualCriterionItem] = []
+    criteria: list[VisualCriterionItem] = []
 
 
 class SectionResult(BaseModel):
@@ -38,8 +38,8 @@ class SectionResult(BaseModel):
 
 class Summary(BaseModel):
     is_compliant: bool
-    secoes_total: int
-    secoes_passed: int
+    sections_total: int
+    sections_passed: int
     description: str
 
 
@@ -53,13 +53,13 @@ class Metadata(BaseModel):
 class HybridReport(BaseModel):
     metadata: Metadata
     summary: Summary
-    secoes: list[SectionResult]
+    sections: list[SectionResult]
 
 
 class VisualComparisonResult(BaseModel):
     match: bool
     confidence: float
-    criterios: list[VisualCriterionItem]
+    criteria: list[VisualCriterionItem]
 
 
 def make_check(field: str, template: str, article: str, match: bool) -> Check:
@@ -75,9 +75,9 @@ def make_script_criterion(cid: str, title: str, checks: list[Check]) -> Criterio
 
 
 def make_visual_criterion(
-    cid: str, title: str, match: bool, criterios: list[VisualCriterionItem]
+    cid: str, title: str, match: bool, criteria: list[VisualCriterionItem]
 ) -> Criterion:
-    return Criterion(id=cid, title=title, match=match, is_visual=True, criterios=criterios)
+    return Criterion(id=cid, title=title, match=match, is_visual=True, criteria=criteria)
 
 
 def build_section_result(
@@ -103,12 +103,12 @@ def build_summary(secoes: list[SectionResult], description: str) -> Summary:
     passed = sum(1 for s in secoes if s.match)
     return Summary(
         is_compliant=passed == len(secoes),
-        secoes_total=len(secoes),
-        secoes_passed=passed,
+        sections_total=len(secoes),
+        sections_passed=passed,
         description=description,
     )
 
 
 def build_report(metadata: Metadata, secoes: list[SectionResult], description: str) -> HybridReport:
     summary = build_summary(secoes, description)
-    return HybridReport(metadata=metadata, summary=summary, secoes=secoes)
+    return HybridReport(metadata=metadata, summary=summary, sections=secoes)
