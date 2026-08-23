@@ -26,9 +26,11 @@ async def create_doc(
 
 @router.get('', response_model=DocumentList)
 async def read_docs(
-    session: Session, filters: Annotated[DocumentFilter, Depends()]
+    session: Session,
+    current_user: CurrentUser,
+    filters: Annotated[DocumentFilter, Depends()],
 ):
-    docs = await doc_service.get_docs(session, filters)
+    docs = await doc_service.get_docs(session, current_user, filters)
     return {'documents': docs}
 
 
@@ -36,21 +38,33 @@ async def read_docs(
     '/by-project-document/{project_document_id}', response_model=DocumentPublic
 )
 async def read_doc_by_project_document(
-    project_document_id: UUID, session: Session
+    project_document_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
 ):
     return await doc_service.get_doc_by_project_document_id(
-        session, project_document_id
+        session, current_user, project_document_id
     )
 
 
 @router.get('/{doc_id}', response_model=DocumentPublic)
-async def read_doc(doc_id: UUID, session: Session):
-    return await doc_service.get_doc_by_id(session, doc_id)
+async def read_doc(
+    doc_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
+    return await doc_service.get_doc_by_id(session, current_user, doc_id)
 
 
 @router.get('/{doc_id}/context-items')
-async def read_doc_context_items(doc_id: UUID, session: Session):
-    items = await doc_service.get_doc_context_items(session, doc_id)
+async def read_doc_context_items(
+    doc_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
+    items = await doc_service.get_doc_context_items(
+        session, current_user, doc_id
+    )
     return {'items': items}
 
 
