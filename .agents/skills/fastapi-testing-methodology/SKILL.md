@@ -18,6 +18,8 @@ Para entender as regras teóricas, leia os arquivos abaixo na pasta `references/
 3. [Cobertura e Matriz de Risco](./references/03-risk-and-coverage.md)
 4. [Definition of Done (Critérios de Parada)](./references/04-definition-of-done.md)
 5. [Armadilhas Comuns e Pitfalls](./references/05-common-pitfalls.md)
+6. [Padrões de Testes para IA (AI Testing Standards)](./references/06-ai-testing-standards.md)
+
 
 ## Templates e Exemplos Práticos
 Ao criar novos arquivos, você pode usar os templates abaixo da pasta `templates/` como base:
