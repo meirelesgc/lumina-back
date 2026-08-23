@@ -1,5 +1,4 @@
-# Schema ABNT: corpo estruturado da IA (ramos obrigatórios) e relatório plano
-# usado pelos endpoints. O flatten converte o objeto da API na lista do front.
+# Schema ABNT: corpo estruturado da IA (ramos obrigatórios) e relatório plano usado pelos endpoints. O flatten converte o objeto da API na lista do front.
 
 from __future__ import annotations
 

@@ -1355,6 +1355,21 @@ class ChatMessage:
 
 
 @table_registry.mapped_as_dataclass
+class PublicationTemplate(AuditMixin):
+    __tablename__ = 'publication_templates'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    name: Mapped[str] = mapped_column(nullable=False)
+    original_filename: Mapped[str] = mapped_column(nullable=False)
+    file_path: Mapped[str] = mapped_column(nullable=False)
+
+
+@table_registry.mapped_as_dataclass
 class Advisorship(AuditMixin):
     __tablename__ = 'advisorships'
 

@@ -1,5 +1,4 @@
-# Schema do relatório híbrido (por seção) e funções puras para construir os
-# critérios/relatório a partir dos resultados dos checks determinísticos e visuais.
+# Schema do relatório híbrido (por seção) e funções puras para construir os critérios/relatório a partir dos resultados dos checks determinísticos e visuais.
 
 from __future__ import annotations
 

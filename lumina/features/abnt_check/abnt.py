@@ -1,5 +1,4 @@
-﻿# Verificação ABNT via engenharia de prompt (somente IA), com foco em elementos
-# textuais/estruturais/citações/referências. Prompt em prompts/prompt_abnt.jinja2.
+﻿# Verificação ABNT via engenharia de prompt (somente IA), com foco em elementos textuais/estruturais/citações/referências. Prompt em prompts/prompt_abnt.jinja2.
 
 from __future__ import annotations
 
@@ -7,7 +6,7 @@ from pathlib import Path
 
 from openai import OpenAI
 
-from lumina.features.template_abnt.abnt_check.schemas import (
+from lumina.features.abnt_check.schemas import (
     EXPECTED_BRANCH_COUNT,
     AbntAiBody,
     AbntCriterionItem,
@@ -16,10 +15,9 @@ from lumina.features.template_abnt.abnt_check.schemas import (
     build_report,
     flatten_ai_body,
 )
-from lumina.features.template_abnt.prompt_loader import render_prompt
+from lumina.features.prompt_loader import render_prompt
 
-# gpt-5.4 aceita temperature só com reasoning.effort='none'; os dois no
-# mínimo aumentam o determinismo e evitam o erro 400 da API.
+# gpt-5.4 aceita temperature só com reasoning.effort='none'; os dois no mínimo aumentam o determinismo e evitam o erro 400 da API.
 AI_MODEL = 'gpt-5.4'
 REASONING_EFFORT = 'none'
 TEMPERATURE = 0
@@ -84,7 +82,7 @@ def build_description(model: str, criterios: list[AbntCriterionItem]) -> str:
     )
 
 
-# Orquestração: ponto de entrada chamado por service.py.
+# Orquestração: ponto de entrada chamado por abnt_conformity_service.py.
 def compare(article_path: str) -> AbntReport:
     criterios = request_criteria(article_path)
     metadata = AbntMetadata(approach='abnt', model=AI_MODEL, article_file=article_path)

@@ -1,15 +1,12 @@
-﻿# Builders determinísticos de critério, operando sobre perfis de página
-# (dicts retornados por pdf_metrics.extract_page_metrics/aggregate_page_metrics).
-# Reaproveitados tanto para a página 1 (página única vs página única) quanto
-# para a página 2 (página única vs perfil agregado de várias páginas do artigo).
+﻿# Builders determinísticos de critério, operando sobre perfis de página (dicts retornados por pdf_metrics.extract_page_metrics/aggregate_page_metrics). Reaproveitados tanto para a página 1 (página única vs página única) quanto para a página 2 (página única vs perfil agregado de várias páginas do artigo).
 
 from __future__ import annotations
 
-from lumina.features.template_abnt.template_check.comparison import (
+from lumina.features.template_check.comparison import (
     families_match,
     within,
 )
-from lumina.features.template_abnt.template_check.constants import (
+from lumina.features.template_check.constants import (
     FONT_SIZE_TOL_PT,
     GUTTER_TOL_MM,
     MARGIN_BOTTOM_TOL_MM,
@@ -18,13 +15,13 @@ from lumina.features.template_abnt.template_check.constants import (
     PT_TO_MM,
     SPACING_TOL_MM,
 )
-from lumina.features.template_abnt.template_check.formatting import (
+from lumina.features.template_check.formatting import (
     fmt_bool,
     fmt_mm,
     fmt_pt,
     fmt_ratio,
 )
-from lumina.features.template_abnt.template_check.schemas import (
+from lumina.features.template_check.schemas import (
     Criterion,
     make_check,
     make_script_criterion,
@@ -112,8 +109,7 @@ def build_line_spacing(tpl: dict, art: dict) -> Criterion:
     return Criterion(id='line_spacing', title='Espaçamento entre linhas', match=leading_ok, checks=checks)
 
 
-# Todos os critérios de página; a página 1 usa um subconjunto (margens
-# distorcidas pela capa/instruções do template, cobertas pela verificação visual).
+# Todos os critérios de página; a página 1 usa um subconjunto (margens distorcidas pela capa/instruções do template, cobertas pela verificação visual).
 PAGE_BUILDERS = [build_page_size, build_columns, build_margins, build_main_font, build_line_spacing]
 PAGE1_BUILDERS = [build_page_size, build_columns, build_main_font, build_line_spacing]
 

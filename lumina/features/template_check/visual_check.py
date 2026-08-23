@@ -1,5 +1,4 @@
-﻿# Verificação visual (modelo de visão da OpenAI) por página — assíncrona.
-# Prompt em prompts/prompt_template.jinja2, renderizado via prompt_loader.
+﻿# Verificação visual (modelo de visão da OpenAI) por página, assíncrona, com prompt em prompts/prompt_template.jinja2, renderizado via prompt_loader.
 
 from __future__ import annotations
 
@@ -8,8 +7,8 @@ import base64
 
 from openai import AsyncOpenAI
 
-from lumina.features.template_abnt.prompt_loader import render_prompt
-from lumina.features.template_abnt.template_check.constants import (
+from lumina.features.prompt_loader import render_prompt
+from lumina.features.template_check.constants import (
     REFERENCES_LABEL_HINTS,
     VISION_DETAIL,
     VISION_DPI,
@@ -18,10 +17,10 @@ from lumina.features.template_abnt.template_check.constants import (
     VISION_TEMPERATURE,
     VISUAL_PROMPT_TEMPLATE,
 )
-from lumina.features.template_abnt.template_check.image_utils import (
+from lumina.features.template_check.image_utils import (
     render_page_png,
 )
-from lumina.features.template_abnt.template_check.schemas import (
+from lumina.features.template_check.schemas import (
     Criterion,
     VisualComparisonResult,
     VisualCriterionItem,

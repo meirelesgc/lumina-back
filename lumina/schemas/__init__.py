@@ -80,6 +80,14 @@ from .project_document import (
     ProjectDocumentSchema,
     ProjectDocumentUpdate,
 )
+from .publication_template import (
+    PublicationTemplateCreate,
+    PublicationTemplateFilter,
+    PublicationTemplateList,
+    PublicationTemplatePublic,
+    PublicationTemplateSchema,
+    PublicationTemplateUpdate,
+)
 from .source import (
     SourceCreate,
     SourceList,
@@ -217,6 +225,12 @@ __all__ = [
     'SystemSettingList',
     'SystemSettingPublic',
     'SystemSettingUpdate',
+    'PublicationTemplateCreate',
+    'PublicationTemplateFilter',
+    'PublicationTemplateList',
+    'PublicationTemplatePublic',
+    'PublicationTemplateSchema',
+    'PublicationTemplateUpdate',
     'AdviseeCardPublic',
     'AdviseeListPublic',
     'AdvisorCardPublic',
