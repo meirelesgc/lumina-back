@@ -33,6 +33,16 @@ class JsonResultStore:
     def list_keys(self) -> list[str]:
         return list(self._cache.keys())
 
+    def list_all(self) -> list[dict[str, Any]]:
+        return list(self._cache.values())
+
+    def list_by_doc_id(self, doc_id: str) -> list[dict[str, Any]]:
+        results = [
+            item for item in self._cache.values() if item.get('doc_id') == doc_id
+        ]
+        results.sort(key=lambda item: item.get('created_at') or '')
+        return results
+
     def save(self, key: str, data: dict[str, Any]) -> Path:
         path = self._path_for(key)
         with self._lock:

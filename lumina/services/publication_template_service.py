@@ -37,7 +37,8 @@ async def create_template(
         )
 
     unique_filename = f'{uuid4()}_{file.filename}'
-    file_path = await storage.save(file, unique_filename)
+    await storage.save(file, unique_filename)
+    file_path = f'template_conformity/uploads/{unique_filename}'
 
     db_template = PublicationTemplate(
         name=name,
@@ -108,7 +109,8 @@ async def update_template(
     if file is not None:
         old_file_path = db_template.file_path
         unique_filename = f'{uuid4()}_{file.filename}'
-        db_template.file_path = await storage.save(file, unique_filename)
+        await storage.save(file, unique_filename)
+        db_template.file_path = f'template_conformity/uploads/{unique_filename}'
         db_template.original_filename = file.filename
 
         if old_file_path:
@@ -161,8 +163,7 @@ async def get_template_file_path(
 ) -> Path:
     # Usado pelo fluxo de conformidade (routers/templates.py) para obter o PDF de referência gravado em disco a partir do template cadastrado.
     template = await get_template_by_id(session, template_id)
-    filename = template.file_path.split('/')[-1]
-    full_path = Path(SETTINGS.TEMPLATES_DIRECTORY) / filename
+    full_path = Path(SETTINGS.STORAGE_DIRECTORY) / template.file_path
     if not full_path.is_file():
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,

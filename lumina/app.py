@@ -54,14 +54,16 @@ def get_version():
 BASE_DIR = os.path.dirname(__file__)
 STORAGE_DIR = os.path.join(BASE_DIR, 'storage')
 UPLOADS_DIR = os.path.join(STORAGE_DIR, 'uploads')
-TEMPLATES_UPLOADS_DIR = os.path.join(STORAGE_DIR, 'templates')
+TEMPLATE_CONFORMITY_UPLOADS_DIR = os.path.join(
+    STORAGE_DIR, 'template_conformity', 'uploads'
+)
 TEMP_DIR = os.path.join(STORAGE_DIR, 'temp')
 DEMOS_DIR = os.path.join(BASE_DIR, 'demos')
 
 for directory in [
     STORAGE_DIR,
     UPLOADS_DIR,
-    TEMPLATES_UPLOADS_DIR,
+    TEMPLATE_CONFORMITY_UPLOADS_DIR,
     TEMP_DIR,
     DEMOS_DIR,
 ]:
@@ -93,11 +95,6 @@ app = FastAPI(
 
 
 app.mount('/uploads', StaticFiles(directory=UPLOADS_DIR), name='uploads')
-app.mount(
-    '/templates-uploads',
-    StaticFiles(directory=TEMPLATES_UPLOADS_DIR),
-    name='templates-uploads',
-)
 app.mount('/demos', StaticFiles(directory=DEMOS_DIR, html=True), name='demos')
 
 app.add_middleware(

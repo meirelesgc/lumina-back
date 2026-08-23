@@ -10,16 +10,14 @@ from fastapi import (
     Depends,
     File,
     Form,
-    HTTPException,
     UploadFile,
 )
 
 from lumina.core.dependencies import CurrentUser, Session, TemplateStorage
 from lumina.features import template_conformity_service
-from lumina.features.json_store import JsonResultStore
 from lumina.features.schemas import (
     ProcessingAccepted,
-    ProcessingResult,
+    ProcessingResultList,
 )
 from lumina.schemas.publication_template import (
     PublicationTemplateFilter,
@@ -30,15 +28,6 @@ from lumina.schemas.publication_template import (
 from lumina.services import publication_template_service
 
 router = APIRouter(prefix='/templates', tags=['conformidade com template'])
-
-RESULT_NOT_FOUND_DETAIL = 'Nenhum processamento de template encontrado para este documento.'
-
-
-def get_result_or_404(store: JsonResultStore, doc_id: str) -> dict:
-    result = store.get(doc_id)
-    if result is None:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=RESULT_NOT_FOUND_DETAIL)
-    return result
 
 
 @router.get('', response_model=PublicationTemplateList)
@@ -115,10 +104,11 @@ async def process_template_compliance(
     )
 
     content = await file.read()
-    template_conformity_service.start_analysis(doc_id, file.filename, content, template_path, background_tasks)
-    return {'doc_id': doc_id, 'status': 'processing'}
+    return template_conformity_service.start_analysis(
+        doc_id, file.filename, content, template_path, background_tasks
+    )
 
 
-@router.get('/{doc_id}/conformidade', response_model=ProcessingResult)
+@router.get('/{doc_id}/conformidade', response_model=ProcessingResultList)
 async def get_template_result(doc_id: str, current_user: CurrentUser):
-    return get_result_or_404(template_conformity_service.get_store(), doc_id)
+    return {'results': template_conformity_service.list_results(doc_id)}

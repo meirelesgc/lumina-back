@@ -93,7 +93,7 @@ def get_template_storage_provider() -> StorageProvider:
     if STORAGE_PROVIDER == 'LOCAL':
         return LocalStorage(
             storage_dir=SETTINGS.TEMPLATES_DIRECTORY,
-            base_url='/templates-uploads',
+            base_url='template_conformity/uploads',
         )
     elif STORAGE_PROVIDER == 'S3':
         return S3Storage()

@@ -6,28 +6,17 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     File,
-    HTTPException,
     UploadFile,
 )
 
 from lumina.core.dependencies import CurrentUser
 from lumina.features import abnt_conformity_service
-from lumina.features.json_store import JsonResultStore
 from lumina.features.schemas import (
     ProcessingAccepted,
-    ProcessingResult,
+    ProcessingResultList,
 )
 
 router = APIRouter(prefix='/abnt', tags=['conformidade com abnt'])
-
-RESULT_NOT_FOUND_DETAIL = 'Nenhum processamento ABNT encontrado para este documento.'
-
-
-def get_result_or_404(store: JsonResultStore, doc_id: str) -> dict:
-    result = store.get(doc_id)
-    if result is None:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=RESULT_NOT_FOUND_DETAIL)
-    return result
 
 
 @router.post(
@@ -42,10 +31,11 @@ async def process_abnt_compliance(
     file: UploadFile = File(...),
 ):
     content = await file.read()
-    abnt_conformity_service.start_analysis(doc_id, file.filename, content, background_tasks)
-    return {'doc_id': doc_id, 'status': 'processing'}
+    return abnt_conformity_service.start_analysis(
+        doc_id, file.filename, content, background_tasks
+    )
 
 
-@router.get('/{doc_id}/conformidade', response_model=ProcessingResult)
+@router.get('/{doc_id}/conformidade', response_model=ProcessingResultList)
 async def get_abnt_result(doc_id: str, current_user: CurrentUser):
-    return get_result_or_404(abnt_conformity_service.get_store(), doc_id)
+    return {'results': abnt_conformity_service.list_results(doc_id)}

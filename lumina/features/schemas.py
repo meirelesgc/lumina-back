@@ -10,13 +10,23 @@ ProcessingStatus = Literal['processing', 'completed', 'error']
 
 
 class ProcessingAccepted(BaseModel):
+    id: str
     doc_id: str
     status: ProcessingStatus = 'processing'
+    file_path: str
+    created_at: str
 
 
 class ProcessingResult(BaseModel):
+    id: str
     doc_id: str
     status: ProcessingStatus
+    file_path: str
+    created_at: str
     updated_at: str
     report: dict[str, Any] | None = None
     error: str | None = None
+
+
+class ProcessingResultList(BaseModel):
+    results: list[ProcessingResult]
