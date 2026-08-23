@@ -28,20 +28,51 @@ class JsonResultStore:
                 continue
 
     def get(self, key: str) -> dict[str, Any] | None:
-        return self._cache.get(key)
+        item = self._cache.get(key)
+        if item is None:
+            return None
+        return self._normalize(key, item)
 
     def list_keys(self) -> list[str]:
         return list(self._cache.keys())
 
     def list_all(self) -> list[dict[str, Any]]:
-        return list(self._cache.values())
+        return [self._normalize(key, item) for key, item in self._cache.items()]
 
     def list_by_doc_id(self, doc_id: str) -> list[dict[str, Any]]:
         results = [
-            item for item in self._cache.values() if item.get('doc_id') == doc_id
+            self._normalize(key, item)
+            for key, item in self._cache.items()
+            if item.get('doc_id') == doc_id
         ]
-        results.sort(key=lambda item: item.get('created_at') or '')
+        results.sort(key=lambda item: item.get('created_at') or '', reverse=True)
         return results
+
+    def _normalize(self, key: str, item: dict[str, Any]) -> dict[str, Any]:
+        # Resultados gravados no formato antigo nao tinham id, file_path nem created_at.
+        normalized = dict(item)
+        normalized.setdefault('id', key)
+        updated_at = normalized.get('updated_at') or ''
+        normalized.setdefault('created_at', updated_at)
+        if not normalized.get('file_path'):
+            normalized['file_path'] = self._legacy_file_path(normalized)
+        return normalized
+
+    def _legacy_file_path(self, item: dict[str, Any]) -> str:
+        metadata = ((item.get('report') or {}).get('metadata') or {})
+        article_file = str(metadata.get('article_file') or '').replace('\\', '/')
+        for marker in (
+            'template_conformity/uploads/',
+            'abnt_conformity/uploads/',
+        ):
+            index = article_file.find(marker)
+            if index != -1:
+                return article_file[index:]
+        doc_id = item.get('doc_id') or ''
+        if not doc_id:
+            return ''
+        feature_dir = self.directory.parent.name
+        return f'{feature_dir}/uploads/{doc_id}.pdf'
 
     def save(self, key: str, data: dict[str, Any]) -> Path:
         path = self._path_for(key)

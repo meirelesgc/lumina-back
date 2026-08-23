@@ -38,4 +38,5 @@ async def process_abnt_compliance(
 
 @router.get('/{doc_id}/conformidade', response_model=ProcessingResultList)
 async def get_abnt_result(doc_id: str, current_user: CurrentUser):
-    return {'results': abnt_conformity_service.list_results(doc_id)}
+    results = abnt_conformity_service.list_results(doc_id)
+    return {'count': len(results), 'results': results}

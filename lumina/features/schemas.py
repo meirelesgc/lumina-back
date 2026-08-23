@@ -29,4 +29,5 @@ class ProcessingResult(BaseModel):
 
 
 class ProcessingResultList(BaseModel):
+    count: int
     results: list[ProcessingResult]

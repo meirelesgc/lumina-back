@@ -111,4 +111,5 @@ async def process_template_compliance(
 
 @router.get('/{doc_id}/conformidade', response_model=ProcessingResultList)
 async def get_template_result(doc_id: str, current_user: CurrentUser):
-    return {'results': template_conformity_service.list_results(doc_id)}
+    results = template_conformity_service.list_results(doc_id)
+    return {'count': len(results), 'results': results}
