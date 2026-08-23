@@ -27,16 +27,16 @@ class DocumentSchema(BaseModel):
 
 
 class DocumentCreate(DocumentSchema):
-    typification_ids: Optional[list[UUID]]
-    editors_ids: Optional[list[UUID]]
+    typification_ids: Optional[list[UUID]] = None
+    editors_ids: Optional[list[UUID]] = None
     project_document_id: Optional[UUID] = None
     source: Optional[str] = 'manual'
 
 
 class DocumentUpdate(DocumentSchema):
     id: UUID
-    typification_ids: Optional[list[UUID]]
-    editors_ids: Optional[list[UUID]]
+    typification_ids: Optional[list[UUID]] = None
+    editors_ids: Optional[list[UUID]] = None
 
 
 class DocumentPublic(DocumentSchema):
@@ -57,7 +57,16 @@ class DocumentList(BaseModel):
     documents: list[DocumentPublic]
 
 
+class DocumentScope(str, Enum):
+    MINE = 'mine'
+    ADVISEES = 'advisees'
+    ALL = 'all'
+
+
 class DocumentFilter(UserFilter):
     archived: Optional[bool] = False
     q: Optional[str] = None
     source: Optional[str] = None
+    scope: Optional[DocumentScope] = DocumentScope.MINE
+    advisee_id: Optional[UUID] = None
+    mine_only: Optional[bool] = None

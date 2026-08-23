@@ -5,9 +5,16 @@ from sqlalchemy import select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from lumina.models import Document, DocumentHistory, Typification, User
+from lumina.models import (
+    AccessType,
+    Advisorship,
+    Document,
+    DocumentHistory,
+    Typification,
+    User,
+)
 from lumina.repositories import util
-from lumina.schemas import DocumentFilter
+from lumina.schemas.document import DocumentFilter, DocumentScope
 
 
 async def get_by_id(session: AsyncSession, doc_id: UUID) -> Optional[Document]:
@@ -38,8 +45,43 @@ async def get_by_identifier(
     return await session.scalar(stmt)
 
 
+async def has_document_access(
+    session: AsyncSession, current_user: User, doc: Document
+) -> bool:
+    if current_user.access_level == AccessType.ADMIN:
+        return True
+
+    if doc.created_by == current_user.id:
+        return True
+
+    if any(editor.id == current_user.id for editor in doc.editors):
+        return True
+
+    if doc.created_by:
+        stmt = select(Advisorship.id).where(
+            Advisorship.advisor_id == current_user.id,
+            Advisorship.advisee_id == doc.created_by,
+            Advisorship.status == 'ACTIVE',
+            Advisorship.deleted_at.is_(None),
+        )
+        if await session.scalar(stmt):
+            return True
+
+    if doc.advisorship_id:
+        stmt = select(Advisorship.id).where(
+            Advisorship.id == doc.advisorship_id,
+            Advisorship.advisor_id == current_user.id,
+            Advisorship.status == 'ACTIVE',
+            Advisorship.deleted_at.is_(None),
+        )
+        if await session.scalar(stmt):
+            return True
+
+    return False
+
+
 async def list_all(
-    session: AsyncSession, filters: DocumentFilter
+    session: AsyncSession, current_user: User, filters: DocumentFilter
 ) -> list[Document]:
     # Lógica de Lateral Join para pegar o último histórico
     last_history_subq = (
@@ -58,6 +100,58 @@ async def list_all(
         .where(Document.deleted_at.is_(None))
         .order_by(last_history.status.asc(), last_history.created_at.asc())
     )
+
+    # Controle de Acesso e Escopo
+    is_admin = current_user.access_level == AccessType.ADMIN
+
+    if is_admin:
+        if filters.advisee_id:
+            query = query.where(Document.created_by == filters.advisee_id)
+        elif filters.mine_only or filters.scope == DocumentScope.MINE:
+            query = query.where(
+                (Document.created_by == current_user.id)
+                | (Document.editors.any(User.id == current_user.id))
+            )
+        # Se is_admin e scope == ALL, vê todos os docs
+    else:
+        # Usuário comum ou orientador
+        advisee_ids_subq = select(Advisorship.advisee_id).where(
+            Advisorship.advisor_id == current_user.id,
+            Advisorship.status == 'ACTIVE',
+            Advisorship.deleted_at.is_(None),
+        )
+        advisorship_ids_subq = select(Advisorship.id).where(
+            Advisorship.advisor_id == current_user.id,
+            Advisorship.status == 'ACTIVE',
+            Advisorship.deleted_at.is_(None),
+        )
+
+        if filters.advisee_id:
+            # Filtra por orientando específico
+            query = query.where(
+                Document.created_by == filters.advisee_id,
+                Document.created_by.in_(advisee_ids_subq),
+            )
+        elif filters.scope == DocumentScope.ADVISEES:
+            # Documentos dos orientandos ativos
+            query = query.where(
+                (Document.created_by.in_(advisee_ids_subq))
+                | (Document.advisorship_id.in_(advisorship_ids_subq))
+            )
+        elif filters.scope == DocumentScope.ALL:
+            # Meus documentos + Documentos dos meus orientandos
+            query = query.where(
+                (Document.created_by == current_user.id)
+                | (Document.editors.any(User.id == current_user.id))
+                | (Document.created_by.in_(advisee_ids_subq))
+                | (Document.advisorship_id.in_(advisorship_ids_subq))
+            )
+        else:
+            # Padrão: MINE (meus documentos criados + onde sou editor)
+            query = query.where(
+                (Document.created_by == current_user.id)
+                | (Document.editors.any(User.id == current_user.id))
+            )
 
     if filters.archived is not None:
         query = query.where(Document.is_archived == filters.archived)

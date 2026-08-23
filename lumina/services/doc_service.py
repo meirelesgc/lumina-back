@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.dependencies import CurrentUser
-from lumina.models import Document, DocumentHistory
+from lumina.models import AccessType, Document, DocumentHistory
 from lumina.repositories import doc_repo, project_document_repo, release_repo
 from lumina.schemas import (
     DocumentCreate,
@@ -28,7 +28,10 @@ async def create_doc(
     if existing_doc:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail=f'Já existe um documento com o identificador "{data.identifier}".',
+            detail=(
+                f'Já existe um documento com o identificador '
+                f'"{data.identifier}".'
+            ),
         )
 
     db_doc = Document(
@@ -90,23 +93,35 @@ async def create_doc(
 
 
 async def get_docs(
-    session: AsyncSession, filters: DocumentFilter
+    session: AsyncSession, current_user: CurrentUser, filters: DocumentFilter
 ) -> list[Document]:
-    return await doc_repo.list_all(session, filters)
+    return await doc_repo.list_all(session, current_user, filters)
 
 
-async def get_doc_by_id(session: AsyncSession, doc_id: UUID) -> Document:
+async def get_doc_by_id(
+    session: AsyncSession, current_user: CurrentUser, doc_id: UUID
+) -> Document:
     doc = await doc_repo.get_by_id(session, doc_id)
     if not doc or doc.deleted_at:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Document not found',
         )
+
+    has_access = await doc_repo.has_document_access(session, current_user, doc)
+    if not has_access:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Acesso negado a este documento.',
+        )
+
     return doc
 
 
 async def get_doc_by_project_document_id(
-    session: AsyncSession, project_document_id: UUID
+    session: AsyncSession,
+    current_user: CurrentUser,
+    project_document_id: UUID,
 ) -> Document:
     doc = await doc_repo.get_by_project_document_id(
         session, project_document_id
@@ -116,13 +131,34 @@ async def get_doc_by_project_document_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Document not found for this project document',
         )
+
+    has_access = await doc_repo.has_document_access(session, current_user, doc)
+    if not has_access:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Acesso negado a este documento.',
+        )
+
     return doc
 
 
 async def update_doc(
     session: AsyncSession, current_user: CurrentUser, data: DocumentUpdate
 ) -> Document:
-    db_doc = await get_doc_by_id(session, data.id)
+    db_doc = await get_doc_by_id(session, current_user, data.id)
+
+    is_admin = current_user.access_level == AccessType.ADMIN
+    is_author = db_doc.created_by == current_user.id
+    is_editor = any(e.id == current_user.id for e in db_doc.editors)
+
+    if not (is_admin or is_author or is_editor):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=(
+                'Apenas autor, editores ou administradores '
+                'podem editar este documento.'
+            ),
+        )
 
     old_data = DocumentPublic.model_validate(db_doc).model_dump(mode='json')
 
@@ -132,7 +168,10 @@ async def update_doc(
     if conflict:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail=f'Já existe um documento com o identificador "{data.identifier}".',
+            detail=(
+                f'Já existe um documento com o identificador '
+                f'"{data.identifier}".'
+            ),
         )
 
     db_doc.name = data.name
@@ -199,7 +238,20 @@ async def update_doc(
 async def toggle_archive(
     session: AsyncSession, current_user: CurrentUser, doc_id: UUID
 ) -> Document:
-    db_doc = await get_doc_by_id(session, doc_id)
+    db_doc = await get_doc_by_id(session, current_user, doc_id)
+
+    is_admin = current_user.access_level == AccessType.ADMIN
+    is_author = db_doc.created_by == current_user.id
+    is_editor = any(e.id == current_user.id for e in db_doc.editors)
+
+    if not (is_admin or is_author or is_editor):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=(
+                'Apenas autor, editores ou administradores '
+                'podem arquivar este documento.'
+            ),
+        )
 
     old_data = DocumentPublic.model_validate(db_doc).model_dump(mode='json')
 
@@ -225,7 +277,19 @@ async def toggle_archive(
 async def delete_doc(
     session: AsyncSession, current_user: CurrentUser, doc_id: UUID
 ) -> None:
-    db_doc = await get_doc_by_id(session, doc_id)
+    db_doc = await get_doc_by_id(session, current_user, doc_id)
+
+    is_admin = current_user.access_level == AccessType.ADMIN
+    is_author = db_doc.created_by == current_user.id
+
+    if not (is_admin or is_author):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=(
+                'Apenas o autor ou administradores '
+                'podem excluir este documento.'
+            ),
+        )
 
     old_data = DocumentPublic.model_validate(db_doc).model_dump(mode='json')
     db_doc.set_deletion_audit(current_user.id)
@@ -260,9 +324,9 @@ async def delete_doc(
 
 
 async def get_doc_context_items(
-    session: AsyncSession, doc_id: UUID
+    session: AsyncSession, current_user: CurrentUser, doc_id: UUID
 ) -> list[dict]:
-    doc = await doc_repo.get_by_id(session, doc_id)
+    doc = await get_doc_by_id(session, current_user, doc_id)
     if not doc or doc.deleted_at:
         return []
 
@@ -276,9 +340,13 @@ async def get_doc_context_items(
             for branch in taxonomy.branches:
                 if branch.deleted_at:
                     continue
+                label = (
+                    f'{typification.name} > '
+                    f'{taxonomy.title} > {branch.title}'
+                )
                 items.append({
                     'id': str(branch.id),
-                    'label': f'{typification.name} > {taxonomy.title} > {branch.title}',
+                    'label': label,
                     'type': 'BRANCH',
                     'typification_name': typification.name,
                     'taxonomy_title': taxonomy.title,
