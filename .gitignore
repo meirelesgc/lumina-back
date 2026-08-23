@@ -13,7 +13,15 @@ __pycache__/
 iaEditais/storage/temp
 # C extensions
 *.so
+# Dotfiles exceptions
 .*
+!.gitignore
+!.dockerignore
+!.specify/
+!.agents/
+!.github/
+!.vscode/
+
 # Distribution / packaging
 iaEditais/storage
 .Python
