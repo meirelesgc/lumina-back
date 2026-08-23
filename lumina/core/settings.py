@@ -41,4 +41,5 @@ class Settings(BaseSettings):
     ROOT_PATH: Optional[str] = str()
 
     UPLOAD_DIRECTORY: Path = 'lumina/storage/uploads'
+    TEMPLATES_DIRECTORY: Path = 'lumina/storage/templates'
     STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'

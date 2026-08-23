@@ -1,11 +1,8 @@
-# Constantes de configuração e tolerâncias da verificação híbrida de template.
-# Centralizadas aqui para evitar "magic values" espalhados pelos módulos.
+# Constantes de configuração e tolerâncias da verificação híbrida de template. Centralizadas aqui para evitar "magic values" espalhados pelos módulos.
 
 from __future__ import annotations
 
-# Modelo de visão usado na comparação entre template e artigo. gpt-5.4-mini só
-# aceita "temperature" quando reasoning.effort='none' (API rejeita a
-# combinação com esforço > none); por isso usamos os dois no mínimo.
+# Modelo de visão usado na comparação entre template e artigo. gpt-5.4-mini só aceita "temperature" quando reasoning.effort='none' (API rejeita a combinação com esforço > none); por isso usamos os dois no mínimo.
 VISION_MODEL = 'gpt-5.4-mini'
 VISION_DPI = 150
 VISION_DETAIL = 'high'

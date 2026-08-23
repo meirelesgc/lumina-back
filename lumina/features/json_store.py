@@ -1,5 +1,4 @@
-# "Banco de dados" simplificado em JSON: cada resultado é um arquivo `<chave>.json`,
-# cacheado em memória. Uma instância para template e outra para ABNT (ver service.py).
+# "Banco de dados" simplificado em JSON: cada resultado é um arquivo `<chave>.json`, cacheado em memória. Uma instância para template_conformity_service.py e outra para abnt_conformity_service.py.
 
 from __future__ import annotations
 

@@ -86,3 +86,16 @@ def get_storage_provider() -> StorageProvider:
         return S3Storage()
     else:
         raise ValueError(f'Unknown storage provider: {STORAGE_PROVIDER}')
+
+
+@lru_cache
+def get_template_storage_provider() -> StorageProvider:
+    if STORAGE_PROVIDER == 'LOCAL':
+        return LocalStorage(
+            storage_dir=SETTINGS.TEMPLATES_DIRECTORY,
+            base_url='/templates-uploads',
+        )
+    elif STORAGE_PROVIDER == 'S3':
+        return S3Storage()
+    else:
+        raise ValueError(f'Unknown storage provider: {STORAGE_PROVIDER}')
