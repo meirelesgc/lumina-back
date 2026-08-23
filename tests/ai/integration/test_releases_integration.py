@@ -1,13 +1,12 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from uuid import uuid4
 
 from lumina.app import app
-from lumina.core.llm import get_model
 from lumina.core.cache import get_redis
+from lumina.core.llm import get_model
 from lumina.core.vectorstore import get_vectorstore
 from lumina.models import Document, DocumentHistory
-from tests.factories.document_factory import ProjectDocumentFactory
-from unittest.mock import AsyncMock, patch
 
 
 @pytest.mark.asyncio
@@ -20,7 +19,6 @@ async def test_create_release_integration(
     client,
     token,
     session,
-    unit,
     user,
     fake_release_pipeline_llm,
 ):
@@ -54,7 +52,6 @@ async def test_create_release_integration(
         identifier='2024-001',
         description='Teste de Integração de Release',
         processing_status='IDLE',
-        unit_id=unit.id,
         created_by=user.id,
     )
 

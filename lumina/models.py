@@ -93,60 +93,6 @@ class AuditMixin:
 
 
 @table_registry.mapped_as_dataclass
-class Unit(AuditMixin):
-    __tablename__ = 'units'
-
-    id: Mapped[UUID] = mapped_column(
-        init=False,
-        primary_key=True,
-        insert_default=uuid4,
-        default_factory=uuid4,
-    )
-    name: Mapped[str] = mapped_column(nullable=False)
-    location: Mapped[Optional[str]] = mapped_column(default=None)
-
-    tsv: Mapped[TSVECTOR] = mapped_column(
-        TSVECTOR,
-        Computed(
-            "setweight(to_tsvector('portuguese', name), 'A') || "
-            "setweight(to_tsvector('portuguese', coalesce(location, '')), 'B')",
-            persisted=True,
-        ),
-        init=False,
-        deferred=True,
-    )
-
-    users: Mapped[List['User']] = relationship(
-        back_populates='unit',
-        default_factory=list,
-        init=False,
-        foreign_keys='User.unit_id',
-        lazy='selectin',
-    )
-    documents: Mapped[List['Document']] = relationship(
-        back_populates='unit',
-        default_factory=list,
-        init=False,
-        foreign_keys='Document.unit_id',
-        lazy='selectin',
-    )
-
-    __table_args__ = (
-        Index(
-            'ix_uq_units_name_active',
-            'name',
-            unique=True,
-            postgresql_where=(column('deleted_at').is_(None)),
-        ),
-        Index(
-            'ix_units_tsv',
-            'tsv',
-            postgresql_using='gin',
-        ),
-    )
-
-
-@table_registry.mapped_as_dataclass
 class User(AuditMixin):
     __tablename__ = 'users'
 
@@ -173,11 +119,6 @@ class User(AuditMixin):
         deferred=True,
     )
 
-    unit_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey('units.id', name='fk_user_unit_id'),
-        default=None,
-        nullable=True,
-    )
     icon_id: Mapped[Optional[UUID]] = mapped_column(
         ForeignKey(
             'user_images.id', name='fk_users_icon_id', ondelete='SET NULL'
@@ -188,9 +129,6 @@ class User(AuditMixin):
     icon: Mapped[Optional['UserImage']] = relationship(
         foreign_keys=[icon_id], init=False, lazy='selectin'
     )
-    unit: Mapped[Optional['Unit']] = relationship(
-        back_populates='users', init=False, foreign_keys=[unit_id]
-    )
 
     editable_documents: Mapped[List['Document']] = relationship(
         'Document',
@@ -199,6 +137,23 @@ class User(AuditMixin):
         primaryjoin='User.id==DocumentEditor.user_id',
         secondaryjoin='Document.id==DocumentEditor.document_id',
         back_populates='editors',
+        default_factory=list,
+        init=False,
+    )
+
+    advising_relationships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys='Advisorship.advisor_id',
+        lazy='selectin',
+        back_populates='advisor',
+        default_factory=list,
+        init=False,
+    )
+    advisee_relationships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys='Advisorship.advisee_id',
+        lazy='selectin',
+        back_populates='advisee',
         default_factory=list,
         init=False,
     )
@@ -574,15 +529,6 @@ class Document(AuditMixin):
         deferred=True,
     )
 
-    unit_id: Mapped[UUID] = mapped_column(
-        ForeignKey('units.id'), nullable=False
-    )
-    unit: Mapped['Unit'] = relationship(
-        back_populates='documents',
-        lazy='selectin',
-        init=False,
-    )
-
     history: Mapped[List['DocumentHistory']] = relationship(
         back_populates='document',
         lazy='selectin',
@@ -641,6 +587,18 @@ class Document(AuditMixin):
         init=False,
         lazy='selectin',
         uselist=False,
+    )
+    advisorship_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('advisorships.id', name='fk_documents_advisorship_id'),
+        nullable=True,
+        default=None,
+    )
+    advisorship: Mapped[Optional['Advisorship']] = relationship(
+        'Advisorship',
+        foreign_keys=[advisorship_id],
+        back_populates='documents',
+        init=False,
+        lazy='selectin',
     )
     __table_args__ = (
         Index(
@@ -1229,6 +1187,13 @@ class Project(AuditMixin):
         init=False,
         cascade='all, delete-orphan',
     )
+    advisorships: Mapped[List['Advisorship']] = relationship(
+        'Advisorship',
+        back_populates='project',
+        lazy='selectin',
+        default_factory=list,
+        init=False,
+    )
 
 
 @table_registry.mapped_as_dataclass
@@ -1402,3 +1367,72 @@ class PublicationTemplate(AuditMixin):
     name: Mapped[str] = mapped_column(nullable=False)
     original_filename: Mapped[str] = mapped_column(nullable=False)
     file_path: Mapped[str] = mapped_column(nullable=False)
+
+
+@table_registry.mapped_as_dataclass
+class Advisorship(AuditMixin):
+    __tablename__ = 'advisorships'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    advisor_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_advisorship_advisor_id'),
+        nullable=False,
+    )
+    advisee_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_advisorship_advisee_id'),
+        nullable=False,
+    )
+    project_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('projects.id', name='fk_advisorship_project_id'),
+        nullable=True,
+        default=None,
+    )
+    role_type: Mapped[str] = mapped_column(
+        default='MAIN_ADVISOR', nullable=False
+    )
+    topic: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    status: Mapped[str] = mapped_column(default='ACTIVE', nullable=False)
+
+    advisor: Mapped['User'] = relationship(
+        'User',
+        foreign_keys=[advisor_id],
+        lazy='selectin',
+        init=False,
+    )
+    advisee: Mapped['User'] = relationship(
+        'User',
+        foreign_keys=[advisee_id],
+        lazy='selectin',
+        init=False,
+    )
+    project: Mapped[Optional['Project']] = relationship(
+        'Project',
+        foreign_keys=[project_id],
+        lazy='selectin',
+        init=False,
+        back_populates='advisorships',
+    )
+    documents: Mapped[List['Document']] = relationship(
+        'Document',
+        lazy='selectin',
+        back_populates='advisorship',
+        default_factory=list,
+        init=False,
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_uq_advisorship_active',
+            'advisor_id',
+            'advisee_id',
+            'project_id',
+            'role_type',
+            unique=True,
+            postgresql_where=(column('deleted_at').is_(None)),
+        ),
+    )

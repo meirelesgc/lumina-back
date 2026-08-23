@@ -5,10 +5,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from lumina.schemas.ai import Citation
 from lumina.schemas.branch import BranchSchema
+from lumina.schemas.common import DocumentReference
 from lumina.schemas.source import SourcePublic
 from lumina.schemas.taxonomy import TaxonomySchema
 from lumina.schemas.typification import TypificationSchema
-from lumina.schemas.common import DocumentReference
 
 
 class DocumentReleaseFeedback(BaseModel):
@@ -34,7 +34,7 @@ class DocumentReleaseFeedback(BaseModel):
     )
     citations: list[Citation] = Field(
         default_factory=list,
-        description='Lista de IDs e trechos dos chunks utilizados como evidência da avaliação.'
+        description='Lista de IDs e trechos dos chunks utilizados como evidência da avaliação.',
     )
     references: list[DocumentReference] = Field(default_factory=list)
 

@@ -35,7 +35,6 @@ async def create_doc(
         name=data.name,
         description=data.description,
         identifier=data.identifier,
-        unit_id=current_user.unit_id,
         processing_status=DocumentProcessingStatus.IDLE,
         grupo=data.grupo,
         tipo_documento=data.tipo_documento,

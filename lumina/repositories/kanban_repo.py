@@ -24,12 +24,10 @@ async def get_user(session: AsyncSession, user_id: UUID) -> Optional[User]:
     return await session.get(User, user_id)
 
 
-async def get_unit_auditors(
-    session: AsyncSession, unit_id: UUID
-) -> Sequence[User]:
+async def get_auditors(session: AsyncSession) -> Sequence[User]:
     stmt = select(User).where(
         User.access_level == 'AUDITOR',
-        User.unit_id == unit_id,
+        User.deleted_at.is_(None),
     )
     result = await session.execute(stmt)
     return result.scalars().all()

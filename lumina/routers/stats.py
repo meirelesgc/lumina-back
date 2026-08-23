@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import desc, func, join, select
+from sqlalchemy import desc, func, select
 
 from lumina.core.dependencies import Session
 from lumina.models import (
@@ -11,20 +11,8 @@ from lumina.models import (
     DocumentHistory,
     DocumentMessage,
     DocumentRelease,
-    Unit,
     User,
 )
-
-
-class DocumentCountByUnit(BaseModel):
-    """Estatística de contagem de documentos por unidade."""
-
-    unit_name: str
-    document_count: int
-
-
-class DocumentCountByUnitList(BaseModel):
-    stats: List[DocumentCountByUnit]
 
 
 class TypificationUsage(BaseModel):
@@ -43,7 +31,6 @@ class KpiStats(BaseModel):
 
     total_users: int
     total_documents: int
-    total_units: int
     total_analyses: int
 
 
@@ -61,33 +48,6 @@ class UserMessageActivityList(BaseModel):
 router = APIRouter(
     prefix='/stats', tags=['operações de sistema, estatísticas']
 )
-
-
-@router.get(
-    '/documents-by-unit',
-    response_model=DocumentCountByUnitList,
-    summary='Contagem de documentos analisados por unidade',
-)
-async def get_document_count_by_unit(session: Session):
-    """
-    Retorna a contagem de documentos ativos (não deletados)
-    agrupados por unidade.
-    """
-    statement = (
-        select(
-            Unit.name.label('unit_name'),
-            func.count(Document.id).label('document_count'),
-        )
-        .select_from(join(Unit, Document, Unit.id == Document.unit_id))
-        .where(Unit.deleted_at.is_(None), Document.deleted_at.is_(None))
-        .group_by(Unit.id, Unit.name)
-        .order_by(desc('document_count'))
-    )
-
-    result = await session.execute(statement)
-    stats = result.mappings().all()
-
-    return {'stats': stats}
 
 
 @router.get(
@@ -134,7 +94,7 @@ async def get_most_used_typifications(session: Session):
 async def get_kpis(session: Session):
     """
     Retorna métricas gerais do sistema, como total de usuários,
-    documentos, unidades e análises (releases) em documentos ativos.
+    documentos e análises (releases) em documentos ativos.
     """
 
     stmt_users = select(func.count(User.id)).where(User.deleted_at.is_(None))
@@ -144,9 +104,6 @@ async def get_kpis(session: Session):
         Document.deleted_at.is_(None)
     )
     total_documents = await session.scalar(stmt_docs) or 0
-
-    stmt_units = select(func.count(Unit.id)).where(Unit.deleted_at.is_(None))
-    total_units = await session.scalar(stmt_units) or 0
 
     stmt_analyses = (
         select(func.count(DocumentRelease.id))
@@ -162,7 +119,6 @@ async def get_kpis(session: Session):
     return KpiStats(
         total_users=total_users,
         total_documents=total_documents,
-        total_units=total_units,
         total_analyses=total_analyses,
     )
 

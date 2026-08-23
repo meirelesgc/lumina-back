@@ -1,7 +1,6 @@
 import os
 import re
-from collections import defaultdict
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 from uuid import UUID
 
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -79,7 +78,7 @@ async def get_context(session: AsyncSession, msg: str) -> List[str]:
 
 def build_chunk_prompts(chunks: List) -> List[str]:
     prompts_list = []
-    
+
     for chunk in chunks:
         chunk_id = chunk.metadata.get('chunk_id', 'unknown_id')
         section = chunk.metadata.get('section_title', '')
@@ -88,7 +87,7 @@ def build_chunk_prompts(chunks: List) -> List[str]:
         if '\n\n' in conteudo and conteudo.startswith('SECTION:'):
             conteudo = conteudo.split('\n\n', 1)[1]
 
-        prompt = f"[FONTE] chunk_id: {chunk_id}\nSECTION: {section}\n{conteudo.strip()}"
+        prompt = f'[FONTE] chunk_id: {chunk_id}\nSECTION: {section}\n{conteudo.strip()}'
         prompts_list.append(prompt)
 
     return prompts_list
@@ -157,7 +156,9 @@ async def get_document_auto_context(
     return prompts_list
 
 
-def resolve_citations(citations: List[Citation], retrieved_chunks: List[Any]) -> List[Dict]:
+def resolve_citations(
+    citations: List[Citation], retrieved_chunks: List[Any]
+) -> List[Dict]:
     resolved = []
     # Cria um mapa O(1) de chunk_id para metadados
     chunk_map = {
@@ -165,28 +166,33 @@ def resolve_citations(citations: List[Citation], retrieved_chunks: List[Any]) ->
         for chunk in retrieved_chunks
         if chunk.metadata.get('chunk_id')
     }
-    
+
     seen = set()
     for citation in citations:
         if citation.chunk_id in seen:
             continue
-            
+
         if citation.chunk_id in chunk_map:
             meta = chunk_map[citation.chunk_id]
             raw_rects = meta.get('rects', [])
             mapped_rects = []
             for r in raw_rects:
                 if len(r) == 4:
-                    mapped_rects.append({"x1": r[0], "y1": r[1], "x2": r[2], "y2": r[3]})
-            
+                    mapped_rects.append({
+                        'x1': r[0],
+                        'y1': r[1],
+                        'x2': r[2],
+                        'y2': r[3],
+                    })
+
             resolved.append({
-                "chunk_id": citation.chunk_id,
-                "text_snippet": citation.text_snippet,
-                "page": meta.get('page'),
-                "rects": mapped_rects,
+                'chunk_id': citation.chunk_id,
+                'text_snippet': citation.text_snippet,
+                'page': meta.get('page'),
+                'rects': mapped_rects,
             })
             seen.add(citation.chunk_id)
-            
+
     return resolved
 
 
@@ -213,8 +219,10 @@ async def create_ai_response(
         vstore, db_release, '\n---\n'.join(explicit_prompts)
     )
 
-    msg_context, msg_chunks = await get_prompt_context(vstore, db_release, data.content)
-    
+    msg_context, msg_chunks = await get_prompt_context(
+        vstore, db_release, data.content
+    )
+
     all_chunks = branch_chunks + msg_chunks
     context = '\n---\n'.join(
         msg_context + branch_context + auto_prompts + explicit_prompts
@@ -222,7 +230,7 @@ async def create_ai_response(
 
     chat_context = build_chat_prompt(recent_messages)
 
-    # Opted to omit full document text because now chunks are perfectly mapped to coords 
+    # Opted to omit full document text because now chunks are perfectly mapped to coords
     # full_text is too big and breaks citations if the LLM cites it instead of chunks.
     # full_text = await _load_document_text(db_release)
     # if full_text:
@@ -233,14 +241,11 @@ async def create_ai_response(
         content=data.content,
         recent_messages=chat_context,
     )
-    
+
     structured_model = model.with_structured_output(AnswerWithCitations)
     response: AnswerWithCitations = structured_model.invoke(prompt)
-    
+
     # Resolve citations
     resolved_citations = resolve_citations(response.citations, all_chunks)
-    
-    return {
-        "answer": response.answer,
-        "references": resolved_citations
-    }
+
+    return {'answer': response.answer, 'references': resolved_citations}

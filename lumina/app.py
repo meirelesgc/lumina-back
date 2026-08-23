@@ -14,12 +14,12 @@ from lumina.core.cache import WebSocketManager
 from lumina.core.settings import Settings
 from lumina.routers import (
     abnt,
+    advisorship,
     auth,
     reports,
     stats,
     system,
     templates,
-    units,
     users,
 )
 from lumina.routers.audit import audit_logs
@@ -119,8 +119,6 @@ async def health():
     }
 
 
-app.include_router(units.router)
-
 app.include_router(stats.router)
 
 
@@ -138,6 +136,7 @@ app.include_router(branches.router)
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(advisorship.router)
 app.include_router(releases.router)
 app.include_router(kanban.router)
 app.include_router(sources.router)

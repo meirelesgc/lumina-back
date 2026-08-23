@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from lumina.schemas.common import FilterPage, DocumentReference
+from lumina.schemas.common import DocumentReference, FilterPage
 from lumina.schemas.user import UserPublic
 
 

@@ -15,7 +15,7 @@ from lumina.app import app
 from lumina.core.database import get_session
 from lumina.core.security import get_password_hash
 from lumina.core.settings import Settings
-from lumina.models import Unit, User, table_registry
+from lumina.models import User, table_registry
 
 
 def pytest_addoption(parser):
@@ -158,20 +158,3 @@ class UserFactory(factory.Factory):
     email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
     password = factory.LazyAttribute(lambda obj: f'{obj.username}@example.com')
     phone_number = factory.Sequence(lambda n: f'550199999{n:04d}')
-
-
-class UnitFactory(factory.Factory):
-    class Meta:
-        model = Unit
-
-    name = factory.Sequence(lambda n: f'Unit {n}')
-    location = factory.Sequence(lambda n: f'Location {n}')
-
-
-@pytest_asyncio.fixture
-async def unit(session):
-    unit_obj = UnitFactory()
-    session.add(unit_obj)
-    await session.commit()
-    await session.refresh(unit_obj)
-    return unit_obj

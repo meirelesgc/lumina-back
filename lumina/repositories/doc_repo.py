@@ -59,9 +59,6 @@ async def list_all(
         .order_by(last_history.status.asc(), last_history.created_at.asc())
     )
 
-    if filters.unit_id:
-        query = query.where(Document.unit_id == filters.unit_id)
-
     if filters.archived is not None:
         query = query.where(Document.is_archived == filters.archived)
 

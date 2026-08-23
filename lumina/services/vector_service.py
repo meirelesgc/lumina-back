@@ -3,8 +3,8 @@ import re
 import unicodedata
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import fitz
 
+import fitz
 from langchain_community.document_loaders import (
     Docx2txtLoader,
     TextLoader,
@@ -25,19 +25,20 @@ SPLITTER = RecursiveCharacterTextSplitter(
     chunk_overlap=50,
 )
 
+
 class CoordinateChunker:
     def __init__(self, max_chars=500):
         self.max_chars = max_chars
 
     def process_page(self, doc, page_num):
         page = doc[page_num]
-        words = page.get_text("words")
+        words = page.get_text('words')
         chunks = []
-        current_chunk_text = ""
+        current_chunk_text = ''
         current_chunk_rects = []
         current_line_key = None
         line_words = []
-        
+
         def process_line(l_words):
             nonlocal current_chunk_text, current_chunk_rects
             if not l_words:
@@ -46,19 +47,22 @@ class CoordinateChunker:
             ly0 = min(w[1] for w in l_words)
             lx1 = max(w[2] for w in l_words)
             ly1 = max(w[3] for w in l_words)
-            line_text = " ".join(w[4] for w in l_words)
-            
-            if len(current_chunk_text) + len(line_text) + 1 > self.max_chars and current_chunk_text:
+            line_text = ' '.join(w[4] for w in l_words)
+
+            if (
+                len(current_chunk_text) + len(line_text) + 1 > self.max_chars
+                and current_chunk_text
+            ):
                 chunks.append({
-                    "chunk_id": f"chunk_{page_num}_{len(chunks)}",
-                    "page": page_num,
-                    "text": current_chunk_text.strip(),
-                    "rects": current_chunk_rects.copy()
+                    'chunk_id': f'chunk_{page_num}_{len(chunks)}',
+                    'page': page_num,
+                    'text': current_chunk_text.strip(),
+                    'rects': current_chunk_rects.copy(),
                 })
-                current_chunk_text = line_text + " "
+                current_chunk_text = line_text + ' '
                 current_chunk_rects = [[lx0, ly0, lx1, ly1]]
             else:
-                current_chunk_text += line_text + " "
+                current_chunk_text += line_text + ' '
                 current_chunk_rects.append([lx0, ly0, lx1, ly1])
 
         for w in words:
@@ -71,18 +75,18 @@ class CoordinateChunker:
                 current_line_key = key
                 line_words = []
             line_words.append(w)
-            
+
         if line_words:
             process_line(line_words)
-            
+
         if current_chunk_text:
             chunks.append({
-                "chunk_id": f"chunk_{page_num}_{len(chunks)}",
-                "page": page_num,
-                "text": current_chunk_text.strip(),
-                "rects": current_chunk_rects.copy()
+                'chunk_id': f'chunk_{page_num}_{len(chunks)}',
+                'page': page_num,
+                'text': current_chunk_text.strip(),
+                'rects': current_chunk_rects.copy(),
             })
-            
+
         return chunks
 
 
@@ -100,12 +104,12 @@ def _clean_and_format_documents(documents: List[Document]) -> List[Document]:
             chunk.page_content = text
         chunk.metadata['chunk_index'] = i
         chunk.metadata.setdefault('source', 'unknown')
-        
+
         # Fallback fields for non-PDFs
-        chunk.metadata['chunk_id'] = f"chunk_fallback_{i}"
+        chunk.metadata['chunk_id'] = f'chunk_fallback_{i}'
         chunk.metadata['page'] = 0
         chunk.metadata['rects'] = []
-        
+
     return chunks
 
 
@@ -171,7 +175,7 @@ def _get_sections_with_model(
         try:
             response = structured_model.invoke(prompt)
         except Exception as e:
-            print(f"Erro na extração de seções: {e}")
+            print(f'Erro na extração de seções: {e}')
             continue
 
         if not response or not response.sections:
@@ -297,14 +301,16 @@ def _split_by_sections(
                 },
             )
         )
-        
+
     if not split_documents and documents:
         return documents
 
     return split_documents
 
 
-def _assign_sections_to_chunks(chunks: List[Document], model: BaseChatModel) -> List[Document]:
+def _assign_sections_to_chunks(
+    chunks: List[Document], model: BaseChatModel
+) -> List[Document]:
     sections = _get_sections_with_model(chunks, model)
     full_text = '\n'.join(doc.page_content for doc in chunks)
     normalized_text, mapping = _normalize_with_mapping(full_text)
@@ -332,21 +338,23 @@ def _assign_sections_to_chunks(chunks: List[Document], model: BaseChatModel) -> 
         chunk_start_idx = normalized_text.find(chunk_norm, current_offset)
         if chunk_start_idx == -1:
             chunk_start_idx = current_offset
-            
-        assigned_section = ""
+
+        assigned_section = ''
         for sec in valid_sections:
             if sec['start_idx'] <= chunk_start_idx + len(chunk_norm) // 2:
                 assigned_section = sec['section']
             else:
                 break
-                
+
         chunk.metadata['section_title'] = assigned_section
-        
+
         if assigned_section:
-            chunk.page_content = f'SECTION: {assigned_section}\n\n{chunk.page_content}'
-            
+            chunk.page_content = (
+                f'SECTION: {assigned_section}\n\n{chunk.page_content}'
+            )
+
         current_offset = chunk_start_idx + len(chunk_norm)
-        
+
     return chunks
 
 
@@ -360,7 +368,7 @@ async def _anonymize_and_vectorize(chunks: List[Document], vstore: VStore):
 
 async def process_file(full_path: str, vstore: VStore, model) -> None:
     ext = os.path.splitext(full_path)[1].lower()
-    source_name = f"lumina/storage/uploads/{os.path.basename(full_path)}"
+    source_name = f'lumina/storage/uploads/{os.path.basename(full_path)}'
 
     if ext == '.pdf':
         doc = fitz.open(full_path)
@@ -382,12 +390,12 @@ async def process_file(full_path: str, vstore: VStore, model) -> None:
                             'chunk_index': global_chunk_idx,
                             'page': pc['page'],
                             'rects': pc['rects'],
-                            'source': source_name
-                        }
+                            'source': source_name,
+                        },
                     )
                 )
                 global_chunk_idx += 1
-                
+
         formatted_documents = _assign_sections_to_chunks(raw_chunks, model)
     elif ext == '.docx':
         loader = Docx2txtLoader(full_path)
