@@ -1,6 +1,4 @@
-﻿# Verificação híbrida POR SEÇÃO (visual + determinística) entre um artigo e um
-# template de revista. Três seções: pré-textuais (p.1), textuais (p.2 + corpo)
-# e pós-textuais (referências) — rodam concorrentemente via asyncio.gather.
+﻿# Verificação híbrida POR SEÇÃO (visual + determinística) entre um artigo e um template de revista. Três seções: pré-textuais (p.1), textuais (p.2 + corpo) e pós-textuais (referências), que rodam concorrentemente via asyncio.gather.
 
 from __future__ import annotations
 
@@ -8,29 +6,29 @@ import asyncio
 
 from openai import AsyncOpenAI
 
-from lumina.features.template_abnt.template_check.bounds import (
+from lumina.features.template_check.bounds import (
     compute_bounds,
 )
-from lumina.features.template_abnt.template_check.constants import (
+from lumina.features.template_check.constants import (
     SEC_POS,
     SEC_PRE,
     SEC_TEXT,
     SEC_TITLES,
     VISION_MODEL,
 )
-from lumina.features.template_abnt.template_check.schemas import (
+from lumina.features.template_check.schemas import (
     HybridReport,
     Metadata,
     SectionResult,
     build_report,
     build_section_result,
 )
-from lumina.features.template_abnt.template_check.script_runner import (
+from lumina.features.template_check.script_runner import (
     run_script_page1,
     run_script_page2,
     run_script_references,
 )
-from lumina.features.template_abnt.template_check.visual_check import (
+from lumina.features.template_check.visual_check import (
     run_visual_check,
 )
 
@@ -95,7 +93,7 @@ def build_metadata(template_path: str, article_path: str, skip_visual: bool) -> 
     )
 
 
-# Orquestração: ponto de entrada chamado por service.py.
+# Orquestração: ponto de entrada chamado por template_conformity_service.py.
 async def compare(template_path: str, article_path: str, skip_visual: bool = False) -> HybridReport:
     client = None if skip_visual else AsyncOpenAI()
     try:

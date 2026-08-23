@@ -13,12 +13,13 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from lumina.core.cache import WebSocketManager
 from lumina.core.settings import Settings
 from lumina.routers import (
+    abnt,
     advisorship,
     auth,
     reports,
     stats,
     system,
-    template_abnt,
+    templates,
     users,
 )
 from lumina.routers.audit import audit_logs
@@ -53,10 +54,19 @@ def get_version():
 BASE_DIR = os.path.dirname(__file__)
 STORAGE_DIR = os.path.join(BASE_DIR, 'storage')
 UPLOADS_DIR = os.path.join(STORAGE_DIR, 'uploads')
+TEMPLATE_CONFORMITY_UPLOADS_DIR = os.path.join(
+    STORAGE_DIR, 'template_conformity', 'uploads'
+)
 TEMP_DIR = os.path.join(STORAGE_DIR, 'temp')
 DEMOS_DIR = os.path.join(BASE_DIR, 'demos')
 
-for directory in [STORAGE_DIR, UPLOADS_DIR, TEMP_DIR, DEMOS_DIR]:
+for directory in [
+    STORAGE_DIR,
+    UPLOADS_DIR,
+    TEMPLATE_CONFORMITY_UPLOADS_DIR,
+    TEMP_DIR,
+    DEMOS_DIR,
+]:
     os.makedirs(directory, exist_ok=True)
 
 
@@ -66,6 +76,10 @@ BROKER_URL = SETTINGS.BROKER_URL
 logging.basicConfig(
     level=SETTINGS.LOG_LEVEL, format='%(levelname)s: %(message)s'
 )
+# Com LOG_LEVEL=DEBUG a OpenAI/httpx despejam o request inteiro (PNG em
+# base64 da conformidade visual e o prompt ABNT). Mantem o DEBUG do app.
+for _noisy in ('openai', 'openai._base_client', 'httpx', 'httpcore'):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 
 
 @asynccontextmanager
@@ -139,4 +153,5 @@ app.include_router(assistant.router)
 app.include_router(audit_logs.router)
 app.include_router(system.router)
 app.include_router(reports.router)
-app.include_router(template_abnt.router)
+app.include_router(templates.router)
+app.include_router(abnt.router)

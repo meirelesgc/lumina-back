@@ -1,5 +1,4 @@
-# Renderização de páginas de PDF em imagem PNG, sem dependência de Poppler
-# (usa apenas PyMuPDF). Usado na verificação visual (ver visual_check.py).
+# Renderização de páginas de PDF em imagem PNG, sem dependência de Poppler (usa apenas PyMuPDF). Usado na verificação visual (ver visual_check.py).
 
 from __future__ import annotations
 
