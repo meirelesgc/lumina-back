@@ -1,6 +1,4 @@
-# Funções pequenas e puras para extrair métricas de formatação de UMA página
-# de PDF (geometria, tipografia, colunas, espaçamento, numeração). Cada função
-# faz uma única coisa; extract_page_metrics/aggregate_page_metrics orquestram.
+# Funções pequenas e puras para extrair métricas de formatação de UMA página de PDF (geometria, tipografia, colunas, espaçamento, numeração). Cada função faz uma única coisa; extract_page_metrics/aggregate_page_metrics orquestram.
 
 from __future__ import annotations
 

@@ -1,24 +1,22 @@
-﻿# Verificação determinística por página (orquestração dos builders de critério).
-# Cada função abre e fecha seus PRÓPRIOS handles de documento (thread-safe,
-# pois roda em paralelo com as demais páginas via asyncio.to_thread).
+﻿# Verificação determinística por página (orquestração dos builders de critério). Cada função abre e fecha seus PRÓPRIOS handles de documento (thread-safe, pois roda em paralelo com as demais páginas via asyncio.to_thread).
 
 from __future__ import annotations
 
-from lumina.features.template_abnt.template_check import pdf_metrics as m
-from lumina.features.template_abnt.template_check.bounds import (
+from lumina.features.template_check import pdf_metrics as m
+from lumina.features.template_check.bounds import (
     body_candidate_pages,
     first_page_bounds,
 )
-from lumina.features.template_abnt.template_check.deterministic_checks import (
+from lumina.features.template_check.deterministic_checks import (
     PAGE1_BUILDERS,
     PAGE_BUILDERS,
     build_references_typography,
     missing_page_criterion,
 )
-from lumina.features.template_abnt.template_check.pdf_references import (
+from lumina.features.template_check.pdf_references import (
     extract_references_metrics,
 )
-from lumina.features.template_abnt.template_check.schemas import Criterion
+from lumina.features.template_check.schemas import Criterion
 
 
 def run_script_page1(template_path: str, article_path: str) -> list[Criterion]:

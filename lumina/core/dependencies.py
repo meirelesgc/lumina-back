@@ -12,6 +12,7 @@ from lumina.core.security import get_current_user
 from lumina.core.storage_provider import (
     StorageProvider,
     get_storage_provider,
+    get_template_storage_provider,
 )
 from lumina.core.vectorstore import get_vectorstore
 from lumina.models import User
@@ -22,3 +23,6 @@ OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 VStore = Annotated[VectorStore, Depends(get_vectorstore)]
 Model = Annotated[BaseChatModel, Depends(get_model)]
 Storage = Annotated[StorageProvider, Depends(get_storage_provider)]
+TemplateStorage = Annotated[
+    StorageProvider, Depends(get_template_storage_provider)
+]

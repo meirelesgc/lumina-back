@@ -1,5 +1,4 @@
-﻿# Localização da seção de referências (por conteúdo, não por número de página)
-# e extração das métricas tipográficas específicas dessa seção.
+﻿# Localização da seção de referências (por conteúdo, não por número de página) e extração das métricas tipográficas específicas dessa seção.
 
 from __future__ import annotations
 
@@ -7,7 +6,7 @@ import re
 import unicodedata
 from collections import Counter
 
-from lumina.features.template_abnt.template_check.pdf_metrics import (
+from lumina.features.template_check.pdf_metrics import (
     body_font_size,
     body_spans,
     classify_spacing,
@@ -84,9 +83,7 @@ def references_start_via_toc(doc) -> int | None:
 
 
 def find_references_bounds(doc) -> dict | None:
-    # O TOC (se existir) só restringe a página inicial da busca; a posição exata do
-    # heading vem sempre da busca textual, pois a página do TOC pode conter o fim
-    # de outra seção antes do título de referências.
+    # O TOC (se existir) só restringe a página inicial da busca; a posição exata do heading vem sempre da busca textual, pois a página do TOC pode conter o fim de outra seção antes do título de referências.
     toc_page = references_start_via_toc(doc)
     start = find_heading_line(doc, _REFERENCES_HEADING, toc_page) if toc_page else None
     if not start:
@@ -120,9 +117,7 @@ def references_lines(doc, bounds: dict) -> list[dict]:
     return lines
 
 
-# Agrupa as linhas por x0 (arredondado) e devolve os 2 agrupamentos mais comuns.
-# Cobre tanto o recuo clássico (1a linha na base, continuação mais à direita)
-# quanto o rótulo "outdentado" (número à esquerda do texto, ex: listas do MDPI).
+# Agrupa as linhas por x0 (arredondado) e devolve os 2 agrupamentos mais comuns. Cobre tanto o recuo clássico (1a linha na base, continuação mais à direita) quanto o rótulo "outdentado" (número à esquerda do texto, ex: listas do MDPI).
 def indent_clusters(lines: list[dict], cols: list[list[float]]) -> list[tuple[float, int]]:
     if not cols:
         return []
