@@ -76,6 +76,10 @@ BROKER_URL = SETTINGS.BROKER_URL
 logging.basicConfig(
     level=SETTINGS.LOG_LEVEL, format='%(levelname)s: %(message)s'
 )
+# Com LOG_LEVEL=DEBUG a OpenAI/httpx despejam o request inteiro (PNG em
+# base64 da conformidade visual e o prompt ABNT). Mantem o DEBUG do app.
+for _noisy in ('openai', 'openai._base_client', 'httpx', 'httpcore'):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 
 
 @asynccontextmanager
