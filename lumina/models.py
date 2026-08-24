@@ -1436,3 +1436,66 @@ class Advisorship(AuditMixin):
             postgresql_where=(column('deleted_at').is_(None)),
         ),
     )
+
+
+@table_registry.mapped_as_dataclass
+class TemplateConformityResult(AuditMixin):
+    __tablename__ = 'template_conformity_results'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    doc_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    file_path: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String, nullable=False, default='processing'
+    )
+    error: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+    report: Mapped[Optional[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=True, default=None
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_template_conformity_doc_id_created_at',
+            'doc_id',
+            'created_at',
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class AbntConformityResult(AuditMixin):
+    __tablename__ = 'abnt_conformity_results'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    doc_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    file_path: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String, nullable=False, default='processing'
+    )
+    error: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+    report: Mapped[Optional[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=True, default=None
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_abnt_conformity_doc_id_created_at',
+            'doc_id',
+            'created_at',
+        ),
+    )
+
