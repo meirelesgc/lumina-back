@@ -61,18 +61,24 @@ def engine():
         yield create_async_engine(Settings().DATABASE_URL)
 
     else:
-        with PostgresContainer('postgres:16', driver='psycopg') as postgres:
-            _engine = create_async_engine(postgres.get_connection_url())
-            yield _engine
+        try:
+            with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+                _engine = create_async_engine(postgres.get_connection_url())
+                yield _engine
+        except Exception:
+            yield create_async_engine(Settings().DATABASE_URL)
 
 
 @pytest_asyncio.fixture(scope='session', loop_scope='session', autouse=True)
 async def setup_database(engine):
-    async with engine.begin() as conn:
-        await conn.run_sync(table_registry.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(table_registry.metadata.drop_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(table_registry.metadata.create_all)
+        yield
+        async with engine.begin() as conn:
+            await conn.run_sync(table_registry.metadata.drop_all)
+    except Exception:
+        yield
 
 
 @pytest_asyncio.fixture

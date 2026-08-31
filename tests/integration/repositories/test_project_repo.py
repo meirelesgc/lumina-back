@@ -43,7 +43,7 @@ async def test_list_all(session, user):
     await session.commit()
 
     filters = ProjectFilter(q='List Project', offset=0, limit=10)
-    projects = await project_repo.list_all(session, filters)
+    projects = await project_repo.list_all(session, user, filters)
 
     assert len(projects) >= 2
     names = [p.name for p in projects]
