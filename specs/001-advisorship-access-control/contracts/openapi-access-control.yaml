@@ -1,0 +1,175 @@
+openapi: 3.1.0
+info:
+  title: Lumina Access Control & Advisorship API Contract
+  version: 1.1.0
+  description: Contratos de interface para o controle de acesso e isolamento de projetos, documentos e orientações.
+
+paths:
+  /project:
+    get:
+      summary: Listar projetos com isolamento por usuário
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Lista de projetos do usuário autenticado (ou orientandos)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectPublic'
+        '401':
+          description: Não autenticado
+
+  /project/{project_id}:
+    get:
+      summary: Obter projeto por ID com validação de permissão
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dados do projeto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPublic'
+        '403':
+          description: Acesso negado (projeto pertence a terceiro sem vínculo de orientação)
+        '404':
+          description: Projeto não encontrado
+
+  /doc:
+    get:
+      summary: Listar documentos com filtro de escopo
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [mine, advisees, all]
+            default: mine
+        - name: advisee_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de documentos filtrados pelo escopo do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentPublic'
+
+  /advisorship/my-advisees:
+    get:
+      summary: Listar orientandos vinculados
+      security:
+        - OAuth2PasswordBearer: []
+      responses:
+        '200':
+          description: Lista de orientandos supervisionados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  advisees:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdviseeCardPublic'
+
+components:
+  schemas:
+    ProjectPublic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    DocumentPublic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        identifier:
+          type: string
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AdviseeCardPublic:
+      type: object
+      properties:
+        advisorship_id:
+          type: string
+          format: uuid
+        advisee_id:
+          type: string
+          format: uuid
+        advisee_name:
+          type: string
+        advisee_email:
+          type: string
+        topic:
+          type: string
+          nullable: true
+        role_type:
+          type: string
+        status:
+          type: string

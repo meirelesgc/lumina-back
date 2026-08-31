@@ -23,7 +23,7 @@ router = APIRouter(
     status_code=HTTPStatus.CREATED,
     response_model=ProjectDocumentPublic,
     summary='Criar documento de projeto',
-    description='Adiciona um novo documento a um projeto, com responsável, status e controle de envio ao kanban.',
+    description='Adiciona um novo documento a um projeto.',
 )
 async def create_document(
     document: ProjectDocumentCreate,
@@ -31,7 +31,7 @@ async def create_document(
     current_user: CurrentUser,
 ):
     return await project_document_service.create_document(
-        session, current_user.id, document
+        session, current_user, document
     )
 
 
@@ -39,11 +39,15 @@ async def create_document(
     '/by-project/{project_id}',
     response_model=ProjectDocumentList,
     summary='Listar documentos de um projeto',
-    description='Retorna todos os documentos associados a um projeto específico.',
+    description='Retorna documentos de um projeto com controle de acesso.',
 )
-async def read_documents_by_project(project_id: UUID, session: Session):
+async def read_documents_by_project(
+    project_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
     documents = await project_document_service.get_documents_by_project(
-        session, project_id
+        session, current_user, project_id
     )
     return {'documents': documents}
 
@@ -52,7 +56,7 @@ async def read_documents_by_project(project_id: UUID, session: Session):
     '',
     response_model=ProjectDocumentPublic,
     summary='Atualizar documento de projeto',
-    description='Atualiza os dados de um documento de projeto (nome, responsável, status, envio ao kanban).',
+    description='Atualiza os dados de um documento de projeto.',
 )
 async def update_document(
     document: ProjectDocumentUpdate,
@@ -60,7 +64,7 @@ async def update_document(
     current_user: CurrentUser,
 ):
     return await project_document_service.update_document(
-        session, current_user.id, document
+        session, current_user, document
     )
 
 
@@ -76,6 +80,6 @@ async def delete_document(
     current_user: CurrentUser,
 ):
     await project_document_service.delete_document(
-        session, current_user.id, doc_id
+        session, current_user, doc_id
     )
     return {'message': 'Document deleted'}

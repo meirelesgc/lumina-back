@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 from uuid import UUID
 
@@ -13,7 +14,7 @@ class ProjectSchema(BaseModel):
     @field_validator('document_group_id', mode='before')
     @classmethod
     def empty_str_to_none(cls, v):
-        if v == '':
+        if not v:
             return None
         return v
 
@@ -27,9 +28,16 @@ class ProjectUpdate(ProjectSchema):
     status: Optional[str] = None
 
 
+class ProjectScope(str, Enum):
+    MINE = 'mine'
+    ADVISEES = 'advisees'
+    ALL = 'all'
+
+
 class ProjectPublic(ProjectSchema):
     id: UUID
     status: str
+    created_by: Optional[UUID] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -42,5 +50,6 @@ class ProjectList(BaseModel):
 
 class ProjectFilter(BaseModel):
     q: Optional[str] = None
+    scope: Optional[ProjectScope] = None
     offset: int = 0
     limit: int = 100

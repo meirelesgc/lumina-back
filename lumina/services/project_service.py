@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina.models import Project
+from lumina.models import AccessType, Project, User
 from lumina.repositories import project_repo
 from lumina.schemas.project import (
     ProjectCreate,
@@ -49,13 +49,13 @@ async def create_project(
 
 
 async def get_projects(
-    session: AsyncSession, filters: ProjectFilter
+    session: AsyncSession, current_user: User, filters: ProjectFilter
 ) -> list[Project]:
-    return await project_repo.list_all(session, filters)
+    return await project_repo.list_all(session, current_user, filters)
 
 
 async def get_project_by_id(
-    session: AsyncSession, project_id: UUID
+    session: AsyncSession, current_user: User, project_id: UUID
 ) -> Project:
     project = await project_repo.get_by_id(session, project_id)
     if not project or project.deleted_at:
@@ -63,17 +63,36 @@ async def get_project_by_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Project not found',
         )
+
+    has_access = await project_repo.has_project_access(
+        session, current_user, project
+    )
+    if not has_access:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Acesso não autorizado ao projeto.',
+        )
+
     return project
 
 
 async def update_project(
-    session: AsyncSession, user_id: UUID, data: ProjectUpdate
+    session: AsyncSession, current_user: User, data: ProjectUpdate
 ) -> Project:
     db_project = await project_repo.get_by_id(session, data.id)
     if not db_project or db_project.deleted_at:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Project not found',
+        )
+
+    if (
+        db_project.created_by != current_user.id
+        and current_user.access_level != AccessType.ADMIN
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Você não tem permissão para editar este projeto.',
         )
 
     old_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
@@ -97,7 +116,7 @@ async def update_project(
 
     new_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
 
-    db_project.set_update_audit(user_id)
+    db_project.set_update_audit(current_user.id)
 
     if data.name != old_name:
         await project_repo.update_document_project_names(
@@ -106,7 +125,7 @@ async def update_project(
 
     await audit_service.register_action(
         session=session,
-        user_id=user_id,
+        user_id=current_user.id,
         action='UPDATE',
         table_name=Project.__tablename__,
         record_id=db_project.id,
@@ -120,7 +139,7 @@ async def update_project(
 
 
 async def delete_project(
-    session: AsyncSession, user_id: UUID, project_id: UUID
+    session: AsyncSession, current_user: User, project_id: UUID
 ) -> None:
     db_project = await project_repo.get_by_id(session, project_id)
     if not db_project or db_project.deleted_at:
@@ -129,12 +148,21 @@ async def delete_project(
             detail='Project not found',
         )
 
+    if (
+        db_project.created_by != current_user.id
+        and current_user.access_level != AccessType.ADMIN
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Você não tem permissão para excluir este projeto.',
+        )
+
     old_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
-    db_project.set_deletion_audit(user_id)
+    db_project.set_deletion_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,
-        user_id=user_id,
+        user_id=current_user.id,
         action='DELETE',
         table_name=Project.__tablename__,
         record_id=db_project.id,

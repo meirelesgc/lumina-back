@@ -2,10 +2,97 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/demos/citation_tracking/">
-  <title>Lumina - Demos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina - Demos Hub</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #3b82f6;
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+    .card-desc {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      align-self: flex-start;
+      background-color: #1e3a8a;
+      color: #93c5fd;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecionando para <a href="/demos/citation_tracking/">Citation Tracking Validator</a>...</p>
+  <div class="container">
+    <h1>Lumina Back — Demos & Validações</h1>
+    <p class="subtitle">Catálogo de páginas de demonstração funcional e validação interativa de especificações.</p>
+
+    <div class="grid">
+      <a href="/demos/advisorship/" class="card">
+        <span class="badge">Spec 001</span>
+        <div class="card-title">Matriz de Acesso & Orientações</div>
+        <div class="card-desc">Validação interativa de isolamento de projetos e documentos por usuário, alternância de personas (Aluno vs. Orientador vs. Terceiro) e inspeção de respostas 403 Forbidden.</div>
+      </a>
+
+      <a href="/demos/citation_tracking/" class="card">
+        <span class="badge">Core RAG</span>
+        <div class="card-title">Citation Tracking Validator</div>
+        <div class="card-desc">Visualizador de PDF com renderização geométrica de bounding boxes e mapeamento de evidências retornadas pela inteligência artificial.</div>
+      </a>
+    </div>
+  </div>
 </body>
 </html>

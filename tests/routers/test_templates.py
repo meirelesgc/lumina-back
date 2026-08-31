@@ -466,7 +466,6 @@ def test_list_template_compliance_global_and_filters(client, token):
     _unlink_stored(template['file_path'])
 
 
-
 def test_get_template_compliance_by_id(client, token):
     template = _create_template(client, token)
     doc_id = str(uuid4())
