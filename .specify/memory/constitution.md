@@ -1,153 +1,383 @@
-<!-- Sync Impact Report
-Version Change: 1.2.0 -> 1.3.0
-Modified Principles:
-- None renamed; content of existing IV principles preserved verbatim.
-Added Sections/Principles:
-- V. AI Pipeline Integrity & Data Sovereignty (new Core Principle, promoted from Additional Constraints + expanded)
-- Additional Constraints: new "Observabilidade e Logging Estruturado" rule
-- Additional Constraints: new "Gestão de Segredos" rule
-- Development Workflow: new "Integração com Spec-Kit" rule (item 4 in Quality Gates + standalone)
-- Governance: new "Cadência de Revisão de Conformidade" rule
-Removed Sections: None
-Follow-up TODOs: None — all placeholders resolved.
+<!--
+SYNC IMPACT REPORT
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR — Adicionado Princípio VIII: Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE).
+
+Added sections:
+  - VIII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
+
+Modified principles: N/A
+Removed sections: N/A
+Follow-up TODOs: Nenhum.
 -->
 
 # Lumina Back Constitution
 
 ## Core Principles
 
-### I. Code Quality & Architecture Integrity
-- **Separação de Responsabilidades**: A arquitetura do sistema MUST manter divisão clara
-  entre camadas: `routers/` (validação de entrada/saída e camada HTTP), `services/` (regras
-  de negócio e orquestração de domínio), `repositories/` (abstração de persistência e
-  consultas) e `models.py` (modelos relacionais SQLAlchemy).
-- **Tipagem Estática e Schemas Pydantic**: Todas as requisições e respostas de endpoints
-  MUST ser estritamente tipadas e validadas com schemas Pydantic.
-- **Estilo e Formatação Rigorosa**: O código-fonte MUST respeitar o limite de linha de
-  **79 caracteres** e utilizar **aspas simples** (`'`) por padrão (estilo PEP 8 / Ruff).
-  O linter e o formatador DEVEM ser validados com `poetry run ruff check --fix` e
-  `poetry run ruff format`.
-- **Uso Obrigatório do Poetry**: Todas as ferramentas do ecossistema (`python`, `pytest`,
-  `alembic`, `ruff`, etc.) MUST ser executadas exclusivamente através do Poetry
-  (`poetry run <comando>`). O uso de binários globais é estritamente proibido.
-- **Higiene de Versionamento (Git)**: Novas implementações e correções MUST ser feitas em
-  branches isoladas (ou *git worktrees*). Commits intermediários de rascunho (*WIP*) MUST
-  passar por *squash/rebase* antes do merge para manter um histórico atômico e semântico.
+### I. Arquitetura em Camadas (Service-Repository)
 
-### II. Testing Standards & Risk-Driven Verification
-- **Foco em Comportamento e Matriz de Risco**: A suíte de testes automatizados MUST
-  priorizar a validação de cenários de risco e comportamentos críticos de negócio em vez de
-  perseguir cegamente percentuais brutos de cobertura de linhas, seguindo a metodologia
-  `fastapi-testing-methodology`.
-- **Isolamento de Banco de Dados com Savepoints**: Testes com persistência MUST utilizar
-  `Testcontainers` com transações aninhadas (*Savepoints* / Nested Transactions). É
-  terminantemente PROIBIDO executar `create_all` ou `drop_all` em cada teste individual.
-- **Segregação Estrita de Testes de IA**:
-  - Testes que realizam chamadas reais a APIs de LLMs externas (com consumo de tokens) MUST
-    ser marcados obrigatoriamente com `@pytest.mark.ai` e executados apenas sob demanda
-    (`poetry run task test-ai`).
-  - Testes de rotina e CI/CD (`poetry run task test`) MUST executar apenas testes
-    determinísticos, utilizando mocks (`unittest.mock.AsyncMock`, `FakeListChatModel`).
-- **Refatoração Segura**: Qualquer grande refatoração estrutural MUST ser precedida por
-  Testes de Caracterização (conforme `safe-refactoring-methodology`) para assegurar a
-  preservação de comportamento regressivo.
+Todo código de aplicação DEVE respeitar a separação rígida de responsabilidades
+em camadas. Nenhuma camada pode ultrapassar seu escopo.
 
-### III. User Experience & API Design Consistency
-- **Semântica e Constantes HTTP**: A API MUST retornar códigos de status HTTP semânticos
-  utilizando as constantes do framework (ex.: `fastapi.status.HTTP_200_OK`,
-  `HTTP_201_CREATED`, `HTTP_403_FORBIDDEN`), sendo proibido o uso de números literais soltos
-  no código.
-- **Tratamento de Erros Human-Friendly & Seguro**: Exceções de domínio e validações DEVEM
-  retornar mensagens de erro claras, consistentes e orientadas à resolução (`detail`), NUNCA
-  expondo *stack traces*, credenciais ou detalhes internos de infraestrutura em ambiente
-  produtivo.
-- **Consistência de Contratos e Visibilidade**: A listagem e manipulação de recursos MUST
-  seguir regras previsíveis de escopo e permissão (ex.: autor `created_by`, colaboradores
-  `editors`, orientadores via `scope='mine'|'advisees'|'all'`), mantendo documentação
-  amigável e alinhada com as necessidades do frontend.
-- **Evolução Não Disruptiva de APIs**: Mudanças estruturais em endpoints ou contratos de
-  dados DEVEM manter retrocompatibilidade sempre que possível ou prover guias de migração
-  claros antes de depreciações.
+- **Routers** (`lumina/routers/`): Recebem requisições HTTP/WebSocket,
+  validam entrada via schemas Pydantic, delegam para services e retornam
+  respostas. NUNCA contêm lógica de negócio, queries SQL ou chamadas a LLMs.
+- **Services** (`lumina/services/`): Orquestram regras de negócio, validações
+  de domínio e coordenam chamadas a repositórios e serviços externos (IA,
+  storage, cache). Recebem dependências via injeção do FastAPI (`Annotated`
+  types em `core/dependencies.py`).
+- **Repositories** (`lumina/repositories/`): Encapsulam consultas SQLAlchemy
+  puras (queries, joins, agregações). NUNCA lançam `HTTPException` — essa
+  responsabilidade é exclusiva dos services/routers.
+- **Models** (`lumina/models.py`): Entidades SQLAlchemy 2.0 com `Mapped` e
+  `mapped_column`. Modelos compartilham o `AuditMixin` (soft delete via
+  `deleted_at`, timestamps `created_at`/`updated_at` e rastreamento de
+  `created_by`/`updated_by`/`deleted_by`).
+- **Schemas** (`lumina/schemas/`): Contratos Pydantic de entrada/saída,
+  validações customizadas e tipos compartilhados (ex: `AccessType`, enums).
+- **Features** (`lumina/features/`): Módulos especializados e autocontidos
+  para funcionalidades complexas (ex: `abnt_check/`, `template_check/`).
+  Cada feature DEVE conter seus próprios schemas, lógica e prompts, sendo
+  orquestrada por um service dedicado na camada de services.
+- **Core** (`lumina/core/`): Infraestrutura transversal — database engine,
+  settings, security/JWT, LLM provider, vectorstore, storage provider e
+  cache/WebSocket manager. Configurações via `pydantic_settings.BaseSettings`
+  carregadas do `.env`.
 
-### IV. Performance & Asynchronous Efficiency
-- **I/O Não Bloqueante (Async Native)**: Todas as operações de entrada e saída — incluindo
-  consultas ao banco de dados via SQLAlchemy 2.0, requisições de rede, cache em Redis e
-  mensageria RabbitMQ — MUST ser implementadas de forma assíncrona (`async`/`await`),
-  impedindo bloqueios no *event loop* do FastAPI.
-- **Eficiência de Consultas (Anti-N+1)**: Consultas a relacionamentos no banco de dados
-  DEVEM utilizar carregamento explícito otimizado (`selectinload` ou `joinedload`), evitando
-  overhead de consultas em cascata.
-- **Processamento Otimizado de IA e Documentos**: Pipelines de extração de texto (PDFs,
-  DOCX) e anonimização de dados com Presidio DEVEM gerenciar streams e memória
-  eficientemente, delegando tarefas pesadas para filas de processamento em background quando
-  a latência síncrona inviabilizar a resposta rápida do endpoint.
-- **Performance da Suíte de Testes**: A suíte de testes deve ser mantida ágil e
-  paralelizável, recomendando o uso de `pytest-xdist` com a estratégia `--dist loadscope`
-  para execução distribuída sem concorrência destrutiva de fixtures.
+**Rationale**: A separação garante que mudanças em uma camada (ex: trocar o
+ORM ou o provedor de LLM) não propaguem efeitos colaterais para camadas
+adjacentes, e permite testes isolados por camada.
 
-### V. AI Pipeline Integrity & Data Sovereignty
-- **Anonimização Obrigatória Antes de LLMs**: Todo dado sensível processado por módulos de
-  inteligência artificial MUST passar por pipelines de análise e anonimização via Presidio
-  Analyzer/Anonymizer **antes** de qualquer transmissão a provedores externos de LLM
-  (OpenAI, etc.). A omissão desta etapa constitui violação crítica.
-- **Determinismo e Rastreabilidade de Pipelines**: Cadeias LangChain e pipelines de IA MUST
-  ser projetados de forma que cada etapa seja rastreável e auditável. Parâmetros de
-  temperatura, modelos e versões DEVEM ser explicitamente configuráveis via variáveis de
-  ambiente — nunca *hardcoded*.
-- **Fallback e Resiliência**: Integrações com APIs de LLM externas DEVEM implementar
-  estratégias de fallback (ex.: retry com *exponential backoff*, circuit breaker) para
-  garantir degradação graciosa em caso de indisponibilidade do provedor.
-- **Segregação de Dados de Treinamento**: Dados de usuários finais MUST NOT ser utilizados
-  para fine-tuning ou retreinamento de modelos sem consentimento explícito documentado e
-  rastreável. Este princípio prevalece sobre qualquer otimização de desempenho.
+### II. Base de Conhecimento (Check Tree)
 
-## Additional Constraints & AI Guidelines
+O sistema de auditoria documental é fundamentado em uma árvore hierárquica de
+conhecimento normativo que DEVE ser mantida com integridade referencial
+completa.
 
-- **Versionamento de Banco com Alembic**: Qualquer alteração em modelos ORM
-  (`lumina/models.py`) MUST ser acompanhada por uma migração gerada e versionada no Alembic
-  (`poetry run alembic revision --autogenerate -m "descricao"`). Migrations sem
-  `downgrade` implementado DEVEM ser explicitamente justificadas.
-- **Observabilidade e Logging Estruturado**: Todos os serviços e handlers de exceção MUST
-  emitir logs estruturados (JSON ou formato parseável) contendo: timestamp, nível
-  (`INFO`/`WARNING`/`ERROR`), `request_id` (quando aplicável), módulo de origem e mensagem
-  descritiva. Logs em produção NUNCA devem conter dados pessoais identificáveis (PII) ou
-  segredos de autenticação.
-- **Gestão de Segredos**: Credenciais, chaves de API e *connection strings* MUST ser
-  carregadas exclusivamente via variáveis de ambiente (`.env` local, secrets manager em
-  produção). É estritamente PROIBIDO *commitar* segredos no repositório Git.
+- **Hierarquia**: `Typification` → `Taxonomy` → `Branch`, com `Source`
+  vinculada como referência normativa/legal de cada critério.
+  - `Typification`: Perfil documental (ex: Edital de Obras, Artigo Científico).
+  - `Taxonomy`: Seção ou tópico obrigatório (ex: Qualificação Técnica,
+    Introdução).
+  - `Branch`: Critério normativo específico com título, descrição e pergunta
+    de verificação para a IA avaliar.
+  - `Source`: Fonte legal que embasa os critérios (ex: Lei 14.133/21,
+    NBR 6023).
+- **Snapshots de Release (`Applied*`)**: Quando uma `DocumentRelease` é
+  processada, a árvore ativa DEVE ser congelada em tabelas
+  `AppliedTypification`, `AppliedTaxonomy`, `AppliedBranch` e
+  `AppliedSource`. Resultados da avaliação (`fulfilled`, `score`, `feedback`,
+  `references`, `presidio_mapping`) são persistidos no `AppliedBranch`.
+- **Imutabilidade Histórica**: Uma vez criado, o snapshot de uma release
+  NUNCA pode ser alterado — ele representa o estado exato da base de
+  conhecimento no momento da avaliação.
+- **CRUDs do Check Tree**: Endpoints em `routers/check_tree/` (projects,
+  document_groups, project_documents, typifications, taxonomies, branches,
+  sources) DEVEM validar integridade relacional e soft-delete antes de
+  qualquer operação.
 
-## Development Workflow & Quality Gates
+**Rationale**: A rastreabilidade normativa exige que cada avaliação de IA
+seja reprodutível e auditável, mesmo que a árvore de conhecimento evolua
+ao longo do tempo.
 
-- **Quality Gates de PR**: Nenhum código deve ser integrado à branch principal sem:
-  1. Sucesso na execução completa dos testes rápidos (`poetry run task test`).
-  2. Conformidade total no linting e formatação com Ruff
-     (`poetry run ruff check` e `poetry run ruff format --check`).
-  3. Validação dos schemas de entrada e saída e status codes HTTP.
-  4. Ausência de segredos ou PII detectáveis no diff do PR.
-- **Análise de Cobertura**: Relatórios de cobertura em HTML (`poetry run task cov`) devem
-  ser consultados para garantir que fluxos críticos e regras de autorização não possuam
-  lacunas de teste.
-- **Integração com Spec-Kit**: Novas funcionalidades MUST seguir o fluxo do Spec-Kit:
-  `speckit-specify` → `speckit-plan` → `speckit-tasks` → `speckit-implement`. Desvios do
-  fluxo requerem justificativa documentada no PR. A validação de conformidade com esta
-  Constituição (`speckit-analyze`) SHOULD ser executada antes de qualquer merge.
+### III. Inteligência Artificial Responsável
+
+Todo uso de IA no Lumina DEVE seguir práticas que garantam rastreabilidade,
+reprodutibilidade, proteção de dados e contenção de custos.
+
+- **RAG com Coordenadas Visuais**: O `CoordinateChunker`
+  (`services/vector_service.py`) divide PDFs em blocos de até 500 caracteres,
+  preservando coordenadas geométricas (`rects: [x0, y0, x1, y1]`) e número
+  de página. Citações retornadas pela LLM (`Citation(chunk_id,
+  text_snippet)`) DEVEM ser resolvidas para coordenadas via
+  `resolve_citations`, permitindo highlight visual no documento original.
+- **Anonimização LGPD (Presidio)**: Antes de qualquer texto ser vetorizado
+  ou enviado a LLMs externas, ele DEVE passar pelo `PresidioAnonymizer`
+  (`utils/PresidioAnonymizer.py`) para substituir CPFs, CNPJs, RGs,
+  telefones, valores monetários, e-mails e outras PII por placeholders
+  indexados (`<CPF_1>`, `<CNPJ_1>`). O mapeamento DEVE ser persistido
+  nos metadados do chunk para desanonimização posterior.
+- **Structured Output**: Respostas de LLMs DEVEM utilizar `structured_output`
+  (Pydantic models ou `JsonOutputParser`) para garantir parsing
+  determinístico. Schemas de saída residem em `schemas/ai.py` e nos schemas
+  internos de cada feature.
+- **Modelos e Prompts**: Prompts centralizados em `lumina/prompts.py` e
+  templates Jinja2 em `features/prompts/`. Configuração de modelos em
+  `core/llm.py` (LangChain `ChatOpenAI` para chat/RAG) e diretamente via
+  OpenAI SDK nos módulos de features (`gpt-5.4` para ABNT, `gpt-4o` para
+  visão de templates).
+- **Avaliação por Lote**: O pipeline de release em
+  `services/release_logic_service.py` executa avaliações via `chain.abatch`
+  para processar múltiplos ramos do Check Tree em paralelo.
+- **Conformidade Híbrida de Templates**: O módulo `features/template_check/`
+  combina verificações determinísticas via PyMuPDF (margens, fontes,
+  entrelinhas, cabeçalhos) com visão computacional (comparação visual de
+  páginas), executadas concorrentemente via `asyncio.gather`.
+
+**Rationale**: IA sem rastreabilidade é uma caixa preta inauditável.
+A combinação de structured output + coordenadas visuais + anonimização
+transforma a IA em ferramenta confiável para auditoria normativa.
+
+### IV. Testes Orientados a Risco (NON-NEGOTIABLE)
+
+A suíte de testes DEVE ser orientada a risco e comportamento — não a
+cobertura cega de linhas. A metodologia completa está definida na skill
+`.agents/skills/fastapi-testing-methodology/SKILL.md`.
+
+- **Pirâmide de Testes (5 camadas)**:
+  1. `tests/unit/services/` — Regras de negócio com mocks completos de
+     repositórios (`AsyncMock`, `pytest-mock`).
+  2. `tests/integration/repositories/` — Queries SQL com banco real via
+     `session` fixture (savepoints).
+  3. `tests/api/routers/` — Fluxo ponta a ponta com `TestClient`.
+  4. Testes de segurança transversais (401/403) integrados em `tests/api/`.
+  5. Testes de regressão nos diretórios pertinentes.
+- **Matriz de Risco**: A profundidade DEVE ser proporcional à criticidade:
+  - Crítico (auth, segurança, regras centrais): Unit + Repo + API + Security.
+  - Alto (transações, mutações complexas): Unit + Repo + API.
+  - Médio (consultas, filtros): Unit + Repo (se query complexa).
+  - Baixo (CRUDs simples, health): API Integration.
+- **Isolamento de Banco**: Testcontainers PostgreSQL 16 com DDL único por
+  sessão e rollback via savepoints a cada teste. NUNCA rodar
+  `create_all`/`drop_all` por teste individual.
+- **Factories Modulares**: Massas de dados via Factory Boy em
+  `tests/factories/`. NUNCA usar `uuid4()` soltos para FKs — sempre
+  instanciar entidades reais.
+- **IA em Testes — Separação Categórica**:
+  1. *AI Integration Tests*: `FakeListChatModel` para validar fluxo sem
+     tokens. Roda em `task test`.
+  2. *AI Contract Tests*: Validação de schemas contra JSON corrompido.
+     Roda em `task test`.
+  3. *AI Evaluation*: Chamadas reais a LLMs com golden datasets
+     (`tests/ai/evaluation/datasets/`). Marcado com `@pytest.mark.ai`.
+     Roda SOMENTE em `task test-ai`.
+- **Guardrail de Cobertura**: Mínimo de 80% de cobertura geral.
+  `models.py` e `schemas.py` só podem ser excluídos se forem estritamente
+  declarativos.
+
+**Rationale**: Testes que dependem de rede externa ou consomem tokens pagos
+em CI/CD são instáveis e caros. A separação em 3 categorias de IA garante
+que o CI seja rápido, determinístico e barato, enquanto a avaliação de
+qualidade roda sob demanda.
+
+### V. Simplicidade e Consistência de Código
+
+Todo código DEVE seguir padrões de formatação e estilo consistentes,
+verificáveis automaticamente.
+
+- **Limite de 79 caracteres por linha** (PEP 8 / Ruff).
+- **Aspas simples `'`** por padrão em todo o projeto.
+- **Ruff** como linter e formatter únicos. Regras ativas:
+  `['I', 'F', 'E', 'W', 'PL', 'PT']`.
+- **Tipagem estática**: Todo parâmetro de função, retorno e variável
+  relevante DEVE ser tipado. Schemas Pydantic para validação de entrada/saída
+  nos routers.
+- **Poetry**: Gerenciador exclusivo de dependências e ambiente virtual.
+  NUNCA executar `python`, `pytest`, `alembic` ou `ruff` sem o prefixo
+  `poetry run` ou sem ativar a virtualenv via `poetry shell`.
+- **Migrações**: Geradas via `poetry run alembic revision --autogenerate`
+  após qualquer alteração em `models.py`. Diretório `migrations/` excluído
+  do linting.
+
+**Rationale**: Consistência elimina debates de estilo nos PRs e permite
+que ferramentas automatizadas garantam a qualidade sem intervenção humana.
+
+### VI. Segurança e Privacidade por Padrão
+
+- **Autenticação**: JWT (HS256) via `pyjwt` com hash de senhas Argon2
+  (`pwdlib`). Tokens emitidos com expiração configurável.
+- **Autorização**: Controle de acesso por documento via `AccessType` (owner,
+  advisor, viewer). Validação em services antes de qualquer operação.
+- **Soft Delete**: Todas as entidades com `AuditMixin` utilizam `deleted_at`
+  em vez de exclusão física. Queries DEVEM filtrar `deleted_at.is_(None)`.
+- **Audit Trail**: Operações críticas (CREATE, UPDATE, DELETE) DEVEM gerar
+  registros em `audit_logs` via `audit_service`.
+- **LGPD**: Dados pessoais NUNCA transitam para LLMs externas sem
+  anonimização prévia via Presidio (Princípio III).
+
+**Rationale**: Um sistema de auditoria normativa que não protege os dados
+dos seus próprios usuários contradiz sua razão de existir.
+
+### VII. Documentação Viva (MkDocs)
+
+Toda especificação de feature elaborada pelo Spec Kit DEVE ser documentada
+em linguagem acessível no diretório `docs/`, utilizando o MkDocs para
+publicação.
+
+- **Localização**: Arquivos Markdown em `docs/` na raiz do repositório.
+- **Linguagem**: Próxima de um humano não-técnico. Evitar jargão de
+  implementação; focar em "o que o sistema faz" e "por que". Utilizar
+  diagramas Mermaid e exemplos concretos sempre que possível.
+- **Sincronização**: Quando uma spec (`spec.md`) for criada ou atualizada
+  via `/speckit-specify`, uma página correspondente DEVE ser criada ou
+  atualizada em `docs/` com o resumo funcional da feature.
+- **Estrutura sugerida por página**:
+  1. Visão geral da feature (para que serve, qual problema resolve).
+  2. Fluxo principal (passo a passo do usuário).
+  3. Regras de negócio (em linguagem natural).
+  4. Diagrama de fluxo ou arquitetura (Mermaid).
+  5. Glossário de termos específicos (se necessário).
+- **Publicação**: O MkDocs DEVE ser configurado para gerar a documentação
+  acessível em `https://meirelesgc.github.io/lumina-back` (já configurado
+  no `pyproject.toml`).
+
+**Rationale**: Specs técnicas em `.specify/` são ótimas para agentes e
+desenvolvedores, mas stakeholders e revisores precisam de uma visão
+simplificada e navegável do sistema.
+
+### VIII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
+
+Sempre que uma nova spec alterar ou adicionar comportamento observável no
+backend, a implementação da spec DEVE incluir uma página HTML simples que
+permita demonstrar e validar manualmente o comportamento implementado.
+
+Esta página NÃO é um frontend de produto: trata-se de um artefato pragmático
+de validação, documentação funcional e demonstração do backend.
+
+- **Objetivos**:
+  1. Permitir que o desenvolvedor valide manualmente se a spec funciona
+     conforme esperado ponta a ponta.
+  2. Servir como referência funcional para a equipe de frontend entender
+     rapidamente quais endpoints, fluxos e retornos estão disponíveis.
+  3. Permitir demonstrar a funcionalidade do backend em reuniões sem precisar
+     de uma aplicação frontend completa.
+- **Princípios de Implementação**:
+  - **Funcionalidade sobre estética**: NUNCA investir tempo em design visual,
+    responsividade avançada ou bibliotecas pesadas de componentes.
+  - **Simplicidade**: HTML, CSS básico e JavaScript vanilla. Sem frameworks de
+    frontend ou dependências externas pesadas.
+  - **Autoexplicativa e Focada**: A página deve permitir entender
+    imediatamente o que a spec faz, demonstrando estritamente o escopo da
+    spec.
+  - **Consumo Real**: A página consome diretamente os endpoints reais da API.
+- **Serviço e Organização no Código**:
+  - As páginas DEVEM ser servidas diretamente pelo FastAPI existente,
+    aproveitando a montagem de estáticos em `lumina/demos/` (exposta em
+    `/demos/<spec-name>/` ou `/spec/<spec-name>/`).
+  - NUNCA criar um servidor ou serviço separado para servir as demos.
+  - A demo atua como complemento funcional ao Swagger/ReDoc (Swagger define o
+    contrato técnico; a demo exercita o fluxo interativo).
+- **Autenticação**:
+  - Reutilizar o mecanismo de autenticação existente do projeto (campos para
+    informar credenciais/token na própria página de teste).
+  - NUNCA implementar um sistema paralelo de autenticação e NUNCA persistir
+    credenciais desnecessariamente.
+- **Conteúdo Mínimo Esperado na Demo**:
+  - Nome da spec e breve descrição funcional.
+  - Entradas necessárias para os fluxos/casos de uso.
+  - Botões/ações para disparar as requisições contra a API.
+  - Exibição clara de respostas com sucesso e respostas com erro (payloads).
+  - Estado antes/depois quando relevante para entender a operação.
+  - Indicação explícita quando uma ação possui efeito real no banco de dados.
+- **Isolamento Arquitetural e Lifecycle**:
+  - Demos NÃO podem conter regras de negócio no HTML/JS — regras residem
+    exclusivamente nos services/repositories do backend.
+  - Nenhuma parte da aplicação de produção pode depender da existência da demo.
+  - A demo DEVE poder ser removida no futuro sem nenhum impacto no sistema.
+- **Segurança**:
+  - NUNCA contornar validações, permissões, RBAC ou isolamento de dados para
+    facilitar a demo.
+  - NUNCA criar endpoints especiais que ignorem proteções reais apenas para a
+    demonstração.
+- **Definition of Done (DoD) para Novas Specs**:
+  - [ ] Backend implementado e aderente à arquitetura em camadas.
+  - [ ] Testes automatizados cobrindo a matriz de risco.
+  - [ ] Página HTML de demo/validação criada em `lumina/demos/<spec-name>/`.
+  - [ ] Página servida pelo próprio FastAPI existente.
+  - [ ] Autenticação integrada ao mecanismo existente (se aplicável).
+  - [ ] Critérios de aceitação da spec exercitáveis manualmente pela página.
+  - [ ] Respostas e erros da API claramente visíveis na interface.
+  - [ ] Sem regra de negócio duplicada no frontend da demo.
+  - [ ] Demo restrita estritamente ao escopo da spec.
+  - [ ] Demo pode ser removida sem afetar a aplicação principal.
+
+**Rationale**: Swagger valida tipos e contratos, testes automatizados validam
+invariantes lógicas, mas a página demo valida a experiência operacional
+do backend e acelera a integração com equipes externas e stakeholders.
+
+## Workflow de Desenvolvimento com Agentes
+
+Regras que governam como agentes de IA (subagentes) DEVEM operar ao
+desenvolver features complexas no Lumina Back.
+
+- **Git Worktrees para Paralelização**: Ao iniciar uma tarefa complexa que
+  pode ser decomposta em subtarefas independentes, o agente DEVE criar
+  git worktrees separados (`git worktree add`) para permitir que subagentes
+  trabalhem em paralelo sem conflitos de working tree.
+  - Cada worktree DEVE partir de `develop` ou da branch de feature corrente.
+  - O nome da branch do worktree DEVE seguir o padrão:
+    `feature/<feature-name>/<subtask-name>`.
+  - Ao finalizar, o agente DEVE informar o desenvolvedor para que ele
+    faça o merge/attach manual da branch à `develop`. Agentes NUNCA
+    fazem merge diretamente em `develop` ou `main`.
+- **Subagentes para Tarefas Complexas**: Quando uma tarefa envolve múltiplos
+  arquivos independentes ou camadas distintas (ex: repository + service +
+  router + tests), o agente principal DEVE criar subagentes especializados
+  para trabalhar em paralelo, cada um em seu worktree.
+- **Atomicidade de Commits**: Cada subtarefa DEVE resultar em commits
+  atômicos e auto-descritivos na branch do worktree. Mensagens de commit
+  DEVEM seguir o padrão Conventional Commits (ex: `feat:`, `fix:`, `test:`,
+  `docs:`).
+- **Testes Antes de Entregar**: Nenhuma branch de worktree DEVE ser
+  considerada pronta sem que `poetry run task test` passe com sucesso.
+  Se a feature envolve IA, `poetry run task test-ai` DEVE ser executado
+  separadamente e seu resultado relatado.
+- **Cleanup**: Ao finalizar o trabalho, worktrees DEVEM ser removidos
+  com `git worktree remove` para manter o repositório limpo.
+
+## Stack Tecnológica e Infraestrutura
+
+Definição canônica da stack. Qualquer adição ou substituição de tecnologia
+DEVE ser proposta como emenda à constituição.
+
+| Categoria | Tecnologia | Versão/Constraint |
+|-----------|-----------|-------------------|
+| Linguagem | Python | ≥3.13, <3.14 |
+| Framework Web | FastAPI | ≥0.120.1 |
+| ORM | SQLAlchemy 2.0 (Async) | ≥2.0.44 |
+| Migrações | Alembic | ≥1.17.0 |
+| Banco de Dados | PostgreSQL 17 + pgvector | pgvector/pgvector:pg17 |
+| Cache/Pub-Sub | Redis | ≥7.0.1 |
+| Mensageria | RabbitMQ (Pika) | ≥1.3.2 |
+| LLM Framework | LangChain + LangChain OpenAI | ≥1.0.2 |
+| Vectorstore | PGVector (LangChain) | ≥0.0.16 |
+| Embeddings | OpenAI text-embedding-3-small | — |
+| PDF Processing | PyMuPDF (fitz) | ≥1.26.5 |
+| Anonimização | Microsoft Presidio | ≥2.2.360 |
+| Relatórios PDF | ReportLab | ≥4.4.4 |
+| Storage | Local / S3 (aioboto3) | Configurável via `STORAGE_PROVIDER` |
+| Notificações | Evolution API (WhatsApp) | v2.3.6 |
+| Gerenciador | Poetry | ≥2.0.0 |
+| Linter/Formatter | Ruff | ≥0.12.11 |
+| Testes | Pytest + Testcontainers + Factory Boy | — |
+| Tasks | Taskipy | ≥1.14.1 |
+| CI/CD | GitHub Actions → AWS EC2 via SSH | — |
+| Containerização | Docker + Docker Compose | — |
 
 ## Governance
 
-- **Supremacia da Constituição**: Esta Constituição sobrepõe todas as práticas não
-  documentadas e acordos informais do repositório.
-- **Procedimento de Emenda**: Qualquer alteração ou inclusão de novos princípios requer
-  justificativa técnica documentada, revisão em PR e aprovação explícita dos mantenedores.
-- **Versionamento Semântico da Governança**:
-  - **MAJOR**: Remoção ou reformulação incompatível de princípios fundamentais.
-  - **MINOR**: Inclusão de novos princípios, seções ou expansão significativa de diretrizes.
-  - **PATCH**: Correções textuais, ajustes de formatação ou refinamentos de redação sem
-    alteração semântica.
-- **Cadência de Revisão de Conformidade**: A conformidade com esta Constituição DEVE ser
-  verificada ativamente a cada ciclo de release. Recomenda-se a execução de
-  `speckit-analyze` ao final de cada sprint para identificar desvios estruturais acumulados.
-  Violações identificadas MUST ser registradas como issues e priorizadas no próximo ciclo.
-- **Revisão de Conformidade de Tarefas**: Todas as tarefas de especificação, planejamento e
-  Pull Requests no Spec-Kit devem ser validadas contra estes princípios antes da integração.
+Esta constituição é o documento normativo supremo do projeto Lumina Back.
+Todas as práticas de desenvolvimento, revisão de código e decisões
+arquiteturais DEVEM estar em conformidade com os princípios aqui
+estabelecidos.
 
-**Version**: 1.3.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-22
+- **Supremacia**: Em caso de conflito entre esta constituição e qualquer
+  outro documento (AGENTS.md, skills, READMEs), a constituição prevalece.
+  O `AGENTS.md` DEVE ser mantido como guia operacional complementar,
+  nunca contraditório.
+- **Emendas**: Qualquer alteração a esta constituição DEVE ser:
+  1. Proposta com justificativa técnica.
+  2. Documentada no Sync Impact Report (comentário HTML no topo do arquivo).
+  3. Versionada segundo SemVer:
+     - MAJOR: Remoção ou redefinição incompatível de princípios.
+     - MINOR: Adição de princípio ou expansão material de orientação.
+     - PATCH: Clarificações, correções de texto, refinamentos não-semânticos.
+- **Revisão de Compliance**: Todo PR DEVE ser verificado quanto à aderência
+  aos princípios. Complexidade arquitetural que desvie dos princípios DEVE
+  ser justificada explicitamente no PR.
+- **Guia Operacional**: O `AGENTS.md` na raiz do repositório contém
+  comandos essenciais e orientações de runtime para desenvolvedores e
+  agentes. Ele complementa — mas não substitui — esta constituição.
+
+**Version**: 1.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-08-31
