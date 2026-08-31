@@ -1498,4 +1498,3 @@ class AbntConformityResult(AuditMixin):
             'created_at',
         ),
     )
-

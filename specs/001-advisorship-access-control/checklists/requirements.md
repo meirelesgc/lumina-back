@@ -1,7 +1,7 @@
-# Specification Quality Checklist: AI Engine v2 — Streaming, Progress & Observability
+# Specification Quality Checklist: Advisorship and Entity Access Control
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-08-22
+**Created**: 2026-08-31
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,8 +31,6 @@
 
 ## Notes
 
-- Todos os itens passaram na validação inicial.
-- Nomenclatura amigável das etapas (SC-001 / FR-006) marcada como assumption
-  a ser alinhada com produto — não bloqueia o planejamento técnico.
-- FR-002 e FR-008 reforçam retrocompatibilidade explicitamente, atendendo ao
-  requisito do usuário de "não quebrar o que existe hoje".
+- Spec retroativa elaborada com sucesso.
+- A validação técnica dos endpoints revelou que o controle de acesso e escopo para `/doc` e `/advisorship` está implementado e validado em testes de integração (`test_doc_access_control.py`), mas a listagem e leitura de `/project` e `/project-document` necessitam do mesmo alinhamento de isolamento por sessão (`created_by` / orientador).
+- A página de demonstração visual em `/demos/advisorship/` atende ao Princípio VIII da Constituição.
