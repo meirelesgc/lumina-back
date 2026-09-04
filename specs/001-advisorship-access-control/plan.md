@@ -10,7 +10,7 @@ O objetivo deste plano é estabelecer a matriz completa de isolamento e controle
 
 A abordagem técnica consiste em:
 1. Injetar `CurrentUser` nas rotas de projetos e documentos de projeto, filtrando por `created_by` e vínculos ativos de orientação.
-2. Criar a página de validação/demo estática em `lumina/demos/advisorship/index.html` servida nativamente pelo FastAPI, permitindo alternância entre personas e validação imediata da matriz de acesso.
+2. Criar a página de validação/demo estática em `lumina/static/demos/advisorship/index.html` servida nativamente pelo FastAPI, permitindo alternância entre personas e validação imediata da matriz de acesso.
 3. Adicionar testes de integração cobrindo o isolamento de projetos.
 
 ## Technical Context
@@ -31,7 +31,7 @@ A abordagem técnica consiste em:
 
 **Constraints**: Isolamento estrito por sessão; zero vazamento de dados entre contas independentes; compatibilidade retroativa com o frontend
 
-**Scale/Scope**: Módulos de Projetos (`routers/check_tree/projects.py`, `services/project_service.py`), Documentos de Projeto e Demos (`lumina/demos/advisorship/`)
+**Scale/Scope**: Módulos de Projetos (`routers/check_tree/projects.py`, `services/project_service.py`), Documentos de Projeto e Demos (`lumina/static/demos/advisorship/`)
 
 ## Constitution Check
 
@@ -46,7 +46,7 @@ A abordagem técnica consiste em:
 | **V. Simplicidade e Consistência** | ✅ PASS | 79 chars, aspas simples `'`, tipagem estática, linter Ruff e Poetry. |
 | **VI. Segurança e Privacidade por Padrão** | ✅ PASS | Corrige diretamente a brecha de segurança/privacidade identificada, garantindo isolamento total entre tenants/usuários. |
 | **VII. Documentação Viva (MkDocs)** | ✅ PASS | Resumo funcional preparado para a documentação em `docs/`. |
-| **VIII. Página HTML Funcional de Validação/Demo** | ✅ PASS | Página HTML simples criada em `lumina/demos/advisorship/index.html`, servida nativamente pelo FastAPI, sem regras de negócio no frontend e consumindo a API real. |
+| **VIII. Página HTML Funcional de Validação/Demo** | ✅ PASS | Página HTML simples criada em `lumina/static/demos/advisorship/index.html`, servida nativamente pelo FastAPI, sem regras de negócio no frontend e consumindo a API real. |
 
 ## Project Structure
 
@@ -89,7 +89,7 @@ tests/
     └── test_project_access_control.py # Novos testes de integração para isolamento de projetos
 ```
 
-**Structure Decision**: A implementação segue estritamente a arquitetura em camadas do Lumina Back, inserindo o ponto de entrada da demonstração no diretório `lumina/demos/` que já possui montagem de arquivos estáticos configurada no FastAPI.
+**Structure Decision**: A implementação segue estritamente a arquitetura em camadas do Lumina Back, inserindo o ponto de entrada da demonstração no diretório `lumina/static/demos/` que já possui montagem de arquivos estáticos configurada no FastAPI.
 
 ## Complexity Tracking
 

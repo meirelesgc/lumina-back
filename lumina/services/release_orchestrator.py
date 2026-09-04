@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import Any, Optional
 from uuid import UUID
 
 from redis import Redis
@@ -20,6 +21,7 @@ from lumina.services import (
     tree_service,
     vector_service,
 )
+from lumina.services.run_logger import get_run_logger
 
 
 # --- WebSocket Helper ---
@@ -129,6 +131,101 @@ async def _save_eval_results(
     await session.flush()
 
 
+async def _record_citations_stage(
+    run_logger: Any,
+    release_id: UUID,
+    simplified_args: list[dict],
+) -> None:
+    t_cit = datetime.now()
+    await run_logger.start_stage(run_id=release_id, stage='citations')
+    try:
+        all_cited: list[str] = []
+        total_hallucinated = 0
+        total_boxes = 0
+        for item in simplified_args:
+            for cid in item.get('citations_provided', []):
+                all_cited.append(cid)
+            total_hallucinated += len(item.get('citations_hallucinated', []))
+            for ref in item.get('references', []):
+                total_boxes += len(ref.get('rects', []))
+
+        cit_data = {
+            'chunks_cited': sorted(list(set(all_cited))),
+            'hallucinated_citations_count': total_hallucinated,
+            'resolved_boxes_count': total_boxes,
+        }
+        d_cit = int((datetime.now() - t_cit).total_seconds() * 1000)
+        await run_logger.complete_stage(
+            run_id=release_id,
+            stage='citations',
+            duration_ms=d_cit,
+            item_count=len(all_cited),
+            data=cit_data,
+        )
+    except Exception as e:
+        d_cit = int((datetime.now() - t_cit).total_seconds() * 1000)
+        await run_logger.fail_stage(
+            run_id=release_id,
+            stage='citations',
+            error=str(e),
+            duration_ms=d_cit,
+        )
+        raise
+
+
+async def _record_synthesis_stage(
+    run_logger: Any,
+    db_release: DocumentRelease,
+    simplified_args: list[dict],
+    model: Model,
+    session: AsyncSession,
+) -> None:
+    t_synth = datetime.now()
+    release_id = db_release.id
+    await run_logger.start_stage(run_id=release_id, stage='synthesis')
+    try:
+        sorted_data = sorted(
+            simplified_args,
+            key=lambda x: x.get('score') or 0,
+            reverse=True,
+        )
+        highest_ids = [str(x.get('id') or '') for x in sorted_data[:2]]
+        lowest_ids = [str(x.get('id') or '') for x in sorted_data[-2:]]
+
+        prompt = release_logic_service.generate_description_prompt(
+            simplified_args
+        )
+        desc_response = model.invoke(prompt)
+        desc_text = desc_response.content.strip()
+        db_release.description = desc_text
+        await session.commit()
+
+        partitioned = release_logic_service.partition_synthesis_text(desc_text)
+        synth_data = {
+            'top_branches': {
+                'highest_score_branch_ids': highest_ids,
+                'lowest_score_branch_ids': lowest_ids,
+            },
+            'partitioned_text': partitioned,
+        }
+        d_synth = int((datetime.now() - t_synth).total_seconds() * 1000)
+        await run_logger.complete_stage(
+            run_id=release_id,
+            stage='synthesis',
+            duration_ms=d_synth,
+            data=synth_data,
+        )
+    except Exception as e:
+        d_synth = int((datetime.now() - t_synth).total_seconds() * 1000)
+        await run_logger.fail_stage(
+            run_id=release_id,
+            stage='synthesis',
+            error=str(e),
+            duration_ms=d_synth,
+        )
+        raise
+
+
 async def process_release_pipeline(
     session: AsyncSession,
     release_id: UUID,
@@ -144,32 +241,58 @@ async def process_release_pipeline(
 
     db_doc = db_release.history.document
 
+    run_logger = get_run_logger()
+
     try:
         await _ws_update(redis, db_release, 'creating_vectors')
         await vector_service.create_vectors(
-            db_release.file_path, vstore, model
+            db_release.file_path, vstore, model, run_id=release_id
         )
+
         await _ws_update(redis, db_release, 'evaluating')
-        tree = await tree_service.get_tree_by_release(session, db_release)
-        args = await release_logic_service.get_eval_args(
-            vstore, tree, db_release
-        )
-        simplified_args = await release_logic_service.simplify_eval_args(args)
-        with open('/tmp/simplified_args.py', 'w', encoding='utf-8') as py:
-            # print('Salvando: [/tmp/simplified_args.py]')
-            # py.write(str(simplified_args))
-            pass
-        chain = release_logic_service.get_chain(model)
-        await release_logic_service.apply_tree(chain, simplified_args)
+        t_eval = datetime.now()
+        await run_logger.start_stage(run_id=release_id, stage='evaluation')
+        try:
+            tree = await tree_service.get_tree_by_release(session, db_release)
+            args = await release_logic_service.get_eval_args(
+                vstore, tree, db_release
+            )
+            simplified_args = await release_logic_service.simplify_eval_args(
+                args
+            )
+            chain = release_logic_service.get_chain(model)
+            await release_logic_service.apply_tree(
+                chain, simplified_args, run_id=release_id
+            )
+            await _save_eval_results(session, simplified_args, db_release.id)
+            d_eval = int((datetime.now() - t_eval).total_seconds() * 1000)
+            await run_logger.complete_stage(
+                run_id=release_id,
+                stage='evaluation',
+                duration_ms=d_eval,
+                item_count=len(simplified_args),
+            )
+        except Exception as e:
+            d_eval = int((datetime.now() - t_eval).total_seconds() * 1000)
+            await run_logger.fail_stage(
+                run_id=release_id,
+                stage='evaluation',
+                error=str(e),
+                duration_ms=d_eval,
+            )
+            raise
 
-        await _save_eval_results(session, simplified_args, db_release.id)
+        # Macroetapa: Resolução de Coordenadas e Citações
+        await _record_citations_stage(run_logger, release_id, simplified_args)
 
-        prompt = release_logic_service.generate_description_prompt(
-            simplified_args
+        # Macroetapa: Síntese Executiva OiacIA
+        await _record_synthesis_stage(
+            run_logger,
+            db_release,
+            simplified_args,
+            model,
+            session,
         )
-        desc_response = model.invoke(prompt)
-        db_release.description = desc_response.content.strip()
-        await session.commit()
 
         await _ws_update(redis, db_release, 'complete')
 

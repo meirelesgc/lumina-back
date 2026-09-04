@@ -9,7 +9,9 @@ class Settings(BaseSettings):
         env_file='.env', env_file_encoding='utf-8', extra='ignore'
     )
 
-    DATABASE_URL: str
+    DATABASE_URL: str = (
+        'postgresql+psycopg://db_user:db_password@localhost:5432/db'
+    )
 
     SECRET_KEY: str = 'SECRET_KEY'
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -43,4 +45,9 @@ class Settings(BaseSettings):
     UPLOAD_DIRECTORY: Path = 'lumina/storage/uploads'
     STORAGE_DIRECTORY: Path = 'lumina/storage'
     TEMPLATES_DIRECTORY: Path = 'lumina/storage/template_conformity/uploads'
+    PIPELINE_RUNS_DIRECTORY: Path = 'lumina/storage/pipeline_runs'
+    DEBUG_PIPELINE_RUNS: bool = False
     STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'
+
+
+SETTINGS = Settings()

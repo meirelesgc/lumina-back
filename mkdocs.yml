@@ -1,0 +1,60 @@
+site_name: Lumina Back
+site_description: Documentação Técnica, Arquitetural e Funcional do Backend do Lumina
+site_author: Lumina Team
+site_url: https://meirelesgc.github.io/lumina-back
+repo_url: https://github.com/meirelesgc/lumina-back
+repo_name: meirelesgc/lumina-back
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Mudar para modo escuro
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Mudar para modo claro
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+    - content.action.edit
+
+extra_css:
+  - stylesheets/lumina.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Início: index.md
+  - Base de Conhecimento: base-de-conhecimento.md
+  - IA Dentro da Plataforma: ia-plataforma.md
+  - Gestão de Orientadores e Orientandos: orientacao-academica.md
+  - Arquitetura & Engenharia: arquitetura-engenharia.md
+  - Governança & Constituição: governanca.md

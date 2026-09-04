@@ -98,7 +98,7 @@ Como desenvolvedor, tech lead ou revisor de produto, desejo acessar uma página 
 - **FR-008**: O endpoint `GET /doc/{id}` DEVE permitir acesso de leitura apenas se o usuário for o criador (`created_by`), editor autorizado, orientador ativo do criador, ou administrador do sistema. Qualquer outro usuário DEVE receber `403 Forbidden`.
 - **FR-009**: Operações de mutação em documentos (`PUT /doc`, `DELETE /doc/{id}`) e projetos (`PUT /project`, `DELETE /project/{id}`) DEVEM ser restritas ao proprietário do recurso ou editores com permissão de escrita explícita, impedindo que orientadores excluam trabalhos sem autorização.
 - **FR-010**: O sistema DEVE fornecer o endpoint `GET /advisorship/documents/{doc_id}/academic-context` para expor o contexto acadêmico consolidado de um documento (autor/orientando, orientadores vinculados e projeto associado).
-- **FR-011**: O sistema DEVE disponibilizar uma página HTML funcional de demonstração em `lumina/demos/advisorship/index.html` servida via FastAPI (`/demos/advisorship/`) que permita exercitar e comprovar a matriz de controle de acesso entre diferentes personas.
+- **FR-011**: O sistema DEVE disponibilizar uma página HTML funcional de demonstração em `lumina/static/demos/advisorship/index.html` servida via FastAPI (`/demos/advisorship/`) que permita exercitar e comprovar a matriz de controle de acesso entre diferentes personas.
 - **FR-012**: A página de demonstração NÃO DEVE conter regras de negócio próprias nem contornar restrições de segurança, consumindo diretamente as rotas oficiais da API com tokens JWT reais.
 
 ### Key Entities

@@ -10,7 +10,7 @@
 
 **Purpose**: Estrutura inicial e preparação do ambiente de desenvolvimento
 
-- [x] T001 Setup demo directory structure at `lumina/demos/advisorship/`
+- [x] T001 Setup demo directory structure at `lumina/static/demos/advisorship/`
 - [x] T002 [P] Verify static mount and test fixtures configuration in `lumina/app.py` and `tests/conftest.py`
 
 ---
@@ -86,9 +86,9 @@
 **Independent Test**: Abrir `/demos/advisorship/` no navegador, alternar entre Aluno, Orientador e Terceiro, e verificar os retornos reais da API na interface.
 
 ### Implementation for User Story 4
-- [x] T014 [US4] Create interactive HTML validation page in `lumina/demos/advisorship/index.html` with persona switching (Aluno, Orientador, Terceiro)
-- [x] T015 [US4] Implement direct REST API client in `lumina/demos/advisorship/index.html` for login, project listing, document listing, and 403 status inspection
-- [x] T016 [US4] Update `lumina/demos/index.html` hub to include a navigation link to `/demos/advisorship/`
+- [x] T014 [US4] Create interactive HTML validation page in `lumina/static/demos/advisorship/index.html` with persona switching (Aluno, Orientador, Terceiro)
+- [x] T015 [US4] Implement direct REST API client in `lumina/static/demos/advisorship/index.html` for login, project listing, document listing, and 403 status inspection
+- [x] T016 [US4] Update `lumina/static/demos/index.html` hub to include a navigation link to `/demos/advisorship/`
 
 **Checkpoint**: Demonstração interativa operacional para reuniões, frontend e validação manual.
 

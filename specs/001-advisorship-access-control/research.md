@@ -4,7 +4,7 @@
 
 O Lumina Back implementou controle de acesso rigoroso para documentos (`/doc`) e orientações acadêmicas (`/advisorship`), permitindo isolamento de dados por usuário e compartilhamento supervisionado entre orientador e orientando. Contudo, os endpoints de projetos (`GET /project` e `GET /project-document/by-project/{id}`) permaneceram sem injeção de sessão (`CurrentUser`), expondo projetos globalmente.
 
-Adicionalmente, a Constituição do Lumina Back (Princípio VIII) exige que toda spec possua uma página HTML funcional em `lumina/demos/<spec-name>/` servida diretamente pelo FastAPI para validação manual, demonstração e documentação funcional de contratos.
+Adicionalmente, a Constituição do Lumina Back (Princípio VIII) exige que toda spec possua uma página HTML funcional em `lumina/static/demos/<spec-name>/` servida diretamente pelo FastAPI para validação manual, demonstração e documentação funcional de contratos.
 
 ## Research Decisions
 
@@ -21,7 +21,7 @@ Adicionalmente, a Constituição do Lumina Back (Princípio VIII) exige que toda
 
 ### Decision 2: Arquitetura da Página HTML de Demonstração (`/demos/advisorship/`)
 
-- **Decision**: Criar a aplicação estática em `lumina/demos/advisorship/index.html` consumindo diretamente os endpoints REST da API via `fetch()` assíncrono com Vanilla JS e CSS moderno.
+- **Decision**: Criar a aplicação estática em `lumina/static/demos/advisorship/index.html` consumindo diretamente os endpoints REST da API via `fetch()` assíncrono com Vanilla JS e CSS moderno.
 - **Rationale**:
   1. O FastAPI já possui o ponto de montagem `app.mount('/demos', StaticFiles(directory=DEMOS_DIR, html=True), name='demos')` configurado em `lumina/app.py`.
   2. Sem necessidade de build tools, frameworks pesados (React/Vue) ou servidores secundários (Princípio VIII).

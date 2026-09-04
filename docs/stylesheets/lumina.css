@@ -1,0 +1,102 @@
+:root {
+  --md-primary-fg-color: #0B5B5E;
+  --md-primary-fg-color--light: #118C99;
+  --md-primary-fg-color--dark: #084345;
+  --md-accent-fg-color: #118C99;
+  --md-accent-fg-color--transparent: rgba(17, 140, 153, 0.1);
+  --md-default-fg-color--light: #6B7280;
+  --md-default-bg-color: #FFFFFF;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #084345;
+  --md-primary-fg-color--light: #118C99;
+  --md-primary-fg-color--dark: #052c2e;
+  --md-accent-fg-color: #118C99;
+  --md-accent-fg-color--transparent: rgba(17, 140, 153, 0.15);
+}
+
+/* Tipografia Sans-serif corporativa */
+body, .md-typeset, .md-nav, .md-header {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Títulos em peso negrito com cor primária */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  color: #0B5B5E;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1 {
+  color: #118C99;
+}
+
+/* Cabeçalho da aplicação */
+.md-header {
+  background-color: #0B5B5E;
+}
+
+/* Links e navegação ativa */
+.md-typeset a {
+  color: #118C99;
+  font-weight: 500;
+}
+
+.md-typeset a:hover {
+  color: #0B5B5E;
+}
+
+.md-nav__link--active {
+  color: #0B5B5E !important;
+  font-weight: 700;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active {
+  color: #118C99 !important;
+}
+
+/* Botões e ações destacadas */
+.md-typeset .md-button--primary {
+  background-color: #118C99;
+  border-color: #118C99;
+  color: #FFFFFF;
+}
+
+.md-typeset .md-button--primary:hover {
+  background-color: #0B5B5E;
+  border-color: #0B5B5E;
+}
+
+/* Badges e destaques secundários na cor de acento terracota (#E85D25) */
+.badge-destaque,
+.md-typeset .admonition.warning {
+  border-left-color: #E85D25;
+}
+
+.md-typeset .admonition.warning > .admonition-title {
+  border-left-color: #E85D25;
+  color: #E85D25;
+}
+
+.md-typeset .admonition.note,
+.md-typeset .admonition.tip {
+  border-left-color: #118C99;
+}
+
+.md-typeset .admonition.note > .admonition-title,
+.md-typeset .admonition.tip > .admonition-title {
+  color: #0B5B5E;
+}
+
+/* Tabelas limpas */
+.md-typeset table:not([class]) th {
+  background-color: #0B5B5E;
+  color: #FFFFFF;
+  font-weight: 600;
+}

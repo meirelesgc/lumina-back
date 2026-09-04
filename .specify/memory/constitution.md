@@ -1,13 +1,22 @@
 <!--
 SYNC IMPACT REPORT
-Version change: 1.0.0 → 1.1.0
-Bump rationale: MINOR — Adicionado Princípio VIII: Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE).
+Version change: 1.1.0 → 2.0.0
+Bump rationale: MAJOR — Remoção de regras de negócio de domínio específicas (Check Tree, RAG com Coordenadas Visuais e regras de auditoria funcional) da constituição, consolidando o documento estritamente como norma suprema de engenharia e arquitetura; transferência integral do conhecimento de domínio para a Documentação Viva do MkDocs (docs/); inclusão formal da obrigatoriedade de documentar grandes mudanças arquiteturais no MkDocs com linguagem humana, direta e coesa; e ampliação e aprofundamento robusto do Princípio da Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE).
 
 Added sections:
-  - VIII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
+  - Reestruturação do Princípio VI: Documentação Viva e Acessível no MkDocs (foco no humano, direto e coeso para grandes mudanças).
+  - Ampliação robusta do Princípio VII: Página HTML Funcional de Validação/Demo (handoff para frontend, contratos vivos executáveis, zero build step e observabilidade visual).
 
-Modified principles: N/A
-Removed sections: N/A
+Modified principles:
+  - Princípio I: Arquitetura em Camadas (generalizado sem acoplamento a regras específicas de domínio).
+  - Princípio II: Inteligência Artificial Responsável e Engenharia de LLMs (reorganizado do antigo Princípio III, removendo regras de negócio de domínio e preservando diretrizes de engenharia de IA).
+  - Princípio VI: Documentação Viva e Acessível no MkDocs (antigo Princípio VII).
+  - Princípio VII: Página HTML Funcional de Validação/Demo (antigo Princípio VIII).
+
+Removed sections:
+  - Antigo Princípio II: Base de Conhecimento (Check Tree) — transferido integralmente para docs/dominio/check-tree.md.
+  - RAG com Coordenadas Visuais e verificações específicas de template/ABNT do antigo Princípio III — transferidos para docs/dominio/rag-coordenadas.md e docs/dominio/conformidade.md.
+
 Follow-up TODOs: Nenhum.
 -->
 
@@ -18,321 +27,278 @@ Follow-up TODOs: Nenhum.
 ### I. Arquitetura em Camadas (Service-Repository)
 
 Todo código de aplicação DEVE respeitar a separação rígida de responsabilidades
-em camadas. Nenhuma camada pode ultrapassar seu escopo.
+em camadas bem delimitadas. Nenhuma camada pode ultrapassar seu escopo.
 
-- **Routers** (`lumina/routers/`): Recebem requisições HTTP/WebSocket,
-  validam entrada via schemas Pydantic, delegam para services e retornam
-  respostas. NUNCA contêm lógica de negócio, queries SQL ou chamadas a LLMs.
-- **Services** (`lumina/services/`): Orquestram regras de negócio, validações
-  de domínio e coordenam chamadas a repositórios e serviços externos (IA,
-  storage, cache). Recebem dependências via injeção do FastAPI (`Annotated`
-  types em `core/dependencies.py`).
-- **Repositories** (`lumina/repositories/`): Encapsulam consultas SQLAlchemy
-  puras (queries, joins, agregações). NUNCA lançam `HTTPException` — essa
-  responsabilidade é exclusiva dos services/routers.
-- **Models** (`lumina/models.py`): Entidades SQLAlchemy 2.0 com `Mapped` e
-  `mapped_column`. Modelos compartilham o `AuditMixin` (soft delete via
-  `deleted_at`, timestamps `created_at`/`updated_at` e rastreamento de
-  `created_by`/`updated_by`/`deleted_by`).
-- **Schemas** (`lumina/schemas/`): Contratos Pydantic de entrada/saída,
-  validações customizadas e tipos compartilhados (ex: `AccessType`, enums).
-- **Features** (`lumina/features/`): Módulos especializados e autocontidos
-  para funcionalidades complexas (ex: `abnt_check/`, `template_check/`).
-  Cada feature DEVE conter seus próprios schemas, lógica e prompts, sendo
-  orquestrada por um service dedicado na camada de services.
-- **Core** (`lumina/core/`): Infraestrutura transversal — database engine,
-  settings, security/JWT, LLM provider, vectorstore, storage provider e
-  cache/WebSocket manager. Configurações via `pydantic_settings.BaseSettings`
-  carregadas do `.env`.
+- **Routers** (`lumina/routers/`): Recebem requisições HTTP e WebSockets,
+  validam payloads de entrada através de schemas Pydantic, injetam dependências,
+  delegam a execução para a camada de services e retornam respostas com códigos
+  HTTP apropriados. NUNCA contêm consultas SQL diretas, regras de negócio ou
+  chamadas diretas a LLMs.
+- **Services** (`lumina/services/`): Orquestram a lógica de negócio, regras de
+  domínio, validações de integridade e coordenam chamadas a repositórios e
+  serviços externos (provedores de IA, storage, cache, mensageria). Recebem
+  dependências via injeção do FastAPI (`Annotated` em `core/dependencies.py`).
+- **Repositories** (`lumina/repositories/`): Encapsulam o acesso e persistência
+  de dados relacionais via SQLAlchemy 2.0 assíncrono (`AsyncSession`). NUNCA
+  lançam `HTTPException` — o tratamento de erro de negócio é responsabilidade
+  exclusiva dos services e routers.
+- **Models** (`lumina/models.py`): Entidades relacionais SQLAlchemy 2.0 com
+  `Mapped` e `mapped_column`. Entidades de negócio compartilham o `AuditMixin`
+  (soft delete via `deleted_at`, timestamps `created_at`/`updated_at` e
+  rastreamento de autoria `created_by`/`updated_by`/`deleted_by`).
+- **Schemas** (`lumina/schemas/`): Contratos Pydantic de entrada, saída,
+  validações de dados e enums compartilhados.
+- **Features** (`lumina/features/`): Módulos autocontidos para funcionalidades
+  especializadas de maior complexidade. Cada feature DEVE encapsular seus
+  próprios schemas, lógica e templates de prompt, sendo orquestrada por um
+  service dedicado na camada de services.
+- **Core** (`lumina/core/`): Infraestrutura transversal do sistema — engine de
+  banco de dados, configurações via `pydantic_settings.BaseSettings`, segurança
+  e tokens JWT, injeção de dependências e clientes de cache e mensageria.
 
-**Rationale**: A separação garante que mudanças em uma camada (ex: trocar o
-ORM ou o provedor de LLM) não propaguem efeitos colaterais para camadas
-adjacentes, e permite testes isolados por camada.
+**Rationale**: O isolamento estrito garante que mudanças em componentes de
+infraestrutura ou fornecedores externos não contaminem as regras de domínio,
+permitindo manutenção segura e testes unitários independentes por camada.
 
-### II. Base de Conhecimento (Check Tree)
+### II. Inteligência Artificial Responsável e Engenharia de LLMs
 
-O sistema de auditoria documental é fundamentado em uma árvore hierárquica de
-conhecimento normativo que DEVE ser mantida com integridade referencial
-completa.
+A utilização de Modelos de Linguagem (LLMs) e componentes de inteligência
+artificial DEVE seguir rigorosas práticas de engenharia que garantam
+segurança jurídica, proteção de privacidade, determinismo e controle de custos.
 
-- **Hierarquia**: `Typification` → `Taxonomy` → `Branch`, com `Source`
-  vinculada como referência normativa/legal de cada critério.
-  - `Typification`: Perfil documental (ex: Edital de Obras, Artigo Científico).
-  - `Taxonomy`: Seção ou tópico obrigatório (ex: Qualificação Técnica,
-    Introdução).
-  - `Branch`: Critério normativo específico com título, descrição e pergunta
-    de verificação para a IA avaliar.
-  - `Source`: Fonte legal que embasa os critérios (ex: Lei 14.133/21,
-    NBR 6023).
-- **Snapshots de Release (`Applied*`)**: Quando uma `DocumentRelease` é
-  processada, a árvore ativa DEVE ser congelada em tabelas
-  `AppliedTypification`, `AppliedTaxonomy`, `AppliedBranch` e
-  `AppliedSource`. Resultados da avaliação (`fulfilled`, `score`, `feedback`,
-  `references`, `presidio_mapping`) são persistidos no `AppliedBranch`.
-- **Imutabilidade Histórica**: Uma vez criado, o snapshot de uma release
-  NUNCA pode ser alterado — ele representa o estado exato da base de
-  conhecimento no momento da avaliação.
-- **CRUDs do Check Tree**: Endpoints em `routers/check_tree/` (projects,
-  document_groups, project_documents, typifications, taxonomies, branches,
-  sources) DEVEM validar integridade relacional e soft-delete antes de
-  qualquer operação.
+- **Anonimização e Privacidade por Padrão (LGPD)**: Nenhum dado pessoal
+  identificável (PII) pode ser vetorizado ou transmitido para provedores
+  externos de LLM sem prévia anonimização via ferramentas dedicadas (como
+  Microsoft Presidio). Mapeamentos reversíveis devem ser mantidos apenas em
+  metadados restritos aos usuários autorizados.
+- **Saídas Estruturadas (Structured Output)**: Toda inferência de LLM que
+  alimenta regras de backend DEVE utilizar validação estruturada obrigatória
+  (Pydantic models ou `JsonOutputParser`) para garantir parsing determinístico
+  e prevenir quebras de contrato de dados.
+- **Centralização e Versionamento de Prompts**: Prompts NUNCA devem ser
+  declarados inline ou dispersos em classes de serviço. Devem residir em
+  módulos dedicados de prompts (`lumina/prompts.py` ou templates Jinja2 em
+  `features/prompts/`), permitindo versionamento, revisão e auditoria clara.
+- **Processamento Concorrente e Eficiência**: Operações sobre múltiplos itens
+  ou critérios DEVEM priorizar execução em lote (`chain.abatch`) e
+  concorrência assíncrona controlada (`asyncio.gather`), mitigando latência e
+  otimizando requisições.
+- **Rastreabilidade de Inferência**: Chamadas a modelos devem preservar
+  metadados mínimos (modelo utilizado, parâmetros de temperatura, tokens
+  consumidos e versão do prompt) para auditoria e reproducibilidade.
 
-**Rationale**: A rastreabilidade normativa exige que cada avaliação de IA
-seja reprodutível e auditável, mesmo que a árvore de conhecimento evolua
-ao longo do tempo.
+**Rationale**: Modelos de linguagem são dependências externas estocásticas.
+Tratá-los com validação de tipos, sanitização de dados prévia e contratos
+estruturados transforma saídas probabilísticas em saídas de engenharia seguras.
 
-### III. Inteligência Artificial Responsável
+### III. Testes Orientados a Risco (NON-NEGOTIABLE)
 
-Todo uso de IA no Lumina DEVE seguir práticas que garantam rastreabilidade,
-reprodutibilidade, proteção de dados e contenção de custos.
-
-- **RAG com Coordenadas Visuais**: O `CoordinateChunker`
-  (`services/vector_service.py`) divide PDFs em blocos de até 500 caracteres,
-  preservando coordenadas geométricas (`rects: [x0, y0, x1, y1]`) e número
-  de página. Citações retornadas pela LLM (`Citation(chunk_id,
-  text_snippet)`) DEVEM ser resolvidas para coordenadas via
-  `resolve_citations`, permitindo highlight visual no documento original.
-- **Anonimização LGPD (Presidio)**: Antes de qualquer texto ser vetorizado
-  ou enviado a LLMs externas, ele DEVE passar pelo `PresidioAnonymizer`
-  (`utils/PresidioAnonymizer.py`) para substituir CPFs, CNPJs, RGs,
-  telefones, valores monetários, e-mails e outras PII por placeholders
-  indexados (`<CPF_1>`, `<CNPJ_1>`). O mapeamento DEVE ser persistido
-  nos metadados do chunk para desanonimização posterior.
-- **Structured Output**: Respostas de LLMs DEVEM utilizar `structured_output`
-  (Pydantic models ou `JsonOutputParser`) para garantir parsing
-  determinístico. Schemas de saída residem em `schemas/ai.py` e nos schemas
-  internos de cada feature.
-- **Modelos e Prompts**: Prompts centralizados em `lumina/prompts.py` e
-  templates Jinja2 em `features/prompts/`. Configuração de modelos em
-  `core/llm.py` (LangChain `ChatOpenAI` para chat/RAG) e diretamente via
-  OpenAI SDK nos módulos de features (`gpt-5.4` para ABNT, `gpt-4o` para
-  visão de templates).
-- **Avaliação por Lote**: O pipeline de release em
-  `services/release_logic_service.py` executa avaliações via `chain.abatch`
-  para processar múltiplos ramos do Check Tree em paralelo.
-- **Conformidade Híbrida de Templates**: O módulo `features/template_check/`
-  combina verificações determinísticas via PyMuPDF (margens, fontes,
-  entrelinhas, cabeçalhos) com visão computacional (comparação visual de
-  páginas), executadas concorrentemente via `asyncio.gather`.
-
-**Rationale**: IA sem rastreabilidade é uma caixa preta inauditável.
-A combinação de structured output + coordenadas visuais + anonimização
-transforma a IA em ferramenta confiável para auditoria normativa.
-
-### IV. Testes Orientados a Risco (NON-NEGOTIABLE)
-
-A suíte de testes DEVE ser orientada a risco e comportamento — não a
-cobertura cega de linhas. A metodologia completa está definida na skill
-`.agents/skills/fastapi-testing-methodology/SKILL.md`.
+A suíte de testes do Lumina Back DEVE ser orientada a risco e comportamento,
+e não à métrica vazia de cobertura de linhas. A metodologia canônica está
+documentada na skill `.agents/skills/fastapi-testing-methodology/SKILL.md`.
 
 - **Pirâmide de Testes (5 camadas)**:
-  1. `tests/unit/services/` — Regras de negócio com mocks completos de
+  1. `tests/unit/services/` — Regras de negócio puras com mocks completos de
      repositórios (`AsyncMock`, `pytest-mock`).
-  2. `tests/integration/repositories/` — Queries SQL com banco real via
-     `session` fixture (savepoints).
-  3. `tests/api/routers/` — Fluxo ponta a ponta com `TestClient`.
+  2. `tests/integration/repositories/` — Consultas SQL contra banco real via
+     fixture `session` (savepoints).
+  3. `tests/api/routers/` — Fluxos ponta a ponta com `TestClient`.
   4. Testes de segurança transversais (401/403) integrados em `tests/api/`.
   5. Testes de regressão nos diretórios pertinentes.
-- **Matriz de Risco**: A profundidade DEVE ser proporcional à criticidade:
-  - Crítico (auth, segurança, regras centrais): Unit + Repo + API + Security.
-  - Alto (transações, mutações complexas): Unit + Repo + API.
-  - Médio (consultas, filtros): Unit + Repo (se query complexa).
-  - Baixo (CRUDs simples, health): API Integration.
-- **Isolamento de Banco**: Testcontainers PostgreSQL 16 com DDL único por
-  sessão e rollback via savepoints a cada teste. NUNCA rodar
-  `create_all`/`drop_all` por teste individual.
-- **Factories Modulares**: Massas de dados via Factory Boy em
-  `tests/factories/`. NUNCA usar `uuid4()` soltos para FKs — sempre
-  instanciar entidades reais.
-- **IA em Testes — Separação Categórica**:
-  1. *AI Integration Tests*: `FakeListChatModel` para validar fluxo sem
-     tokens. Roda em `task test`.
-  2. *AI Contract Tests*: Validação de schemas contra JSON corrompido.
-     Roda em `task test`.
-  3. *AI Evaluation*: Chamadas reais a LLMs com golden datasets
-     (`tests/ai/evaluation/datasets/`). Marcado com `@pytest.mark.ai`.
-     Roda SOMENTE em `task test-ai`.
+- **Matriz de Risco**: A profundidade de teste deve ser proporcional à
+  criticidade da funcionalidade:
+  - Crítico (autenticação, segurança, autorização, regras centrais): Unit +
+    Repo + API + Security.
+  - Alto (mutações complexas, transações financeiras/jurídicas): Unit + Repo +
+    API.
+  - Médio (consultas com filtros dinâmicos, relatórios): Unit + Repo (se query
+    complexa).
+  - Baixo (CRUDs simples, health checks): API Integration.
+- **Isolamento de Banco via Testcontainers**: Provisionamento único de
+  PostgreSQL por sessão de teste com aplicação de DDL e reversão de estado
+  por transações aninhadas (Savepoints) a cada teste. É PROIBIDO executar
+  `create_all`/`drop_all` em testes individuais.
+- **Massas de Dados com Factory Boy**: Dados de teste em `tests/factories/`.
+  É PROIBIDO gerar `uuid4()` avulsos para chaves estrangeiras; relacionamentos
+  devem instanciar entidades válidas.
+- **Separação Categórica de Testes de IA**:
+  1. *AI Integration Tests*: Utilizam `FakeListChatModel` para validar fluxos
+     sem consumir tokens. Executam em `poetry run task test`.
+  2. *AI Contract Tests*: Validam resiliência de schemas contra JSONs
+     corrompidos ou truncados. Executam em `poetry run task test`.
+  3. *AI Evaluation*: Chamadas reais a LLMs com datasets padronizados
+     (`tests/ai/evaluation/datasets/`). Marcados com `@pytest.mark.ai`.
+     Executam SOMENTE em `poetry run task test-ai`.
 - **Guardrail de Cobertura**: Mínimo de 80% de cobertura geral.
-  `models.py` e `schemas.py` só podem ser excluídos se forem estritamente
-  declarativos.
 
-**Rationale**: Testes que dependem de rede externa ou consomem tokens pagos
-em CI/CD são instáveis e caros. A separação em 3 categorias de IA garante
-que o CI seja rápido, determinístico e barato, enquanto a avaliação de
-qualidade roda sob demanda.
+**Rationale**: Testes que gastam tokens ou dependem de redes externas em CI/CD
+tornam a esteira cara, lenta e frágil. A tripla divisão de IA mantém o CI
+rápido e determinístico, preservando a avaliação qualitativa para execuções sob
+demanda.
 
-### V. Simplicidade e Consistência de Código
+### IV. Simplicidade e Consistência de Código
 
-Todo código DEVE seguir padrões de formatação e estilo consistentes,
-verificáveis automaticamente.
+Todo código da aplicação DEVE seguir padrões rígidos de formatação e estilo,
+verificados de maneira automática.
 
-- **Limite de 79 caracteres por linha** (PEP 8 / Ruff).
-- **Aspas simples `'`** por padrão em todo o projeto.
-- **Ruff** como linter e formatter únicos. Regras ativas:
+- **Limite de Linha**: 79 caracteres por linha (estilo PEP 8 / Ruff).
+- **Aspas**: Aspas simples `'` por padrão em todo o código Python.
+- **Ruff**: Linter e formatador único do repositório. Regras ativas:
   `['I', 'F', 'E', 'W', 'PL', 'PT']`.
-- **Tipagem estática**: Todo parâmetro de função, retorno e variável
-  relevante DEVE ser tipado. Schemas Pydantic para validação de entrada/saída
-  nos routers.
-- **Poetry**: Gerenciador exclusivo de dependências e ambiente virtual.
-  NUNCA executar `python`, `pytest`, `alembic` ou `ruff` sem o prefixo
-  `poetry run` ou sem ativar a virtualenv via `poetry shell`.
-- **Migrações**: Geradas via `poetry run alembic revision --autogenerate`
-  após qualquer alteração em `models.py`. Diretório `migrations/` excluído
-  do linting.
+- **Tipagem Estática Integral**: Funções, parâmetros, métodos e retornos DEVEM
+  possuir anotações de tipo estáticas explícitas. Schemas Pydantic cuidam da
+  validação nas bordas da aplicação.
+- **Uso Estrito do Poetry**: NUNCA execute ferramentas de sistema diretamente.
+  Sempre utilize `poetry run <comando>` ou ative o ambiente via `poetry shell`.
+- **Migrações Automáticas com Alembic**: Qualquer alteração em `models.py`
+  deve gerar migração via `poetry run alembic revision --autogenerate`.
+  O diretório `migrations/` é excluído do linter Ruff.
 
-**Rationale**: Consistência elimina debates de estilo nos PRs e permite
-que ferramentas automatizadas garantam a qualidade sem intervenção humana.
+**Rationale**: Consistência estilística verificada por ferramentas elimina
+fricções em revisões de PR e assegura uniformidade em todo o código-fonte.
 
-### VI. Segurança e Privacidade por Padrão
+### V. Segurança e Privacidade por Padrão
 
-- **Autenticação**: JWT (HS256) via `pyjwt` com hash de senhas Argon2
-  (`pwdlib`). Tokens emitidos com expiração configurável.
-- **Autorização**: Controle de acesso por documento via `AccessType` (owner,
-  advisor, viewer). Validação em services antes de qualquer operação.
-- **Soft Delete**: Todas as entidades com `AuditMixin` utilizam `deleted_at`
-  em vez de exclusão física. Queries DEVEM filtrar `deleted_at.is_(None)`.
-- **Audit Trail**: Operações críticas (CREATE, UPDATE, DELETE) DEVEM gerar
-  registros em `audit_logs` via `audit_service`.
-- **LGPD**: Dados pessoais NUNCA transitam para LLMs externas sem
-  anonimização prévia via Presidio (Princípio III).
+- **Autenticação**: Tokens JWT (`HS256`) gerados com segredo robusto e hash
+  de senhas via **Argon2** (`pwdlib`).
+- **Autorização Contextual**: Acesso a recursos e documentos controlado por
+  matriz de permissões (`AccessType`: owner, advisor, viewer), validada em
+  services antes de repassar chamadas ao repositório.
+- **Exclusão Lógica Obrigatória (Soft Delete)**: Entidades com `AuditMixin`
+  utilizam `deleted_at` e `deleted_by`. Exclusões físicas são expressamente
+  vedadas em rotinas normais de negócio.
+- **Trilha de Auditoria**: Mutações em entidades centrais geram registros
+  imutáveis na tabela `audit_logs` via `audit_service`.
+- **Proteção LGPD**: Dados identificáveis sensíveis devem ser mascarados antes
+  de qualquer processamento externo (conforme Princípio II).
 
-**Rationale**: Um sistema de auditoria normativa que não protege os dados
-dos seus próprios usuários contradiz sua razão de existir.
+**Rationale**: Um sistema de auditoria que falha na proteção de seus próprios
+registros e credenciais perde a credibilidade técnica e legal.
 
-### VII. Documentação Viva (MkDocs)
+### VI. Documentação Viva e Acessível no MkDocs (NON-NEGOTIABLE)
 
-Toda especificação de feature elaborada pelo Spec Kit DEVE ser documentada
-em linguagem acessível no diretório `docs/`, utilizando o MkDocs para
-publicação.
+O repositório adota a prática de **Documentação Viva**. A documentação não é um
+registro estático após o fato, mas um ativo sincronizado com o código, publicado
+via **MkDocs** no diretório `docs/`.
 
-- **Localização**: Arquivos Markdown em `docs/` na raiz do repositório.
-- **Linguagem**: Próxima de um humano não-técnico. Evitar jargão de
-  implementação; focar em "o que o sistema faz" e "por que". Utilizar
-  diagramas Mermaid e exemplos concretos sempre que possível.
-- **Sincronização**: Quando uma spec (`spec.md`) for criada ou atualizada
-  via `/speckit-specify`, uma página correspondente DEVE ser criada ou
-  atualizada em `docs/` com o resumo funcional da feature.
-- **Estrutura sugerida por página**:
-  1. Visão geral da feature (para que serve, qual problema resolve).
-  2. Fluxo principal (passo a passo do usuário).
-  3. Regras de negócio (em linguagem natural).
-  4. Diagrama de fluxo ou arquitetura (Mermaid).
-  5. Glossário de termos específicos (se necessário).
-- **Publicação**: O MkDocs DEVE ser configurado para gerar a documentação
-  acessível em `https://meirelesgc.github.io/lumina-back` (já configurado
-  no `pyproject.toml`).
+- **Documentação de Grandes Mudanças**: Mudanças arquiteturais relevantes,
+  alterações de governança, remoções ou adições de princípios constitucionais e
+  evoluções nas regras de negócio DEVEM ser documentadas formalmente no MkDocs
+  no momento em que ocorrem.
+- **Linguagem Focada no Humano, Direta e Coesa**: O conteúdo no MkDocs DEVE ser
+  redigido em tom claro, acessível e direto para seres humanos (desenvolvedores,
+  revisores, gestores e stakeholders não-técnicos). É mandatório:
+  - Focar no "o que o sistema faz", "por que foi desenhado assim" e "qual
+    problema resolve".
+  - Evitar jargões excessivos e pormenores de implementação voláteis.
+  - Utilizar diagramas Mermaid para fluxos e relações entre componentes.
+  - Apresentar exemplos práticos e tabelas comparativas concisas.
+- **Repositório Central de Regras de Domínio**: Regras de negócio da aplicação
+  (como a Base de Conhecimento, fatiamento de documentos, normas ABNT e modelos
+  específicos) NÃO pertencem à constituição; pertencem à seção de Domínio do
+  MkDocs (`docs/dominio/`).
+- **Sincronização com Especificações (Spec Kit)**: Cada nova funcionalidade
+  especificada em `specs/` DEVE ter sua respectiva página de resumo funcional
+  criada ou atualizada em `docs/`.
+- **Validação de Build**: A documentação deve compilar com zero erros através
+  de `poetry run task docs-build` (ou `mkdocs build`).
 
-**Rationale**: Specs técnicas em `.specify/` são ótimas para agentes e
-desenvolvedores, mas stakeholders e revisores precisam de uma visão
-simplificada e navegável do sistema.
+**Rationale**: Códigos e especificações técnicas atendem bem agentes e
+engenheiros, mas uma documentação viva, humana e coesa é indispensável para a
+continuidade do projeto e comunicação com stakeholders.
 
-### VIII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
+### VII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
 
-Sempre que uma nova spec alterar ou adicionar comportamento observável no
-backend, a implementação da spec DEVE incluir uma página HTML simples que
-permita demonstrar e validar manualmente o comportamento implementado.
+Toda especificação (spec) que adicionar ou alterar comportamento observável no
+backend DEVE incluir uma **página HTML funcional de demonstração e validação**.
 
-Esta página NÃO é um frontend de produto: trata-se de um artefato pragmático
-de validação, documentação funcional e demonstração do backend.
+Esta página NÃO é um frontend definitivo de produção. Trata-se de um artefato
+pragmático de validação, documentação interativa e referência viva.
 
-- **Objetivos**:
-  1. Permitir que o desenvolvedor valide manualmente se a spec funciona
-     conforme esperado ponta a ponta.
-  2. Servir como referência funcional para a equipe de frontend entender
-     rapidamente quais endpoints, fluxos e retornos estão disponíveis.
-  3. Permitir demonstrar a funcionalidade do backend em reuniões sem precisar
-     de uma aplicação frontend completa.
-- **Princípios de Implementação**:
-  - **Funcionalidade sobre estética**: NUNCA investir tempo em design visual,
-    responsividade avançada ou bibliotecas pesadas de componentes.
-  - **Simplicidade**: HTML, CSS básico e JavaScript vanilla. Sem frameworks de
-    frontend ou dependências externas pesadas.
-  - **Autoexplicativa e Focada**: A página deve permitir entender
-    imediatamente o que a spec faz, demonstrando estritamente o escopo da
-    spec.
-  - **Consumo Real**: A página consome diretamente os endpoints reais da API.
-- **Serviço e Organização no Código**:
-  - As páginas DEVEM ser servidas diretamente pelo FastAPI existente,
-    aproveitando a montagem de estáticos em `lumina/demos/` (exposta em
-    `/demos/<spec-name>/` ou `/spec/<spec-name>/`).
-  - NUNCA criar um servidor ou serviço separado para servir as demos.
-  - A demo atua como complemento funcional ao Swagger/ReDoc (Swagger define o
-    contrato técnico; a demo exercita o fluxo interativo).
-- **Autenticação**:
-  - Reutilizar o mecanismo de autenticação existente do projeto (campos para
-    informar credenciais/token na própria página de teste).
-  - NUNCA implementar um sistema paralelo de autenticação e NUNCA persistir
-    credenciais desnecessariamente.
-- **Conteúdo Mínimo Esperado na Demo**:
-  - Nome da spec e breve descrição funcional.
-  - Entradas necessárias para os fluxos/casos de uso.
-  - Botões/ações para disparar as requisições contra a API.
-  - Exibição clara de respostas com sucesso e respostas com erro (payloads).
-  - Estado antes/depois quando relevante para entender a operação.
-  - Indicação explícita quando uma ação possui efeito real no banco de dados.
-- **Isolamento Arquitetural e Lifecycle**:
-  - Demos NÃO podem conter regras de negócio no HTML/JS — regras residem
-    exclusivamente nos services/repositories do backend.
-  - Nenhuma parte da aplicação de produção pode depender da existência da demo.
-  - A demo DEVE poder ser removida no futuro sem nenhum impacto no sistema.
-- **Segurança**:
-  - NUNCA contornar validações, permissões, RBAC ou isolamento de dados para
+- **Objetivos Centrais**:
+  1. *Validação Manual Ponta a Ponta*: Permitir que o engenheiro ou agente
+     valide o fluxo de ponta a ponta em segundos, sem depender de Postman ou
+     comandos curl complexos.
+  2. *Contrato Executável e Handoff para o Frontend*: Servir como guia vivo
+     para os desenvolvedores de frontend entenderem imediatamente como chamar
+     os endpoints, quais cabeçalhos enviar, o formato real do payload de
+     resposta e o comportamento em situações de erro.
+  3. *Demonstração Imediata*: Permitir demonstrar funcionalidades em reuniões
+     de alinhamento sem necessitar que o frontend de produto esteja pronto.
+- **Diretrizes Técnicas de Construção**:
+  - **Zero Build Step**: Construída estritamente com HTML5 semântico, estilos
+    limpos (CSS vanilla ou Tailwind CSS via CDN) e JavaScript moderno
+    (`fetch`, `async/await`). É EXPRESSAMENTE VEDADO o uso de frameworks
+    pesados (React, Vue, Angular) ou bundlers para páginas de demo.
+  - **Servida pelo Próprio FastAPI**: As demos DEVEM ser armazenadas em
+    `lumina/static/demos/<nome-da-spec>/` e servidas diretamente pela montagem de
+    arquivos estáticos em `/demos/<nome-da-spec>/`. NUNCA suba servidores web
+    ou processos paralelos.
+  - **Catálogo Central**: Toda nova demo deve ser listada com título, badge e
+    descrição clara no catálogo geral em `lumina/static/demos/index.html`.
+  - **Consumo Real**: A demo interage diretamente com os endpoints reais da API
+    em execução, sem dados mockados no cliente.
+  - **Autenticação e Personas**: A demo deve conter controles visuais para
+    informar token JWT ou alternar rapidamente entre personas de teste (ex:
+    Aluno, Orientador, Administrador), reutilizando as rotas reais de auth.
+  - **Transparência e Observabilidade na Interface**:
+    - Campos claros para parâmetros de entrada;
+    - Botões autoexplicativos para disparar ações;
+    - Indicador visual de processamento em andamento;
+    - Exibição legível do status HTTP e payload de resposta retornado;
+    - Alerta visual explícito (etiquetas destacadas) em ações que persistam,
+      alterem ou deletem dados reais no banco de dados.
+- **Isolamento Arquitetural e Desacoplamento**:
+  - A demo NÃO pode conter lógica ou validações de negócio no JavaScript;
+    toda regra reside no backend.
+  - Nenhuma linha do código de produção pode depender da existência da demo.
+  - A demo DEVE poder ser excluída a qualquer momento com zero impacto no
+    sistema.
+  - NUNCA crie endpoints inseguros ou contorne o RBAC do backend apenas para
     facilitar a demo.
-  - NUNCA criar endpoints especiais que ignorem proteções reais apenas para a
-    demonstração.
-- **Definition of Done (DoD) para Novas Specs**:
+- **Definition of Done (DoD) para Specs com Backend**:
   - [ ] Backend implementado e aderente à arquitetura em camadas.
   - [ ] Testes automatizados cobrindo a matriz de risco.
-  - [ ] Página HTML de demo/validação criada em `lumina/demos/<spec-name>/`.
-  - [ ] Página servida pelo próprio FastAPI existente.
-  - [ ] Autenticação integrada ao mecanismo existente (se aplicável).
-  - [ ] Critérios de aceitação da spec exercitáveis manualmente pela página.
-  - [ ] Respostas e erros da API claramente visíveis na interface.
-  - [ ] Sem regra de negócio duplicada no frontend da demo.
-  - [ ] Demo restrita estritamente ao escopo da spec.
-  - [ ] Demo pode ser removida sem afetar a aplicação principal.
+  - [ ] Página HTML de validação criada em `lumina/static/demos/<spec-name>/`.
+  - [ ] Card descritivo adicionado em `lumina/static/demos/index.html`.
+  - [ ] Página servida diretamente pela montagem `/demos/` do FastAPI.
+  - [ ] Fluxo de autenticação/personas funcionando na interface.
+  - [ ] Todos os critérios de aceitação exercitáveis manualmente pela página.
+  - [ ] Payloads de sucesso e de erro visíveis de forma clara.
+  - [ ] Mudança e resumo funcional documentados no MkDocs em linguagem humana.
+  - [ ] Validação de zero acoplamento (a demo é puramente consumidora e
+    descartável).
 
-**Rationale**: Swagger valida tipos e contratos, testes automatizados validam
-invariantes lógicas, mas a página demo valida a experiência operacional
-do backend e acelera a integração com equipes externas e stakeholders.
+**Rationale**: Swagger define tipos e testes automatizados validam lógica, mas
+uma demo HTML executável valida a experiência real da API, elimina ruídos no
+handoff com o frontend e comprova o valor de negócio de forma tangível.
 
 ## Workflow de Desenvolvimento com Agentes
 
-Regras que governam como agentes de IA (subagentes) DEVEM operar ao
-desenvolver features complexas no Lumina Back.
+Regras que governam como agentes e desenvolvedores operam ao trabalhar no
+Lumina Back:
 
-- **Git Worktrees para Paralelização**: Ao iniciar uma tarefa complexa que
-  pode ser decomposta em subtarefas independentes, o agente DEVE criar
-  git worktrees separados (`git worktree add`) para permitir que subagentes
-  trabalhem em paralelo sem conflitos de working tree.
-  - Cada worktree DEVE partir de `develop` ou da branch de feature corrente.
-  - O nome da branch do worktree DEVE seguir o padrão:
-    `feature/<feature-name>/<subtask-name>`.
-  - Ao finalizar, o agente DEVE informar o desenvolvedor para que ele
-    faça o merge/attach manual da branch à `develop`. Agentes NUNCA
-    fazem merge diretamente em `develop` ou `main`.
-- **Subagentes para Tarefas Complexas**: Quando uma tarefa envolve múltiplos
-  arquivos independentes ou camadas distintas (ex: repository + service +
-  router + tests), o agente principal DEVE criar subagentes especializados
-  para trabalhar em paralelo, cada um em seu worktree.
-- **Atomicidade de Commits**: Cada subtarefa DEVE resultar em commits
-  atômicos e auto-descritivos na branch do worktree. Mensagens de commit
-  DEVEM seguir o padrão Conventional Commits (ex: `feat:`, `fix:`, `test:`,
-  `docs:`).
-- **Testes Antes de Entregar**: Nenhuma branch de worktree DEVE ser
-  considerada pronta sem que `poetry run task test` passe com sucesso.
-  Se a feature envolve IA, `poetry run task test-ai` DEVE ser executado
-  separadamente e seu resultado relatado.
-- **Cleanup**: Ao finalizar o trabalho, worktrees DEVEM ser removidos
-  com `git worktree remove` para manter o repositório limpo.
+- **Git Worktrees para Paralelização**: Em tarefas complexas que permitam
+  decomposição em subtarefas independentes, DEVE-SE utilizar git worktrees
+  separados (`git worktree add`) para execução paralela sem conflitos de working
+  tree.
+  - Padrão de branch: `feature/<feature-name>/<subtask-name>`.
+  - Agentes NUNCA realizam merge direto em `develop` ou `main`. A consolidação
+    final é sempre conduzida ou autorizada pelo desenvolvedor responsável.
+- **Atomicidade e Conventional Commits**: Commits devem ser atômicos e seguir o
+  padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`).
+- **Validação Pré-Entrega**: Nenhuma entrega é aceita sem a aprovação completa
+  de `poetry run task test`. Testes que envolvem IA real (`task test-ai`) devem
+  ser executados e seus resultados relatados quando aplicável.
+- **Limpeza de Worktrees**: Ao concluir, os worktrees devem ser removidos
+  (`git worktree remove`) mantendo o repositório organizado.
 
 ## Stack Tecnológica e Infraestrutura
 
-Definição canônica da stack. Qualquer adição ou substituição de tecnologia
-DEVE ser proposta como emenda à constituição.
+Definição canônica dos componentes e versões do projeto:
 
 | Categoria | Tecnologia | Versão/Constraint |
-|-----------|-----------|-------------------|
+|---|---|---|
 | Linguagem | Python | ≥3.13, <3.14 |
 | Framework Web | FastAPI | ≥0.120.1 |
 | ORM | SQLAlchemy 2.0 (Async) | ≥2.0.44 |
@@ -344,40 +310,36 @@ DEVE ser proposta como emenda à constituição.
 | Vectorstore | PGVector (LangChain) | ≥0.0.16 |
 | Embeddings | OpenAI text-embedding-3-small | — |
 | PDF Processing | PyMuPDF (fitz) | ≥1.26.5 |
-| Anonimização | Microsoft Presidio | ≥2.2.360 |
+| Anonimização LGPD | Microsoft Presidio | ≥2.2.360 |
 | Relatórios PDF | ReportLab | ≥4.4.4 |
 | Storage | Local / S3 (aioboto3) | Configurável via `STORAGE_PROVIDER` |
 | Notificações | Evolution API (WhatsApp) | v2.3.6 |
-| Gerenciador | Poetry | ≥2.0.0 |
+| Documentação Viva | MkDocs + MkDocs Material | ≥1.6.1 / ≥9.7.7 |
+| Gerenciador de Pacotes | Poetry | ≥2.0.0 |
 | Linter/Formatter | Ruff | ≥0.12.11 |
 | Testes | Pytest + Testcontainers + Factory Boy | — |
-| Tasks | Taskipy | ≥1.14.1 |
-| CI/CD | GitHub Actions → AWS EC2 via SSH | — |
+| Automação de Tarefas | Taskipy | ≥1.14.1 |
 | Containerização | Docker + Docker Compose | — |
 
 ## Governance
 
 Esta constituição é o documento normativo supremo do projeto Lumina Back.
 Todas as práticas de desenvolvimento, revisão de código e decisões
-arquiteturais DEVEM estar em conformidade com os princípios aqui
-estabelecidos.
+arquiteturais DEVEM obedecer aos princípios aqui estabelecidos.
 
-- **Supremacia**: Em caso de conflito entre esta constituição e qualquer
-  outro documento (AGENTS.md, skills, READMEs), a constituição prevalece.
-  O `AGENTS.md` DEVE ser mantido como guia operacional complementar,
-  nunca contraditório.
-- **Emendas**: Qualquer alteração a esta constituição DEVE ser:
-  1. Proposta com justificativa técnica.
-  2. Documentada no Sync Impact Report (comentário HTML no topo do arquivo).
-  3. Versionada segundo SemVer:
-     - MAJOR: Remoção ou redefinição incompatível de princípios.
-     - MINOR: Adição de princípio ou expansão material de orientação.
-     - PATCH: Clarificações, correções de texto, refinamentos não-semânticos.
-- **Revisão de Compliance**: Todo PR DEVE ser verificado quanto à aderência
-  aos princípios. Complexidade arquitetural que desvie dos princípios DEVE
-  ser justificada explicitamente no PR.
-- **Guia Operacional**: O `AGENTS.md` na raiz do repositório contém
-  comandos essenciais e orientações de runtime para desenvolvedores e
-  agentes. Ele complementa — mas não substitui — esta constituição.
+- **Supremacia**: Em caso de conflito entre esta constituição e qualquer outro
+  documento (AGENTS.md, skills, guias locais), a constituição prevalece.
+  O `AGENTS.md` atua como guia operacional complementar, nunca contraditório.
+- **Emendas e Versionamento SemVer**:
+  - **MAJOR**: Remoção, redefinição incompatível de princípios ou alteração nos
+    limites arquiteturais fundamentais.
+  - **MINOR**: Adição de novo princípio ou expansão material de orientações.
+  - **PATCH**: Clarificações de redação, correções ortográficas e refinamentos
+    não-semânticos.
+  - Toda emenda DEVE incluir o preenchimento do Sync Impact Report no topo do
+    arquivo.
+- **Revisão de Conformidade**: Todo pull request deve ser inspecionado quanto à
+  sua aderência aos princípios. Desvios ou complexidades anômalas devem ser
+  justificados explicitamente.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-08-31
+**Version**: 2.0.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-05

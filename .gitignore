@@ -2,6 +2,7 @@ lumina/storage/uploads
 lumina/storage/templates
 lumina/storage/template_conformity
 lumina/storage/abnt_conformity
+lumina/storage/pipeline_runs
 *.txt
 htmlmvp/
 compose.dev.yaml

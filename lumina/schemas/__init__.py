@@ -65,6 +65,16 @@ from .document_release import (
     DocumentReleaseList,
     DocumentReleasePublic,
 )
+from .processing_run import (
+    CriterionEvaluationRecord,
+    ProcessingEvent,
+    ProcessingEventType,
+    ProcessingRunDetail,
+    ProcessingRunListResponse,
+    ProcessingRunSummary,
+    ProcessingStageDetail,
+    ProcessingStatus,
+)
 from .project import (
     ProjectCreate,
     ProjectFilter,
@@ -244,4 +254,12 @@ __all__ = [
     'AdvisorshipStatus',
     'AdvisorshipUpdate',
     'DocumentAcademicContextPublic',
+    'ProcessingStatus',
+    'ProcessingEventType',
+    'ProcessingEvent',
+    'CriterionEvaluationRecord',
+    'ProcessingStageDetail',
+    'ProcessingRunSummary',
+    'ProcessingRunListResponse',
+    'ProcessingRunDetail',
 ]
