@@ -1,6 +1,7 @@
 services:
   db:
     image: pgvector/pgvector:pg17
+    restart: unless-stopped
     volumes:
       - dbdata:/var/lib/postgresql/data
     environment:
@@ -20,6 +21,7 @@ services:
   api:
     build: .
     image: "${COMPOSE_PROJECT_NAME:-lumina}_api"
+    restart: unless-stopped
     entrypoint: ./entrypoint.sh
     ports:
       - "${PORT_API:-8000}:8000"
@@ -44,6 +46,7 @@ services:
 
   redis:
     image: redis:latest
+    restart: unless-stopped
     ports:
       - "${PORT_REDIS:-6379}:6379"
     volumes:
@@ -57,6 +60,7 @@ services:
 
   evolution_api:
     image: gleidsoncosta/evolution-api:v2.3.6
+    restart: unless-stopped
     ports:
       - "${PORT_EVO:-8082}:8080"
     env_file:
