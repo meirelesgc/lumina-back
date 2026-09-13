@@ -5,7 +5,6 @@ O módulo de **Gestão de Orientadores e Orientandos** (Advisorship) implementa 
 O código correspondente está localizado em:
 * Rota: [`lumina/routers/advisorship.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/routers/advisorship.py)
 * Serviço: [`lumina/services/advisorship_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/advisorship_service.py)
-* Especificação Canônica: [`specs/001-advisorship-access-control/spec.md`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/specs/001-advisorship-access-control/spec.md)
 
 ---
 

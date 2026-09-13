@@ -8,7 +8,6 @@ Este documento reúne os princípios normativos supremos do **Lumina Back**, o h
 
 > **Documento Normativo Supremo**  
 > **Versão**: 2.0.0 | **Ratificada em**: 31/08/2026 | **Última Revisão**: 05/09/2026  
-> **Arquivo Fonte**: [`.specify/memory/constitution.md`](https://github.com/meirelesgc/lumina-back/blob/develop/.specify/memory/constitution.md)
 
 ### Princípios Fundamentais (Core Principles)
 
@@ -58,11 +57,11 @@ Suíte de testes focada em comportamento e criticidade:
 * **Grandes Mudanças**: Decisões arquiteturais, mudanças de governança e evolução de domínio DEVEM ser documentadas no MkDocs.
 * **Linguagem Focada no Humano, Direta e Coesa**: Conteúdo claro, evitando jargões excessivos, com diagramas Mermaid e exemplos práticos.
 * **Preservação de Domínio**: Regras de negócio da aplicação residem na documentação viva.
-* **Sincronização com Specs**: Toda nova spec do Spec Kit deve gerar sua documentação funcional correspondente.
+* **Sincronização de Especificações**: Toda nova funcionalidade deve possuir sua documentação correspondente no MkDocs.
 * **Zero Erros de Build**: Validado via `poetry run task docs-build`.
 
 #### VII. Página HTML Funcional de Validação/Demo (NON-NEGOTIABLE)
-Toda spec que altere ou adicione comportamento observável no backend DEVE incluir página HTML simples de validação em `lumina/static/demos/<spec-name>/`.
+Toda funcionalidade que altere ou adicione comportamento observável no backend DEVE incluir página HTML simples de validação em `lumina/static/demos/<feature-name>/`.
 * **Zero Build Step**: HTML5, CSS simples e JavaScript vanilla (`fetch`, `async/await`), sem frameworks pesados de frontend.
 * **Servida pelo FastAPI**: Montada em `/demos/<spec-name>/` com catálogo em `lumina/static/demos/index.html`.
 * **Contrato Vivo e Handoff**: Serve como referência visual e executável para a equipe de frontend.
@@ -112,4 +111,4 @@ Qualquer alteração na Constituição deve obedecer ao versionamento semântico
 * **MINOR**: Adição de novo princípio ou expansão material de orientações.
 * **PATCH**: Clarificações de redação, correções ortográficas e refinamentos não-semânticos.
 
-Toda alteração deve vir acompanhada do preenchimento do **Sync Impact Report** no cabeçalho do arquivo fonte [`.specify/memory/constitution.md`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/.specify/memory/constitution.md).
+Toda alteração deve vir acompanhada da atualização correspondente neste documento de governança e documentação viva.

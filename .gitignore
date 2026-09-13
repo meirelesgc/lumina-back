@@ -21,7 +21,6 @@ iaEditais/storage/temp
 .*
 !.gitignore
 !.dockerignore
-!.specify/
 !.agents/
 !.github/
 !.vscode/
