@@ -39,7 +39,7 @@ async def test_create_document_ai_message_endpoint(client, user, token):
             new_callable=AsyncMock,
         ) as mock_list_msg:
             with patch(
-                'lumina.routers.docs.messages.ai_service.create_ai_response',
+                'lumina.routers.docs.messages.ai_chat_service.create_ai_response',
                 new_callable=AsyncMock,
             ) as mock_create_ai:
                 # Setup do mock

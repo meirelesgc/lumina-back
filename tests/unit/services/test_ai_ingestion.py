@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import fitz
 import pytest
 
-from lumina.services.vector_service import process_file
+from lumina.services.ai.pipeline import run_document_ingestion
 
 
 @pytest.mark.asyncio
@@ -28,10 +28,10 @@ async def test_process_file_pdf_metadata(tmp_path):
 
     # Moca a chamada ao LLM de seções
     with patch(
-        'lumina.services.vector_service._get_sections_with_model',
+        'lumina.services.ai.stages.sections.detect_sections_with_model',
         return_value=[],
     ):
-        await process_file(str(pdf_path), mock_vstore, mock_model)
+        await run_document_ingestion(str(pdf_path), mock_vstore, mock_model)
 
     assert mock_vstore.aadd_documents.called
     documents = mock_vstore.aadd_documents.call_args[0][0]
@@ -63,10 +63,10 @@ async def test_process_file_txt_metadata_fallback(tmp_path):
     mock_model = MagicMock()
 
     with patch(
-        'lumina.services.vector_service._get_sections_with_model',
+        'lumina.services.ai.stages.sections.detect_sections_with_model',
         return_value=[],
     ):
-        await process_file(str(txt_path), mock_vstore, mock_model)
+        await run_document_ingestion(str(txt_path), mock_vstore, mock_model)
 
     assert mock_vstore.aadd_documents.called
     documents = mock_vstore.aadd_documents.call_args[0][0]

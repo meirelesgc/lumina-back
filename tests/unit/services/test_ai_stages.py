@@ -5,11 +5,11 @@ import pytest
 from langchain_core.documents import Document
 
 from lumina.schemas.processing_run import ProcessingStatus
-from lumina.services.release_logic_service import (
-    apply_tree,
-    get_expanded_chunks,
-    partition_synthesis_text,
+from lumina.services.ai.stages.evaluation import (
+    evaluate_criteria_batch as apply_tree,
 )
+from lumina.services.ai.stages.retrieval import get_expanded_chunks
+from lumina.services.ai.stages.synthesis import partition_synthesis_text
 from lumina.services.run_logger import RunLogger
 
 EXPECTED_SCORE_NINE = 9
@@ -205,7 +205,7 @@ async def test_apply_tree_isolates_schema_validation_error(
 ):
     logger = RunLogger(base_dir=tmp_path)
     monkeypatch.setattr(
-        'lumina.services.release_logic_service.get_run_logger',
+        'lumina.services.ai.stages.evaluation.get_run_logger',
         lambda: logger,
     )
     run_id = uuid4()

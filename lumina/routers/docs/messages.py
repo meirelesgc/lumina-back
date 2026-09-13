@@ -26,7 +26,8 @@ from lumina.schemas.document_message import (
     MessageFilter,
     MessageMention,
 )
-from lumina.services import ai_service, message_service
+from lumina.services import message_service
+from lumina.services.ai import chat as ai_chat_service
 
 router = APIRouter(prefix='/doc', tags=['document verification, messages'])
 
@@ -52,7 +53,7 @@ async def create_document_message(
     status_code=HTTPStatus.CREATED,
     response_model=DocumentMessagePublic,
 )
-async def create_document_ai_message(
+async def create_document_ai_message(  # noqa: PLR0913, PLR0917
     doc_id: UUID,
     msg: DocumentMessageCreate,
     session: Session,
@@ -60,16 +61,14 @@ async def create_document_ai_message(
     vstore: VStore,
     current_user: CurrentUser,
 ):
-    user_msg = await message_service.create_message(
-        session, current_user.id, doc_id, msg
-    )
+    await message_service.create_message(session, current_user.id, doc_id, msg)
 
     filters = MessageFilter(limit=3)
     recent_messages = await message_service.list_messages(
         session, doc_id, filters
     )
 
-    response = await ai_service.create_ai_response(
+    response = await ai_chat_service.create_ai_response(
         session=session,
         user_id=current_user.id,
         doc_id=doc_id,
@@ -154,7 +153,7 @@ async def broadcast_event(
     )
 
 
-async def process_user_message(
+async def process_user_message(  # noqa: PLR0913, PLR0917
     data: str,
     session: Session,
     user_id: UUID,
@@ -176,7 +175,7 @@ async def process_user_message(
             session, doc_id, filters
         )
 
-        response = await ai_service.create_ai_response(
+        response = await ai_chat_service.create_ai_response(
             session, user_id, doc_id, msg, model, vstore, recent_messages
         )
 
@@ -202,7 +201,7 @@ async def process_user_message(
 
 
 @router.websocket('/message/{doc_id}/ws')
-async def document_chat_websocket(
+async def document_chat_websocket(  # noqa: PLR0913, PLR0917
     websocket: WebSocket,
     doc_id: UUID,
     session: Session,

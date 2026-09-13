@@ -6,10 +6,10 @@ import pytest
 from langchain_community.document_loaders import PyMuPDFLoader
 
 from lumina.core.llm import get_model
-from lumina.services.vector_service import (
+from lumina.services.ai.stages.sections import (
     ChunkSections,
     SectionInfo,
-    _split_by_sections,
+    split_by_sections,
 )
 
 DATASETS_DIR = Path(__file__).parent / 'datasets' / 'validation_docs'
@@ -51,8 +51,14 @@ def test_split_by_sections_with_ground_truth():
             sections=[
                 SectionInfo(
                     section_name='Considerações finais',
-                    start_text='1 Considerações finais Este artigo apresentou um novo processo de mediação de modelagem',
-                    end_text='desenvolver um SRC que evolua de forma dinâmica à medida que o modelo seja alterado.',
+                    start_text=(
+                        '1 Considerações finais Este artigo apresentou um novo'
+                        ' processo de mediação de modelagem'
+                    ),
+                    end_text=(
+                        'desenvolver um SRC que evolua de forma dinâmica'
+                        ' à medida que o modelo seja alterado.'
+                    ),
                 ),
             ]
         ),
@@ -60,7 +66,11 @@ def test_split_by_sections_with_ground_truth():
             sections=[
                 SectionInfo(
                     section_name='Referências',
-                    start_text='Referências BAADER, F.; KOWALCZYK, P.; TISCHENDORF, J. Description logics in the era of knowledge',
+                    start_text=(
+                        'Referências BAADER, F.; KOWALCZYK, P.;'
+                        ' TISCHENDORF, J. Description logics in the era'
+                        ' of knowledge'
+                    ),
                     end_text=None,
                 ),
             ]
@@ -69,10 +79,11 @@ def test_split_by_sections_with_ground_truth():
     ]
     mock_model.with_structured_output.return_value = mock_structured_model
 
-    split_documents = _split_by_sections(documents, mock_model)
+    split_documents, _ = split_by_sections(documents, mock_model)
 
     assert len(split_documents) == len(expected_sections), (
-        f'Esperado {len(expected_sections)} seções, mas obtido {len(split_documents)}'
+        f'Esperado {len(expected_sections)} seções, mas obtido '
+        f'{len(split_documents)}'
     )
 
     retrieved_section_titles = [
@@ -81,7 +92,8 @@ def test_split_by_sections_with_ground_truth():
 
     for expected in expected_sections:
         assert expected in retrieved_section_titles, (
-            f"A seção '{expected}' definida no Ground Truth não foi recuperada."
+            f"A seção '{expected}' definida no Ground Truth não foi"
+            ' recuperada.'
         )
 
     cons_doc = next(
@@ -104,9 +116,10 @@ def test_split_by_sections_with_ground_truth():
 @pytest.mark.asyncio
 async def test_split_by_sections_real_llm_evaluation():
     """
-    Teste real de Avaliação de IA: faz chamadas reais ao modelo LLM (LangChain / OpenAI)
-    para o arquivo `conclusao_referencias.pdf` e valida se o modelo realmente identifica
-    e recupera as seções de Conclusão/Considerações Finais e Referências.
+    Teste real de Avaliação de IA: faz chamadas reais ao modelo LLM
+    (LangChain / OpenAI) para o arquivo `conclusao_referencias.pdf` e valida
+    se o modelo realmente identifica e recupera as seções de
+    Conclusão/Considerações Finais e Referências.
     """
     gt_data = load_ground_truth()
     target_gt = next(
@@ -124,10 +137,11 @@ async def test_split_by_sections_real_llm_evaluation():
     real_model = await get_model()
 
     # Executa a função chamando o modelo LLM real
-    split_documents = _split_by_sections(documents, real_model)
+    split_documents, _ = split_by_sections(documents, real_model)
 
     assert len(split_documents) >= len(expected_sections), (
-        f'O modelo real retornou {len(split_documents)} seções, esperava pelo menos {len(expected_sections)}.'
+        f'O modelo real retornou {len(split_documents)} seções, esperava'
+        f' pelo menos {len(expected_sections)}.'
     )
 
     retrieved_section_titles = [
@@ -135,12 +149,14 @@ async def test_split_by_sections_real_llm_evaluation():
         for doc in split_documents
     ]
 
-    # Valida se cada seção esperada do Ground Truth foi encontrada (case-insensitive)
+    # Valida se cada seção esperada do Ground Truth foi encontrada
+    # (case-insensitive)
     for expected in expected_sections:
         assert any(
             expected.lower() in title for title in retrieved_section_titles
         ), (
-            f"O modelo LLM real não conseguiu recuperar a seção '{expected}'. Seções obtidas: {retrieved_section_titles}"
+            f"O modelo LLM real não conseguiu recuperar a seção '{expected}'."
+            f' Seções obtidas: {retrieved_section_titles}'
         )
 
     # Garante que cada documento recuperado pela LLM real tem conteúdo válido

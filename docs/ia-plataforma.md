@@ -3,10 +3,11 @@
 Este documento descreve de forma exaustiva o funcionamento interno do motor de Inteligência Artificial do **Lumina Back**, abrangendo desde o momento em que um documento é enviado até a geração de relatórios estruturados e respostas conversacionais com realce geométrico.
 
 O código correspondente está distribuído em:
-* Ingestão e Vetorização: [`lumina/services/vector_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/vector_service.py)
-* Anonimização LGPD: [`lumina/utils/PresidioAnonymizer.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/utils/PresidioAnonymizer.py)
-* Pipeline de Release: [`lumina/services/release_orchestrator.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/release_orchestrator.py) e [`lumina/services/release_logic_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/release_logic_service.py)
-* Chat e Assistente: [`lumina/services/ai_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/ai_service.py) e [`lumina/services/assistant_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/assistant_service.py)
+* Módulo Modular de IA: [`lumina/services/ai/`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/ai)
+* Estágios de IA: [`lumina/services/ai/stages/`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/ai/stages)
+* Pipeline de Release: [`lumina/services/ai/pipeline.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/ai/pipeline.py)
+* Chat Conversacional e RAG: [`lumina/services/ai/chat.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/ai/chat.py)
+* Assistente Long-Context: [`lumina/services/assistant_service.py`](file:///home/jaspion/Fiocruz/Lumina/lumina-back/lumina/services/assistant_service.py)
 
 ---
 

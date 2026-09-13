@@ -36,7 +36,7 @@ from lumina.schemas import (
 )
 from lumina.schemas.document import DocumentProcessingStatus
 from lumina.services import audit_service, release_service, report_service
-from lumina.workers.docs.releases import release_pipeline
+from lumina.services.ai.pipeline import release_pipeline
 
 SETTINGS = Settings()
 BROKER_URL = SETTINGS.BROKER_URL
@@ -52,7 +52,7 @@ router = APIRouter(
     status_code=HTTPStatus.CREATED,
     response_model=DocumentReleasePublic,
 )
-async def create_release(
+async def create_release(  # noqa: PLR0913, PLR0917
     doc_id: UUID,
     session: Session,
     current_user: CurrentUser,
@@ -86,7 +86,7 @@ async def create_release(
     version = await release_service.get_next_version(
         session,
         doc_id,
-        bump if bump in ('major', 'minor', 'patch') else 'patch',
+        bump if bump in {'major', 'minor', 'patch'} else 'patch',
     )
 
     db_release = DocumentRelease(
@@ -142,7 +142,7 @@ class ReleaseFromFileCreate(BaseModel):
     status_code=HTTPStatus.CREATED,
     response_model=DocumentReleasePublic,
 )
-async def create_release_from_file(
+async def create_release_from_file(  # noqa: PLR0913, PLR0917
     doc_id: UUID,
     payload: ReleaseFromFileCreate,
     session: Session,
@@ -183,7 +183,7 @@ async def create_release_from_file(
         session,
         doc_id,
         payload.bump
-        if payload.bump in ('major', 'minor', 'patch')
+        if payload.bump in {'major', 'minor', 'patch'}
         else 'patch',
     )
 

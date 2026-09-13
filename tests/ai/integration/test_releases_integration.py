@@ -1,6 +1,8 @@
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from langchain_core.documents import Document as LangchainDocument
 
 from lumina.app import app
 from lumina.core.cache import get_redis
@@ -11,11 +13,11 @@ from lumina.models import Document, DocumentHistory
 
 @pytest.mark.asyncio
 @patch(
-    'lumina.services.release_orchestrator.vector_service.create_vectors',
+    'lumina.services.ai.pipeline.run_document_ingestion',
     new_callable=AsyncMock,
 )
-async def test_create_release_integration(
-    mock_create_vectors,
+async def test_create_release_integration(  # noqa: PLR0913, PLR0917
+    mock_ingestion,
     client,
     token,
     session,
@@ -23,11 +25,13 @@ async def test_create_release_integration(
     fake_release_pipeline_llm,
 ):
     """
-    Testa a integração do fluxo `POST /doc/{doc_id}/releases`, injetando um LLM Fake.
-    - Como o FastAPI TestClient executa as background tasks de maneira bloqueante
-      antes de devolver a resposta HTTP, a BackgroundTask `release_pipeline` será
-      executada por inteira.
-    - Ao final, nenhum token real foi gasto, mas TODO O FLUXO de Parsing e WebSockets foi coberto.
+    Testa a integração do fluxo `POST /doc/{doc_id}/releases`, injetando um
+    LLM Fake.
+    - Como o FastAPI TestClient executa as background tasks de maneira
+      bloqueante antes de devolver a resposta HTTP, a BackgroundTask
+      `release_pipeline` será executada por inteira.
+    - Ao final, nenhum token real foi gasto, mas TODO O FLUXO de Parsing e
+      WebSockets foi coberto.
     """
     # 1. Arrange
     # Sobrescreve a dependência que provê a LLM pela nossa fixture mockada.
@@ -38,8 +42,6 @@ async def test_create_release_integration(
 
     mock_vstore = AsyncMock()
     # asimilarity_search returns a list of chunks
-    from langchain_core.documents import Document as LangchainDocument
-
     mock_vstore.asimilarity_search.return_value = [
         LangchainDocument(
             page_content='Mock chunk', metadata={'chunk_index': 0}
@@ -85,7 +87,7 @@ async def test_create_release_integration(
     app.dependency_overrides.clear()
 
     # Validações HTTP
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     resp_data = response.json()
     assert resp_data['version'] == '1.0.0'
     assert resp_data['file_path'] is not None
@@ -94,7 +96,5 @@ async def test_create_release_integration(
     # Como a BackgrounTask roda no TestClient, o processing_status deve ir
     # de QUEUED -> PROCESSING -> IDLE (em caso de sucesso simulado).
     await session.refresh(document)
-    # Status IDLE reflete que o pipeline rodou até o final (sucesso mockado da AI)
+    # Status IDLE reflete que o pipeline rodou até o final
     assert document.processing_status == 'IDLE'
-
-    # Se testarmos um Fake Model que quebra o Pydantic, o status seria FAILED, etc.

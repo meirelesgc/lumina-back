@@ -3,12 +3,19 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain_core.documents import Document
 
+from lumina.models import DocumentRelease
 from lumina.schemas.ai import AnswerWithCitations, Citation
-from lumina.services.ai_service import create_ai_response, resolve_citations
+from lumina.services.ai.chat import create_ai_response
+from lumina.services.ai.stages.citations import resolve_citations
+
+EXPECTED_RESOLVED_COUNT = 2
 
 
 def test_resolve_citations_valid():
-    """Testa se as citations válidas são resolvidas corretamente e as inválidas descartadas"""
+    """
+    Testa se as citations válidas são resolvidas corretamente e as
+    inválidas descartadas.
+    """
     chunks = [
         Document(
             page_content='Texto',
@@ -32,7 +39,7 @@ def test_resolve_citations_valid():
 
     resolved = resolve_citations(citations, chunks)
 
-    assert len(resolved) == 2
+    assert len(resolved) == EXPECTED_RESOLVED_COUNT
     assert resolved[0]['chunk_id'] == 'chunk_1'
     assert resolved[0]['rects'] == [{'x1': 10, 'y1': 10, 'x2': 20, 'y2': 20}]
     assert resolved[1]['chunk_id'] == 'chunk_txt'
@@ -41,7 +48,9 @@ def test_resolve_citations_valid():
 
 @pytest.mark.asyncio
 async def test_create_ai_response_structured():
-    """Testa se o fluxo completo descarta alucinações de chunk e entrega o JSON"""
+    """
+    Testa se o fluxo completo descarta alucinações de chunk e entrega o JSON.
+    """
     # Mock vstore and its chunks
     mock_vstore = MagicMock()
     mock_chunk = Document(
@@ -68,9 +77,6 @@ async def test_create_ai_response_structured():
     )
     mock_model.with_structured_output.return_value = mock_structured
 
-    # Mock dependencies
-    from lumina.models import DocumentRelease
-
     mock_session = AsyncMock()
     mock_release = MagicMock(spec=DocumentRelease)
     mock_release.file_path = 'path/file.pdf'
@@ -86,11 +92,11 @@ async def test_create_ai_response_structured():
             AsyncMock(return_value=mock_release),
         )
         m.setattr(
-            'lumina.services.ai_service.get_document_auto_context',
+            'lumina.services.ai.chat.get_document_auto_context',
             AsyncMock(return_value=[]),
         )
         m.setattr(
-            'lumina.services.release_logic_service.get_expanded_chunks',
+            'lumina.services.ai.stages.retrieval.get_expanded_chunks',
             AsyncMock(return_value=[mock_chunk]),
         )
 
