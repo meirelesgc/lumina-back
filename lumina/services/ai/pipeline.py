@@ -217,8 +217,9 @@ async def process_release_pipeline(
     await run_logger.start_stage(run_id=release_id, stage='evaluation')
     try:
         tree = await tree_service.get_tree_by_release(session, db_release)
-        args = await stages.retrieval.get_eval_args(vstore, tree, db_release)
-        simplified_args = await stages.retrieval.simplify_eval_args(args)
+        simplified_args = await stages.retrieval.retrieve_evaluation_payloads(
+            vstore, tree, db_release
+        )
         chain = stages.evaluation.get_evaluation_chain(model)
         await stages.evaluation.evaluate_criteria_batch(
             chain, simplified_args, run_id=release_id

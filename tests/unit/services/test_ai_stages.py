@@ -8,7 +8,13 @@ from lumina.schemas.processing_run import ProcessingStatus
 from lumina.services.ai.stages.evaluation import (
     evaluate_criteria_batch as apply_tree,
 )
-from lumina.services.ai.stages.retrieval import get_expanded_chunks
+from lumina.services.ai.stages.retrieval import (
+    format_context,
+    get_eval_args,
+    get_expanded_chunks,
+    retrieve_evaluation_payloads,
+    simplify_eval_args,
+)
 from lumina.services.ai.stages.synthesis import partition_synthesis_text
 from lumina.services.run_logger import RunLogger
 
@@ -295,3 +301,107 @@ async def test_apply_tree_isolates_schema_validation_error(
     )
     assert failed_rec['status'] == ProcessingStatus.FAILED
     assert 'Invalid JSON schema' in failed_rec['error_message']
+
+
+def test_format_context_formatting():
+    chunk1 = Document(
+        page_content='SECTION: Juridica\n\nTexto do chunk 1',
+        metadata={
+            'chunk_id': 'c1',
+            'chunk_index': 0,
+            'section_title': 'Juridica',
+        },
+    )
+    chunk2 = Document(
+        page_content='Texto do chunk 2',
+        metadata={
+            'chunk_id': 'c2',
+            'chunk_index': 1,
+            'section_title': 'Juridica',
+        },
+    )
+    res_list = format_context([chunk1, chunk2])
+    assert '## CONTEXTO DA SEÇÃO: Juridica' in res_list
+    assert '[FONTE] chunk_id: c1\nTexto do chunk 1' in res_list
+    assert '[FONTE] chunk_id: c2\nTexto do chunk 2' in res_list
+
+    res_dict = format_context({'evidence_chunks': [chunk1, chunk2]})
+    assert res_dict == res_list
+
+
+@pytest.mark.asyncio
+async def test_retrieve_evaluation_payloads_structure():
+    now = '2026-09-14T00:00:00'
+    typ_id = str(uuid4())
+    tax_id = str(uuid4())
+    tree = [
+        {
+            'id': typ_id,
+            'name': 'Tipificacao 1',
+            'sources': [],
+            'created_at': now,
+            'taxonomies': [
+                {
+                    'id': tax_id,
+                    'typification_id': typ_id,
+                    'title': 'Habilitacao Juridica',
+                    'description': 'Desc Tax',
+                    'created_at': now,
+                    'sources': [
+                        {
+                            'id': str(uuid4()),
+                            'name': 'Edital',
+                            'description': 'Ref',
+                            'created_at': now,
+                        }
+                    ],
+                    'branches': [
+                        {
+                            'id': str(uuid4()),
+                            'taxonomy_id': tax_id,
+                            'title': 'Contrato Social',
+                            'description': 'Apresentar contrato ativo.',
+                            'created_at': now,
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(
+        return_value=[
+            Document(
+                page_content='Contrato social regular.',
+                metadata={
+                    'chunk_id': 'chunk_1',
+                    'chunk_index': 1,
+                    'source': 'lumina/storage/uploads/doc.pdf',
+                    'section_title': 'Habilitacao Juridica',
+                },
+            )
+        ]
+    )
+    db_release = MagicMock()
+    db_release.file_path = 'uploads/doc.pdf'
+
+    payloads = await retrieve_evaluation_payloads(
+        mock_vstore, tree, db_release
+    )
+
+    assert len(payloads) == 1
+    p = payloads[0]
+    assert p['expected_section'] == 'Habilitacao Juridica'
+    assert p['expected_session'] == 'Habilitacao Juridica'
+    assert p['source'] == 'Edital'
+    assert 'Contrato Social' in p['requirement']
+    assert '[FONTE] chunk_id: chunk_1' in p['document']
+    assert p['_chunks'] == p['_sessions']
+    assert p['initial_chunks'] == ['chunk_1']
+
+    # Valida compatibilidade retroativa com get_eval_args e simplify_eval_args
+    eval_args = await get_eval_args(mock_vstore, tree, db_release)
+    simplified = await simplify_eval_args(eval_args)
+    assert len(simplified) == 1
+    assert simplified[0]['expected_section'] == 'Habilitacao Juridica'
