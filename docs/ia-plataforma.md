@@ -81,9 +81,8 @@ Para que a inteligência artificial possa embasar suas afirmações em caixas vi
    * `page`: Índice da página no documento;
    * `text`: Texto acumulado higienizado;
    * `rects`: Lista com as caixas delimitadoras de cada linha contida no bloco `[[lx0, ly0, lx1, ly1], ...]`.
-
-### Arquivos DOCX e TXT
-Documentos `.docx` utilizam `Docx2txtLoader` e documentos `.txt` utilizam `TextLoader`. Como não contêm layout de página fixo, recebem metadados neutros de fallback (`chunk_fallback_{i}`, `page: 0`, `rects: []`).
+### Formatos Suportados
+Atualmente, o pipeline de ingestão opera exclusivamente com documentos `.pdf`. Arquivos `.docx` e `.txt` não são suportados.
 
 ### Sanitização
 * **Bytes Nulos**: Caracteres `\x00` comuns em PDFs compilados são removidos para impedir rejeição pelo driver de banco de dados do PostgreSQL.
@@ -93,7 +92,7 @@ Documentos `.docx` utilizam `Docx2txtLoader` e documentos `.txt` utilizam `TextL
 
 ## 3. Identificação de Seções por LLM & Atribuição de Chunks
 
-Em editais e documentos formais, o contexto normativo de uma exigência depende da seção em que ela se encontra. O Lumina utiliza um modelo de linguagem para identificar os limites das macro-seções antes da indexação.
+Em editais e documentos formais, o contexto normativo de uma exigência depende da seção (com 'ç', referindo-se estritamente à divisão e partes estruturais do texto, como Introdução, Metodologia, Resultados, etc.) em que ela se encontra. O Lumina identifica os limites dessas macro-seções antes da indexação.
 
 ### Processamento em Janelas de 3.000 Caracteres
 O texto do documento é percorrido em blocos sequenciais de 3.000 caracteres. Para tratar seções que cruzam a fronteira entre duas janelas, o prompt mantém histórico das seções já encontradas e notifica o modelo quando a seção anterior permaneceu aberta (`end_text is None`).

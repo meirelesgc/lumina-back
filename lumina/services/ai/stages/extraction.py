@@ -4,19 +4,9 @@ from typing import Any, List, Optional, Tuple
 from uuid import UUID
 
 import fitz
-from langchain_community.document_loaders import (
-    Docx2txtLoader,
-    TextLoader,
-)
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from lumina.services.run_logger import get_run_logger
-
-SPLITTER = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50,
-)
 
 
 class CoordinateChunker:
@@ -89,42 +79,6 @@ class CoordinateChunker:
         return chunks
 
 
-def clean_and_format_documents(
-    documents: List[Document],
-) -> Tuple[List[Document], int, int]:
-    """
-    Fatia documentos em blocos de até 500 caracteres, removendo bytes nulos
-    e normalizando espaços. Retorna os chunks e contadores de sanitização.
-    """
-    chunks = SPLITTER.split_documents(documents)
-    null_bytes_count = 0
-    whitespace_count = 0
-
-    for i, chunk in enumerate(chunks):
-        raw_text = chunk.page_content or ''
-        if '\x00' in raw_text:
-            null_bytes_count += raw_text.count('\x00')
-            raw_text = raw_text.replace('\x00', '')
-        cleaned_text = re.sub(r'\s+', ' ', raw_text).strip()
-        if cleaned_text != raw_text:
-            whitespace_count += 1
-
-        section = (chunk.metadata.get('section_title') or '').strip()
-        if section:
-            chunk.page_content = f'SECTION: {section}\n\n{cleaned_text}'
-        else:
-            chunk.page_content = cleaned_text
-        chunk.metadata['chunk_index'] = i
-        chunk.metadata.setdefault('source', 'unknown')
-
-        # Fallback para arquivos sem layout fixo
-        chunk.metadata['chunk_id'] = f'chunk_fallback_{i}'
-        chunk.metadata['page'] = 0
-        chunk.metadata['rects'] = []
-
-    return chunks, null_bytes_count, whitespace_count
-
-
 def extract_pdf_chunks(
     full_path: str, source_name: str
 ) -> Tuple[List[Document], int, int, int]:
@@ -163,15 +117,6 @@ def extract_pdf_chunks(
                 )
             )
     return raw_chunks, pages_count, null_bytes, ws_ops
-
-
-def load_raw_text_docs(full_path: str, ext: str) -> Tuple[List[Document], str]:
-    """
-    Carrega documentos brutos DOCX ou TXT.
-    """
-    if ext == '.docx':
-        return Docx2txtLoader(full_path).load(), 'Docx2txtLoader'
-    return TextLoader(full_path, encoding='utf-8').load(), 'TextLoader'
 
 
 async def extract_pdf_with_telemetry(
@@ -227,66 +172,5 @@ async def extract_pdf_with_telemetry(
                 stage='extraction',
                 error=str(e),
                 duration_ms=d_ms,
-            )
-        raise
-
-
-async def format_text_docs_with_telemetry(
-    section_docs: List[Document],
-    source_name: str,
-    pages_count: int,
-    extractor_type: str,
-    run_id: Optional[UUID] = None,
-) -> List[Document]:
-    """
-    Formata documentos DOCX/TXT em blocos com rastreamento no RunLogger.
-    """
-    run_logger = get_run_logger()
-    t_ext = datetime.now()
-    if run_id:
-        await run_logger.start_stage(run_id=run_id, stage='extraction')
-    try:
-        formatted_docs, null_cnt, ws_cnt = clean_and_format_documents(
-            section_docs
-        )
-        for doc in formatted_docs:
-            doc.metadata['source'] = source_name
-        chunks_count = len(formatted_docs)
-        avg_sz = (
-            round(
-                sum(len(c.page_content) for c in formatted_docs)
-                / chunks_count,
-                1,
-            )
-            if chunks_count
-            else 0.0
-        )
-        if run_id:
-            d_ext = int((datetime.now() - t_ext).total_seconds() * 1000)
-            await run_logger.complete_stage(
-                run_id=run_id,
-                stage='extraction',
-                duration_ms=d_ext,
-                item_count=chunks_count,
-                data={
-                    'pages_count': pages_count,
-                    'chunks_count': chunks_count,
-                    'avg_chunk_size': avg_sz,
-                    'extractor_type': extractor_type,
-                    'sanitization_ops_count': {
-                        'null_bytes_removed': null_cnt,
-                        'whitespace_normalized': ws_cnt,
-                    },
-                },
-            )
-        return formatted_docs
-    except Exception as e:
-        if run_id:
-            d_ext = int((datetime.now() - t_ext).total_seconds() * 1000)
-            await run_logger.fail_stage(
-                run_id=run_id,
-                stage='extraction',
-                error=str(e),
-                duration_ms=d_ext,
             )
         raise

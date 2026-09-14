@@ -164,33 +164,17 @@ async def run_document_ingestion(
             return
 
     ext = os.path.splitext(full_path)[1].lower()
+    if ext != '.pdf':
+        raise ValueError(f'Tipo de arquivo não suportado: {ext}')
+
     source_name = f'lumina/storage/uploads/{os.path.basename(full_path)}'
 
-    if ext == '.pdf':
-        raw_chunks, _ = await stages.extraction.extract_pdf_with_telemetry(
-            full_path, source_name, run_id=run_id
-        )
-        formatted_docs = await stages.sections.assign_sections_with_telemetry(
-            raw_chunks, model, run_id=run_id
-        )
-    elif ext in {'.docx', '.txt'}:
-        raw_docs, extractor_type = stages.extraction.load_raw_text_docs(
-            full_path, ext
-        )
-        section_docs = await stages.sections.split_sections_with_telemetry(
-            raw_docs, model, run_id=run_id
-        )
-        formatted_docs = (
-            await stages.extraction.format_text_docs_with_telemetry(
-                section_docs,
-                source_name,
-                len(raw_docs),
-                extractor_type,
-                run_id=run_id,
-            )
-        )
-    else:
-        raise ValueError(f'Tipo de arquivo não suportado: {ext}')
+    raw_chunks, _ = await stages.extraction.extract_pdf_with_telemetry(
+        full_path, source_name, run_id=run_id
+    )
+    formatted_docs = await stages.sections.assign_sections_with_telemetry(
+        raw_chunks, model, run_id=run_id
+    )
 
     anonymized = await stages.anonymization.anonymize_chunks(
         formatted_docs, run_id=run_id

@@ -189,7 +189,7 @@ def format_context(branch: dict) -> str:
                 formatted_parts.append('\n\n---\n\n')
             if section_title:
                 formatted_parts.append(
-                    f'## CONTEXTO DA SESSÃO: {section_title}\n'
+                    f'## CONTEXTO DA SEÇÃO: {section_title}\n'
                 )
             current_section = section_title
 

@@ -12,16 +12,16 @@ O sistema SHALL extrair o conteúdo textual de arquivos PDF mantendo o mapeament
 - **WHEN** um documento PDF válido é processado pela etapa de extração
 - **THEN** o sistema emite blocos com `chunk_id`, número de página `page`, texto sanitizado e caixas delimitadoras `rects` correspondentes às linhas no documento original
 
-#### Scenario: Fallback para arquivos sem layout fixo
-- **WHEN** um documento TXT ou DOCX é processado pela etapa de extração
-- **THEN** o sistema emite blocos com texto sanitizado, `page` igual a 0 e lista de `rects` vazia
+#### Scenario: Rejeição de formatos não suportados
+- **WHEN** um arquivo com extensão diferente de PDF é fornecido na extração
+- **THEN** o sistema SHALL rejeitar o processamento levantando erro de tipo de arquivo não suportado
 
 ### Requirement: Classificação e Vinculação de Macro-seções
-O sistema SHALL identificar os limites de macro-seções normativas no texto do documento e carimbar o cabeçalho temático correspondente no conteúdo dos blocos de texto.
+O sistema SHALL atribuir a macro-seção padrão "NÃO ENCONTRADA" a todos os blocos de texto gerados no pipeline de ingestão e carimbar o cabeçalho temático correspondente no conteúdo dos blocos de texto, sem realizar chamadas a modelos de linguagem para detecção de seções.
 
 #### Scenario: Identificação de seções e atribuição aos blocos
-- **WHEN** blocos de texto são analisados para identificação de seções
-- **THEN** cada bloco tem seu ponto médio associado à seção correspondente e recebe o prefixo `SECTION: <Nome da Seção>`
+- **WHEN** blocos de texto são processados na etapa de seções
+- **THEN** cada bloco recebe o metadado `section_title` com valor "NÃO ENCONTRADA" e o prefixo `SECTION: NÃO ENCONTRADA\n\n` no conteúdo textual
 
 ### Requirement: Anonimização e Proteção de Dados Pessoais
 O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos blocos de texto antes de qualquer operação de vetorização ou envio para provedores de LLM externos, mantendo os dados de reversão isolados exclusivamente nos metadados.
