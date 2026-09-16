@@ -115,12 +115,9 @@ async def get_prompt_context(
     if not original_chunks:
         return [], []
 
-    expanded_chunks = await stages.retrieval.get_expanded_chunks(
-        vstore, original_chunks
-    )
     return (
-        stages.retrieval.build_chunk_prompts(expanded_chunks),
-        expanded_chunks,
+        stages.retrieval.build_chunk_prompts(original_chunks),
+        original_chunks,
     )
 
 

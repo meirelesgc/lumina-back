@@ -51,7 +51,7 @@ def resolve_citations(
 
 
 def process_citations(
-    raw_citations: list, sessions: list
+    raw_citations: list, chunks: list
 ) -> tuple[list[str], list[str], list[dict]]:
     """
     Filtra citações retornadas pela LLM, separando citações válidas
@@ -59,7 +59,7 @@ def process_citations(
     Retorna: (fornecidas, alucinadas, referências_resolvidas).
     """
     valid_chunk_ids = set()
-    for d in sessions:
+    for d in chunks:
         cid = d.metadata.get('chunk_id') if hasattr(d, 'metadata') else None
         if not cid and hasattr(d, 'id'):
             cid = str(d.id)
@@ -87,7 +87,7 @@ def process_citations(
         if cid:
             provided.append(cid)
 
-    resolved_refs = resolve_citations(valid_objs, sessions)
+    resolved_refs = resolve_citations(valid_objs, chunks)
     return provided, hallucinated, resolved_refs
 
 

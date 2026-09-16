@@ -8,13 +8,11 @@ from .extraction import (
 )
 from .indexing import index_chunks_to_vstore
 from .retrieval import (
-    fetch_chunks_by_indices,
+    build_chunk_prompts,
+    format_context,
     get_base_filter,
-    get_eval_args,
-    get_expanded_chunks,
-    retrieve_branch_context,
+    retrieve_criteria_payload,
     retrieve_evaluation_payloads,
-    simplify_eval_args,
 )
 from .sections import (
     ChunkSections,
@@ -38,13 +36,11 @@ __all__ = [
     'assign_sections_with_telemetry',
     'anonymize_chunks',
     'index_chunks_to_vstore',
-    'fetch_chunks_by_indices',
     'get_base_filter',
-    'get_eval_args',
-    'get_expanded_chunks',
-    'retrieve_branch_context',
+    'format_context',
+    'build_chunk_prompts',
+    'retrieve_criteria_payload',
     'retrieve_evaluation_payloads',
-    'simplify_eval_args',
     'get_evaluation_chain',
     'evaluate_criteria_batch',
     'resolve_citations',

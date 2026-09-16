@@ -95,10 +95,6 @@ async def test_create_ai_response_structured():
             'lumina.services.ai.chat.get_document_auto_context',
             AsyncMock(return_value=[]),
         )
-        m.setattr(
-            'lumina.services.ai.stages.retrieval.get_expanded_chunks',
-            AsyncMock(return_value=[mock_chunk]),
-        )
 
         response = await create_ai_response(
             session=mock_session,

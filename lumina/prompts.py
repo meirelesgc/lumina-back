@@ -84,7 +84,7 @@ Minha abordagem será:
 ## 🔍 Regra em Análise
 **Item Avaliado:** {requirement}
 
-**Tópico de Referência:** {expected_session}
+**Tópico de Referência:** {expected_section}
 
 > **Pergunta de Verificação:** O conteúdo necessário está presente **nos trechos recuperados** e cumpre integralmente o requisito?
 

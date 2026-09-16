@@ -517,8 +517,7 @@ async def test_evaluation_citations_and_synthesis_logging(tmp_path):
         feedback='Atende plenamente aos requisitos.',
         retrieval={
             'query_executed': 'SECTION: Habilitação --- Requisito contrato',
-            'initial_chunks': ['chunk_1', 'chunk_2'],
-            'expanded_chunks': ['chunk_0', 'chunk_1', 'chunk_2', 'chunk_3'],
+            'retrieved_chunks': ['chunk_1', 'chunk_2'],
         },
         llm_interaction={
             'model': 'gpt-4o-mini',
@@ -547,8 +546,7 @@ async def test_evaluation_citations_and_synthesis_logging(tmp_path):
         error_message='Invalid JSON output: missing field score',
         retrieval={
             'query_executed': 'SECTION: Técnica --- Certidões',
-            'initial_chunks': ['chunk_4'],
-            'expanded_chunks': ['chunk_3', 'chunk_4', 'chunk_5'],
+            'retrieved_chunks': ['chunk_4'],
         },
         llm_interaction={
             'model': 'gpt-4o-mini',

@@ -32,7 +32,7 @@ def get_evaluation_chain(model: Model):
             'document',
             'source',
             'requirement',
-            'expected_session',
+            'expected_section',
             'query',
         ],
         partial_variables=fmt,
@@ -70,8 +70,9 @@ def _build_criterion_record(
     score_val = parsed.get('score')
     retrieval_data = {
         'query_executed': item.get('retriever_query', ''),
-        'initial_chunks': item.get('initial_chunks', []),
-        'expanded_chunks': item.get('expanded_chunks', []),
+        'retrieved_chunks': (
+            item.get('retrieved_chunks') or item.get('initial_chunks', [])
+        ),
     }
     p_rendered = item.get('prompt', '') if SETTINGS.DEBUG_PIPELINE_RUNS else ''
     r_output = meta['raw_text'] if SETTINGS.DEBUG_PIPELINE_RUNS else ''
@@ -98,7 +99,7 @@ def _build_criterion_record(
     return CriterionEvaluationRecord(
         criterion_id=str(item.get('id') or ''),
         title=str(
-            item.get('expected_session') or item.get('query') or 'Critério'
+            item.get('expected_section') or item.get('query') or 'Critério'
         ),
         status=crit_status,
         duration_ms=meta['avg_dur'],
@@ -141,8 +142,8 @@ async def _process_eval_item(
 
     item.update(parsed)
     raw_citations = parsed.get('citations') or parsed.get('references') or []
-    sessions = item.get('_sessions') or []
-    provided, hallucinated, refs = process_citations(raw_citations, sessions)
+    chunks = item.get('_chunks') or []
+    provided, hallucinated, refs = process_citations(raw_citations, chunks)
     item['references'] = refs
     item['citations_provided'] = provided
     item['citations_hallucinated'] = hallucinated

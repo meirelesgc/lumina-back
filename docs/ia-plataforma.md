@@ -175,13 +175,8 @@ Para cada critério (`Branch`) da árvore:
    --- {branch_title}: {branch_description}
    """
    ```
-2. Recupera os **3 chunks mais similares** filtrados estritamente pelo arquivo do documento (`source`).
-
-### Expansão Contextual de Margem (`MARGIN_SIZE = 2`)
-Se o trecho relevante estiver no chunk `5`, partes do parágrafo podem estar nos blocos adjacentes. A função `get_expanded_chunks`:
-* Consulta o banco buscando os chunks nos índices `[chunk_index - 2, ..., chunk_index + 2]`;
-* Remove duplicidades e ordena os blocos cronologicamente pelo índice sequencial;
-* Entrega para a LLM uma janela textual fluida de cerca de 2.500 caracteres, identificando cada fragmento por `[FONTE] chunk_id: {id}`.
+2. Recupera os **5 chunks mais similares** (`MAX_CHUNKS = 5`) filtrados estritamente pelo arquivo do documento (`source`).
+3. Formata os blocos de evidência recuperados identificando cada fragmento por `[FONTE] chunk_id: {id}` e delimitando o contexto da seção, entregando os trechos diretamente para a LLM.
 
 ### O Barema de Pontuação e Regras de Avaliação
 O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com base no seguinte barema de 0 a 10 pontos:
@@ -228,7 +223,7 @@ Ao final da avaliação de todos os ramos:
 Permite dialogar com o documento com retorno de coordenadas visuais para destaque no visualizador de PDF:
 
 1. **4 Vias de Contexto Concorrentes**:
-   * **RAG da Pergunta**: Busca vetorial (`k=5`) baseada na dúvida do usuário + expansão de margem (`MARGIN_SIZE=2`);
+   * **RAG da Pergunta**: Busca vetorial direta (`k=5`) baseada na dúvida do usuário;
    * **Menções de Ramos**: Identifica padrões `<branch:uuid>` digitados pelo usuário, carrega a regra normativa do critério e executa busca vetorial focada nele;
    * **Auto-contexto da Árvore**: Injeta os tópicos e perguntas normativas ativas no documento;
    * **Histórico Recente**: Carrega as últimas 3 mensagens da conversa para continuidade do diálogo.
@@ -291,7 +286,7 @@ Para permitir diagnóstico completo e melhoria contínua sem depender de prints 
 1. **Extração e Chunking (`extraction`)**: Registra a tipologia de extração aplicada (PyMuPDF, Docx2txtLoader, TextLoader), total de páginas processadas, chunks gerados, tamanho médio dos blocos para validação do teto de 500 caracteres e contadores de sanitização (remoção de `\x00` e normalização de espaços).
 2. **Identificação de Seções por LLM (`sections`)**: Registra a janela textual de entrada (até 3.000 caracteres em modo depuração), as seções estruturadas identificadas (`section_name`, `start_text`, `end_text`) e a taxa percentual de sucesso na localização física dos marcos (`mapping_success_rate`).
 3. **Anonimização LGPD via Presidio (`anonymization`)**: Captura o quantitativo de entidades sensíveis identificadas e substituídas (CPF, CNPJ, RG, Telefone, E-mail) e as chaves anônimas de reversão (`<CPF_1>`, `<CNPJ_1>`), assegurando total ausência de dados pessoais (PII) nos logs estruturados.
-4. **Recuperação Semântica Ponderada (Retriever)**: Registra a string da query executada com triplicação do nome da seção para ancoragem de contexto, os 3 `chunk_id` retornados na busca vetorial inicial e a lista final de chunks expandidos com margem contextual (`MARGIN_SIZE = 2`) e deduplicação.
+4. **Recuperação Semântica Ponderada (Retriever)**: Registra a string da query executada com triplicação do nome da seção para ancoragem de contexto e os `chunk_id` retornados na busca vetorial direta (`MAX_CHUNKS = 5`).
 5. **Avaliação Estruturada de Critérios (`evaluation`)**: Para cada critério avaliado concorrentemente no lote, registra a tríade completa:
    * *Entrada*: Query executada, chunks recuperados e cópia integral do prompt montado (`DOCUMENT_ANALYSIS_PROMPT` em modo debug);
    * *Estado Interno*: Modelo de LLM, contadores de tokens (prompt e completude), duração individual em ms e isolamento de falhas de schema (`schema_validation_error`);

@@ -933,8 +933,7 @@
         const icon = isOk ? '✓' : '✗';
         const iconColor = isOk ? '#10b981' : '#ef4444';
 
-        const initChunks = (ret.initial_chunks || []).join(', ') || '-';
-        const expChunks = (ret.expanded_chunks || []).join(', ') || '-';
+        const retrievedChunks = (ret.retrieved_chunks || ret.initial_chunks || []).join(', ') || '-';
         const provCits = (out.citations_provided || []).join(', ') || '-';
         const hallCits = out.citations_hallucinated || [];
 
@@ -963,8 +962,7 @@
                       <div class="tab-pane active" data-tab="input">
                         <div class="kv-list">
                           <div class="kv-item"><strong>Query Executada:</strong> <span class="code-box" style="padding: 4px;">${escapeHtml(ret.query_executed || '-')}</span></div>
-                          <div class="kv-item"><strong>Chunks Iniciais:</strong> <span class="badge-chip">${escapeHtml(initChunks)}</span></div>
-                          <div class="kv-item"><strong>Chunks Expandidos:</strong> <span class="badge-chip">${escapeHtml(expChunks)}</span></div>
+                          <div class="kv-item"><strong>Chunks Recuperados:</strong> <span class="badge-chip">${escapeHtml(retrievedChunks)}</span></div>
                           ${inter.prompt_rendered ? `
                             <div class="kv-item" style="margin-top: 4px;">
                               <div class="copy-header">
