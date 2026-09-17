@@ -2,7 +2,7 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 
 from lumina.core.dependencies import CurrentUser, Session
 from lumina.schemas import (
@@ -29,8 +29,11 @@ async def create_branch(
     branch: BranchCreate,
     session: Session,
     current_user: CurrentUser,
+    background_tasks: BackgroundTasks,
 ):
-    return await branch_service.create_branch(session, current_user.id, branch)
+    return await branch_service.create_branch(
+        session, current_user.id, branch, background_tasks
+    )
 
 
 @router.get('', response_model=BranchList)

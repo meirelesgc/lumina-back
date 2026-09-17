@@ -20,7 +20,9 @@ from .branch import (
     BranchList,
     BranchPublic,
     BranchSchema,
+    BranchSectionRequirement,
     BranchUpdate,
+    SectionRequirementScope,
 )
 from .common import FilterPage, Message, Token, WSMessage
 from .document import (
@@ -169,7 +171,9 @@ __all__ = [
     'BranchList',
     'BranchPublic',
     'BranchSchema',
+    'BranchSectionRequirement',
     'BranchUpdate',
+    'SectionRequirementScope',
     'FilterPage',
     'Message',
     'Token',

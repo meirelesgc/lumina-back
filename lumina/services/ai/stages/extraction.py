@@ -88,7 +88,7 @@ def extract_pdf_chunks(
     """
     doc = fitz.open(full_path)
     pages_count = len(doc)
-    chunker = CoordinateChunker(max_chars=500)
+    chunker = CoordinateChunker(max_chars=1200)
     raw_chunks = []
     null_bytes = 0
     ws_ops = 0
