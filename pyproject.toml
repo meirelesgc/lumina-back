@@ -25,6 +25,8 @@ testcontainers = "^4.13.2"
 pytest-asyncio = "^1.2.0"
 factory-boy = "^3.3.3"
 pytest-mock = "^3.15.1"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.7.7"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -63,6 +65,8 @@ run = 'fastapi dev lumina/app.py'
 
 seed = 'python -m lumina.scripts.seed_demo'
 
+analyze-branches = 'python -m lumina.scripts.analyze_existing_branches'
+
 test = 'pytest -s -x --cov=lumina -vv'
 
 test-ai = 'pytest -s -x --run-ai -m ai -vv'
@@ -70,3 +74,7 @@ test-ai = 'pytest -s -x --run-ai -m ai -vv'
 test-all = 'pytest -s -x --run-ai --cov=lumina -vv'
 
 cov = 'coverage html'
+
+docs = 'mkdocs serve'
+
+docs-build = 'mkdocs build --strict'

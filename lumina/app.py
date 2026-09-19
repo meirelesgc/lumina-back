@@ -16,6 +16,7 @@ from lumina.routers import (
     abnt,
     advisorship,
     auth,
+    processing_runs,
     reports,
     stats,
     system,
@@ -58,13 +59,15 @@ TEMPLATE_CONFORMITY_UPLOADS_DIR = os.path.join(
     STORAGE_DIR, 'template_conformity', 'uploads'
 )
 TEMP_DIR = os.path.join(STORAGE_DIR, 'temp')
-DEMOS_DIR = os.path.join(BASE_DIR, 'demos')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+DEMOS_DIR = os.path.join(STATIC_DIR, 'demos')
 
 for directory in [
     STORAGE_DIR,
     UPLOADS_DIR,
     TEMPLATE_CONFORMITY_UPLOADS_DIR,
     TEMP_DIR,
+    STATIC_DIR,
     DEMOS_DIR,
 ]:
     os.makedirs(directory, exist_ok=True)
@@ -155,3 +158,4 @@ app.include_router(system.router)
 app.include_router(reports.router)
 app.include_router(templates.router)
 app.include_router(abnt.router)
+app.include_router(processing_runs.router)

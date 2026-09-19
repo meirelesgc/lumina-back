@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from datetime import datetime
-
-pytest_plugins = ['tests.ai.fixtures.ai_fixtures']
+from unittest.mock import AsyncMock, MagicMock
 
 import factory
 import pytest
@@ -13,9 +12,16 @@ from testcontainers.postgres import PostgresContainer
 
 from lumina.app import app
 from lumina.core.database import get_session
+from lumina.core.llm import set_fast_model_override
 from lumina.core.security import get_password_hash
 from lumina.core.settings import Settings
 from lumina.models import User, table_registry
+from lumina.schemas.branch import (
+    BranchSectionRequirement,
+    SectionRequirementScope,
+)
+
+pytest_plugins = ['tests.ai.fixtures.ai_fixtures']
 
 
 def pytest_addoption(parser):
@@ -40,6 +46,27 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_ai)
 
 
+@pytest.fixture(autouse=True)
+def mock_fast_model_for_tests(request):
+    """Garante que nenhum teste rotineiro chame APIs reais de LLM."""
+    if not request.config.getoption('--run-ai'):
+        mock_llm = MagicMock()
+        mock_structured = MagicMock()
+        mock_structured.ainvoke = AsyncMock(
+            return_value=BranchSectionRequirement(
+                scope=SectionRequirementScope.UNKNOWN,
+                expected_section=None,
+                reasoning='Mock padrão para testes.',
+            )
+        )
+        mock_llm.with_structured_output.return_value = mock_structured
+        set_fast_model_override(mock_llm)
+        yield mock_llm
+        set_fast_model_override(None)
+    else:
+        yield None
+
+
 @pytest.fixture
 def client(session):
     def get_session_override():
@@ -62,7 +89,9 @@ def engine():
 
     else:
         try:
-            with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+            with PostgresContainer(
+                'postgres:16', driver='psycopg'
+            ) as postgres:
                 _engine = create_async_engine(postgres.get_connection_url())
                 yield _engine
         except Exception:

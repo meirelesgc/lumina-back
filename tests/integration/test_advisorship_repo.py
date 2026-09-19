@@ -70,3 +70,47 @@ async def test_advisorship_repo_crud_and_queries(session):
     filters = AdvisorshipFilter(advisor_id=advisor.id, limit=10, offset=0)
     all_filtered = await advisorship_repo.list_all(session, filters)
     assert len(all_filtered) >= 1
+
+
+@pytest.mark.asyncio
+async def test_list_by_advisor_and_advisee_filters_deleted_users(session):
+    advisor = User(
+        username=f'advisor_{uuid4().hex[:6]}',
+        email=f'advisor_{uuid4().hex[:6]}@test.com',
+        phone_number=f'55019{uuid4().int % 100000000:08d}',
+        password='hash',
+        access_level=AccessType.DEFAULT,
+    )
+    advisee = User(
+        username=f'advisee_{uuid4().hex[:6]}',
+        email=f'advisee_{uuid4().hex[:6]}@test.com',
+        phone_number=f'55019{uuid4().int % 100000000:08d}',
+        password='hash',
+        access_level=AccessType.DEFAULT,
+    )
+    session.add_all([advisor, advisee])
+    await session.commit()
+
+    advisorship = Advisorship(
+        advisor_id=advisor.id,
+        advisee_id=advisee.id,
+        role_type='MAIN_ADVISOR',
+        topic='Soft delete test',
+        status='ACTIVE',
+    )
+    advisorship_repo.add_advisorship(session, advisorship)
+    await session.commit()
+
+    # Soft-delete the advisee
+    advisee.set_deletion_audit(advisor.id)
+    await session.commit()
+
+    by_advisor = await advisorship_repo.list_by_advisor(session, advisor.id)
+    assert len(by_advisor) == 0
+
+    # Soft-delete the advisor as well
+    advisor.set_deletion_audit(advisor.id)
+    await session.commit()
+
+    by_advisee = await advisorship_repo.list_by_advisee(session, advisee.id)
+    assert len(by_advisee) == 0

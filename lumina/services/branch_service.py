@@ -1,10 +1,12 @@
+import asyncio
 from http import HTTPStatus
+from typing import Optional
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina.models import Branch
+from lumina.models import Branch, Typification
 from lumina.repositories import branch_repo
 from lumina.schemas import (
     BranchCreate,
@@ -13,10 +15,17 @@ from lumina.schemas import (
     BranchUpdate,
 )
 from lumina.services import audit_service
+from lumina.services.ai.branch_analyzer import (
+    BranchNormativeContext,
+    run_branch_section_analysis_background,
+)
 
 
 async def create_branch(
-    session: AsyncSession, user_id: UUID, data: BranchCreate
+    session: AsyncSession,
+    user_id: UUID,
+    data: BranchCreate,
+    background_tasks: Optional[BackgroundTasks] = None,
 ) -> Branch:
     # Verifica duplicidade
     existing_branch = await branch_repo.get_by_title_and_taxonomy(
@@ -35,6 +44,20 @@ async def create_branch(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Taxonomy not found',
         )
+
+    typification = None
+    if taxonomy.typification_id:
+        typification = await session.get(
+            Typification, taxonomy.typification_id
+        )
+
+    context = BranchNormativeContext(
+        branch_title=data.title,
+        branch_description=data.description,
+        taxonomy_title=taxonomy.title,
+        taxonomy_description=taxonomy.description,
+        typification_name=typification.name if typification else None,
+    )
 
     db_branch = Branch(
         title=data.title,
@@ -57,6 +80,18 @@ async def create_branch(
 
     await session.commit()
     await session.refresh(db_branch)
+
+    if background_tasks is not None:
+        background_tasks.add_task(
+            run_branch_section_analysis_background,
+            db_branch.id,
+            context,
+        )
+    else:
+        asyncio.create_task(
+            run_branch_section_analysis_background(db_branch.id, context)
+        )
+
     return db_branch
 
 

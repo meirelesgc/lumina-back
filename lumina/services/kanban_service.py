@@ -3,8 +3,6 @@ from enum import Enum
 from http import HTTPStatus
 from uuid import UUID
 
-logger = logging.getLogger(__name__)
-
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +11,9 @@ from lumina.repositories import kanban_repo, project_document_repo
 from lumina.schemas import DocumentPublic, DocumentStatus
 from lumina.schemas.document_history import DocumentHistoryPublic
 from lumina.services import audit_service
-from lumina.workers.utils import send_message
+from lumina.services.notification_service import send_message
+
+logger = logging.getLogger(__name__)
 
 
 class NotifyTarget(str, Enum):

@@ -20,7 +20,9 @@ from .branch import (
     BranchList,
     BranchPublic,
     BranchSchema,
+    BranchSectionRequirement,
     BranchUpdate,
+    SectionRequirementScope,
 )
 from .common import FilterPage, Message, Token, WSMessage
 from .document import (
@@ -64,6 +66,16 @@ from .document_release import (
     DocumentReleaseFeedback,
     DocumentReleaseList,
     DocumentReleasePublic,
+)
+from .processing_run import (
+    CriterionEvaluationRecord,
+    ProcessingEvent,
+    ProcessingEventType,
+    ProcessingRunDetail,
+    ProcessingRunListResponse,
+    ProcessingRunSummary,
+    ProcessingStageDetail,
+    ProcessingStatus,
 )
 from .project import (
     ProjectCreate,
@@ -159,7 +171,9 @@ __all__ = [
     'BranchList',
     'BranchPublic',
     'BranchSchema',
+    'BranchSectionRequirement',
     'BranchUpdate',
+    'SectionRequirementScope',
     'FilterPage',
     'Message',
     'Token',
@@ -244,4 +258,12 @@ __all__ = [
     'AdvisorshipStatus',
     'AdvisorshipUpdate',
     'DocumentAcademicContextPublic',
+    'ProcessingStatus',
+    'ProcessingEventType',
+    'ProcessingEvent',
+    'CriterionEvaluationRecord',
+    'ProcessingStageDetail',
+    'ProcessingRunSummary',
+    'ProcessingRunListResponse',
+    'ProcessingRunDetail',
 ]

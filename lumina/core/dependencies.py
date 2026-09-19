@@ -1,6 +1,7 @@
+from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.vectorstores import VectorStore
@@ -16,6 +17,7 @@ from lumina.core.storage_provider import (
 )
 from lumina.core.vectorstore import get_vectorstore
 from lumina.models import User
+from lumina.schemas import AccessType
 
 Session = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
@@ -26,3 +28,15 @@ Storage = Annotated[StorageProvider, Depends(get_storage_provider)]
 TemplateStorage = Annotated[
     StorageProvider, Depends(get_template_storage_provider)
 ]
+
+
+async def require_admin_user(current_user: CurrentUser) -> User:
+    if current_user.access_level != AccessType.ADMIN:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Access restricted to system administrators.',
+        )
+    return current_user
+
+
+AdminUser = Annotated[User, Depends(require_admin_user)]

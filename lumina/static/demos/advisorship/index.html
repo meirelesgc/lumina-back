@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina - Validação de Acesso e Orientações (Spec 001)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    header { border-bottom: 1px solid var(--border); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge-spec { background-color: #1e3a8a; color: #93c5fd; }
+    .badge-status-200 { background-color: #064e3b; color: #6ee7b7; }
+    .badge-status-403 { background-color: #7f1d1d; color: #fca5a5; }
+    .badge-status-404 { background-color: #78350f; color: #fcd34d; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .card-title { font-size: 1.1rem; font-weight: 600; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    input, select { background-color: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { background-color: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; }
+    button:hover { background-color: var(--primary-hover); }
+    button.btn-secondary { background-color: #334155; color: #f1f5f9; }
+    button.btn-secondary:hover { background-color: #475569; }
+    button.btn-danger { background-color: #991b1b; }
+    button.btn-danger:hover { background-color: #b91c1c; }
+
+    .persona-bar { background-color: #1e293b; border: 1px dashed var(--border); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .persona-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+
+    pre { background-color: #090d16; border: 1px solid #1e293b; border-radius: 6px; padding: 12px; color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; max-height: 380px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+    .status-panel { padding: 10px 14px; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+    .status-ok { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+    .status-error { background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; }
+
+    .hint { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Matriz de Acesso e Orientações</h1>
+        <p class="hint">Painel funcional de validação manual da Spec 001 e isolamento de entidades (Projetos, Documentos e Orientações)</p>
+      </div>
+      <span class="badge badge-spec">Demo Funcional (Princípio VIII)</span>
+    </header>
+
+    <!-- Barra de Autenticação / Personas -->
+    <div class="persona-bar">
+      <div class="persona-info">
+        <span>👤 <strong>Usuário Ativo:</strong></span>
+        <span id="active-user-display" style="color: #38bdf8;">Não autenticado</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="loginWithPreset('aluno_advisee@universidade.edu.br', 'testtest')">Simular: Aluno / Orientando</button>
+        <button class="btn-secondary" onclick="loginWithPreset('advisor@universidade.edu.br', 'testtest')">Simular: Prof. Orientador</button>
+        <button class="btn-secondary" onclick="loginWithPreset('stranger@teste.com', 'testtest')">Simular: Usuário Terceiro</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Coluna 1: Controles de Execução -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Bloco de Autenticação Personalizada -->
+        <div class="card">
+          <div class="card-title">1. Autenticação e Token JWT</div>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label>E-mail ou Usuário</label>
+              <input type="text" id="auth-username" placeholder="ex: aluno@teste.com" />
+            </div>
+            <div class="form-group">
+              <label>Senha</label>
+              <input type="password" id="auth-password" placeholder="ex: testtest" />
+            </div>
+          </div>
+          <div class="btn-group">
+            <button onclick="authenticate()">Efetuar Login (POST /auth/token)</button>
+            <button class="btn-secondary" onclick="clearAuth()">Limpar Sessão</button>
+          </div>
+          <div class="form-group">
+            <label>Token JWT Ativo (Bearer)</label>
+            <input type="text" id="auth-token" placeholder="Token será preenchido após o login ou insira manualmente" />
+          </div>
+        </div>
+
+        <!-- Bloco de Validação de Projetos -->
+        <div class="card">
+          <div class="card-title">
+            <span>2. Isolamento de Projetos</span>
+            <span class="badge" style="background:#1e293b; border:1px solid #334155;">/project</span>
+          </div>
+          <p class="hint">Validação de isolamento por sessão: Contas novas devem ver apenas seus próprios projetos.</p>
+          <div class="btn-group">
+            <button onclick="fetchProjects('mine')">Meus Projetos (Padrão: mine)</button>
+            <button onclick="fetchProjects('advisees')">Projetos de Orientandos (scope=advisees)</button>
+            <button onclick="fetchProjects('all')">Todos Permitidos (scope=all)</button>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="project-id-input" placeholder="ID do Projeto para GET /project/{id}" style="flex:1;" />
+            <button onclick="fetchProjectById()">Consultar por ID</button>
+            <button onclick="fetchProjectDocs()" class="btn-secondary">Listar Docs do Projeto</button>
+          </div>
+        </div>
+
+        <!-- Bloco de Validação de Documentos -->
+        <div class="card">
+          <div class="card-title">
+            <span>3. Isolamento de Documentos</span>
+            <span class="badge" style="background:#1e293b; border:1px solid #334155;">/doc</span>
+          </div>
+          <div class="btn-group">
+            <button onclick="fetchDocs('mine')">Meus Documentos (mine)</button>
+            <button onclick="fetchDocs('advisees')">Docs de Orientandos (advisees)</button>
+            <button onclick="fetchDocs('all')">Todos Permitidos (all)</button>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="doc-id-input" placeholder="ID do Documento para GET /doc/{id}" style="flex:1;" />
+            <button onclick="fetchDocById()">Consultar por ID</button>
+          </div>
+        </div>
+
+        <!-- Bloco de Vínculos de Orientação -->
+        <div class="card">
+          <div class="card-title">
+            <span>4. Supervisão Acadêmica</span>
+            <span class="badge" style="background:#1e293b; border:1px solid #334155;">/advisorship</span>
+          </div>
+          <div class="btn-group">
+            <button onclick="fetchMyAdvisees()">Meus Orientandos (Visão Orientador)</button>
+            <button onclick="fetchMyAdvisors()">Meus Orientadores (Visão Orientando)</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Coluna 2: Inspetor de Resposta e Diagnóstico -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card" style="flex: 1;">
+          <div class="card-title">
+            <span>Inspetor de Resposta da API</span>
+            <span id="response-badge" class="badge" style="display:none;"></span>
+          </div>
+          <div id="status-box" class="status-panel status-ok" style="display: none;">
+            <span id="status-message">Pronto para requisições</span>
+            <span id="status-code">200 OK</span>
+          </div>
+          <div class="form-group">
+            <label>Endpoint Executado</label>
+            <input type="text" id="executed-endpoint" readonly value="Nenhum" style="color:#94a3b8;" />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Payload JSON Retornado</label>
+            <pre id="json-output">// Os resultados das chamadas REST serão exibidos aqui em tempo real...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentToken = '';
+
+    function updateHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = document.getElementById('auth-token').value.trim();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
+    }
+
+    function displayResult(endpoint, status, data) {
+      document.getElementById('executed-endpoint').value = endpoint;
+      const statusBox = document.getElementById('status-box');
+      const statusMsg = document.getElementById('status-message');
+      const statusCode = document.getElementById('status-code');
+      const jsonOutput = document.getElementById('json-output');
+
+      statusBox.style.display = 'flex';
+      statusCode.innerText = `Status: ${status}`;
+
+      if (status >= 200 && status < 300) {
+        statusBox.className = 'status-panel status-ok';
+        statusMsg.innerText = '✅ Sucesso / Acesso Permitido';
+      } else if (status === 403) {
+        statusBox.className = 'status-panel status-error';
+        statusMsg.innerText = '⛔ 403 Forbidden: Isolamento garantido (Acesso Negado)';
+      } else if (status === 401) {
+        statusBox.className = 'status-panel status-error';
+        statusMsg.innerText = '🔒 401 Unauthorized: Sessão ausente ou inválida';
+      } else {
+        statusBox.className = 'status-panel status-error';
+        statusMsg.innerText = `⚠️ Resposta com erro (${status})`;
+      }
+
+      jsonOutput.innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function authenticate() {
+      const u = document.getElementById('auth-username').value.trim();
+      const p = document.getElementById('auth-password').value.trim();
+      if (!u || !p) {
+        alert('Informe usuário e senha.');
+        return;
+      }
+
+      const formBody = new URLSearchParams();
+      formBody.append('username', u);
+      formBody.append('password', p);
+
+      try {
+        const res = await fetch('/auth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formBody
+        });
+        const data = await res.json();
+        if (res.ok && data.access_token) {
+          currentToken = data.access_token;
+          document.getElementById('auth-token').value = currentToken;
+          document.getElementById('active-user-display').innerText = `${u}`;
+          displayResult('POST /auth/token', res.status, data);
+        } else {
+          displayResult('POST /auth/token', res.status, data);
+        }
+      } catch (err) {
+        displayResult('POST /auth/token', 500, { error: err.message });
+      }
+    }
+
+    function loginWithPreset(email, password) {
+      document.getElementById('auth-username').value = email;
+      document.getElementById('auth-password').value = password;
+      authenticate();
+    }
+
+    function clearAuth() {
+      currentToken = '';
+      document.getElementById('auth-token').value = '';
+      document.getElementById('active-user-display').innerText = 'Não autenticado';
+      displayResult('CLEAR', 200, { message: 'Sessão limpa localmente.' });
+    }
+
+    async function fetchProjects(scope) {
+      const url = scope ? `/project?scope=${scope}` : '/project';
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchProjectById() {
+      const id = document.getElementById('project-id-input').value.trim();
+      if (!id) { alert('Informe o UUID do projeto.'); return; }
+      const url = `/project/${id}`;
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchProjectDocs() {
+      const id = document.getElementById('project-id-input').value.trim();
+      if (!id) { alert('Informe o UUID do projeto.'); return; }
+      const url = `/project-document/by-project/${id}`;
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchDocs(scope) {
+      const url = scope ? `/doc?scope=${scope}` : '/doc';
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchDocById() {
+      const id = document.getElementById('doc-id-input').value.trim();
+      if (!id) { alert('Informe o UUID do documento.'); return; }
+      const url = `/doc/${id}`;
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchMyAdvisees() {
+      const url = '/advisorship/my-advisees';
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+
+    async function fetchMyAdvisors() {
+      const url = '/advisorship/my-advisors';
+      try {
+        const res = await fetch(url, { headers: updateHeaders() });
+        const data = await res.json();
+        displayResult(`GET ${url}`, res.status, data);
+      } catch (err) {
+        displayResult(`GET ${url}`, 500, { error: err.message });
+      }
+    }
+  </script>
+</body>
+</html>
