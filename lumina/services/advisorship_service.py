@@ -245,6 +245,8 @@ async def get_my_advisees(
     advisee_cards: list[AdviseeCardPublic] = []
 
     for rel in relationships:
+        if not rel.advisee:
+            continue
         metrics = await advisorship_repo.get_advisee_document_metrics(
             session, rel.advisee_id, rel.project_id
         )
@@ -290,6 +292,7 @@ async def get_my_advisors(
             ),
         )
         for rel in relationships
+        if rel.advisor
     ]
 
 

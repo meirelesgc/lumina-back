@@ -98,6 +98,7 @@ async def list_by_advisor(
 ) -> Sequence[Advisorship]:
     stmt = (
         select(Advisorship)
+        .join(Advisorship.advisee)
         .options(
             selectinload(Advisorship.advisor),
             selectinload(Advisorship.advisee),
@@ -123,6 +124,7 @@ async def list_by_advisee(
 ) -> Sequence[Advisorship]:
     stmt = (
         select(Advisorship)
+        .join(Advisorship.advisor)
         .options(
             selectinload(Advisorship.advisor),
             selectinload(Advisorship.advisee),

@@ -1402,12 +1402,14 @@ class Advisorship(AuditMixin):
         'User',
         foreign_keys=[advisor_id],
         lazy='selectin',
+        back_populates='advising_relationships',
         init=False,
     )
     advisee: Mapped['User'] = relationship(
         'User',
         foreign_keys=[advisee_id],
         lazy='selectin',
+        back_populates='advisee_relationships',
         init=False,
     )
     project: Mapped[Optional['Project']] = relationship(

@@ -268,3 +268,45 @@ async def test_get_my_advisees(session, mock_advisorship_repo):
     assert cards[0].advisee.username == 'orientando_1'
     assert cards[0].total_documents == expected_total_docs
     assert cards[0].pending_reviews == expected_pending
+
+
+@pytest.mark.asyncio
+async def test_get_my_advisees_skips_none_advisee(
+    session, mock_advisorship_repo
+):
+    current_user = MagicMock(spec=User, id=uuid4())
+    rel = MagicMock(
+        spec=Advisorship,
+        id=uuid4(),
+        advisee_id=uuid4(),
+        advisee=None,  # Simula orientando deletado
+        role_type='MAIN_ADVISOR',
+        topic='TCC Robótica',
+        status='ACTIVE',
+        project=None,
+    )
+    mock_advisorship_repo.list_by_advisor.return_value = [rel]
+
+    cards = await advisorship_service.get_my_advisees(session, current_user)
+    assert len(cards) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_my_advisors_skips_none_advisor(
+    session, mock_advisorship_repo
+):
+    current_user = MagicMock(spec=User, id=uuid4())
+    rel = MagicMock(
+        spec=Advisorship,
+        id=uuid4(),
+        advisor_id=uuid4(),
+        advisor=None,  # Simula orientador deletado
+        role_type='MAIN_ADVISOR',
+        topic='TCC Robótica',
+        status='ACTIVE',
+        project=None,
+    )
+    mock_advisorship_repo.list_by_advisee.return_value = [rel]
+
+    cards = await advisorship_service.get_my_advisors(session, current_user)
+    assert len(cards) == 0

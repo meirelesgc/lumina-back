@@ -163,3 +163,68 @@ async def test_advisorship_update_and_delete(
 async def test_advisorship_unauthorized(client):
     response = client.get('/advisorship/my-advisees')
     assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.asyncio
+async def test_get_my_advisees_with_deleted_advisee(
+    client, session, user, token, advisee_and_project
+):
+    advisee, _ = advisee_and_project
+    session.add(advisee)
+    await session.commit()
+
+    resp_create = client.post(
+        '/advisorship',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'advisor_id': str(user.id),
+            'advisee_id': str(advisee.id),
+            'topic': 'Tema Deletado',
+        },
+    )
+    assert resp_create.status_code == HTTPStatus.CREATED
+
+    # Simula soft delete do advisee (aluno deletado)
+    advisee.set_deletion_audit(user.id)
+    await session.commit()
+
+    resp_advisees = client.get(
+        '/advisorship/my-advisees',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert resp_advisees.status_code == HTTPStatus.OK
+    advisees_list = resp_advisees.json()['advisees']
+    assert len(advisees_list) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_my_advisors_with_deleted_advisor(
+    client, session, user, token, advisee_and_project
+):
+    advisee, _ = advisee_and_project
+    session.add(advisee)
+    await session.commit()
+
+    resp_create = client.post(
+        '/advisorship',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'advisor_id': str(user.id),
+            'advisee_id': str(advisee.id),
+            'topic': 'Tema Orientador Deletado',
+        },
+    )
+    assert resp_create.status_code == HTTPStatus.CREATED
+
+    # Simula soft delete do orientador
+    user.set_deletion_audit(user.id)
+    await session.commit()
+
+    advisee_token = create_access_token({'sub': str(advisee.id)})
+    resp_advisors = client.get(
+        '/advisorship/my-advisors',
+        headers={'Authorization': f'Bearer {advisee_token}'},
+    )
+    assert resp_advisors.status_code == HTTPStatus.OK
+    advisors_list = resp_advisors.json()['advisors']
+    assert len(advisors_list) == 0
