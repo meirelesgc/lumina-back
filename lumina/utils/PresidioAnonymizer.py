@@ -258,7 +258,32 @@ class PresidioAnonymizer:
             )
             self.existing_presidio_mapping.update(entity_mapping)
             chunk.page_content = anonymized_text
-            chunk.metadata['presidio_mapping'] = entity_mapping
+
+            if 'section_title' in chunk.metadata and isinstance(
+                chunk.metadata['section_title'], str
+            ):
+                anon_title, title_map = self._anonymize_text(
+                    chunk.metadata['section_title'],
+                    verbose,
+                    self.existing_presidio_mapping,
+                )
+                self.existing_presidio_mapping.update(title_map)
+                chunk.metadata['section_title'] = anon_title
+
+            if 'section_path' in chunk.metadata and isinstance(
+                chunk.metadata['section_path'], str
+            ):
+                anon_path, path_map = self._anonymize_text(
+                    chunk.metadata['section_path'],
+                    verbose,
+                    self.existing_presidio_mapping,
+                )
+                self.existing_presidio_mapping.update(path_map)
+                chunk.metadata['section_path'] = anon_path
+
+            chunk.metadata['presidio_mapping'] = (
+                self.existing_presidio_mapping.copy()
+            )
             chunk.metadata['anonymized'] = True
 
         return chunks

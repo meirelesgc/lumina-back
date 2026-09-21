@@ -1,122 +1,118 @@
 import re
 from datetime import datetime
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 import fitz
+import pymupdf4llm
 from langchain_core.documents import Document
 
+from lumina.services.ai.stages.chunking import create_chunks_from_sections
+from lumina.services.ai.stages.positioning import enrich_chunks_with_line_rects
+from lumina.services.ai.stages.sections import (
+    build_sections_tree_from_markdown,
+)
 from lumina.services.run_logger import get_run_logger
 
 
-class CoordinateChunker:
+def extract_raw_markdown_and_pages(  # noqa: PLR0914
+    full_path: str,
+) -> Tuple[str, List[Dict[str, Any]], int, int, Any]:
     """
-    Agrupa palavras extraídas pelo PyMuPDF em linhas lógicas e fatias
-    de texto com teto de caracteres (max_chars), preservando as caixas
-    delimitadoras (rects) de cada linha.
+    Extrai markdown bruto e lista de chunks por pagina em memoria via
+    pymupdf4llm. Garante page: int (0-based) e sanitizacao de bytes nulos.
+    Retorna (full_markdown, page_map, null_bytes, ws_ops, doc_fitz).
     """
+    doc = fitz.open(full_path)
+    page_chunks = pymupdf4llm.to_markdown(full_path, page_chunks=True)
+    page_sizes = [
+        {
+            'width': p.rect.width,
+            'height': p.rect.height,
+            'rotation': p.rotation,
+        }
+        for p in doc
+    ]
 
-    def __init__(self, max_chars: int = 500):
-        self.max_chars = max_chars
+    page_map: List[Dict[str, Any]] = []
+    text_parts: List[str] = []
+    current_line = 1
+    current_char = 0
+    null_bytes = 0
+    ws_ops = 0
 
-    def process_page(self, doc: Any, page_num: int) -> List[dict]:
-        page = doc[page_num]
-        words = page.get_text('words')
-        chunks = []
-        current_chunk_text = ''
-        current_chunk_rects = []
-        current_line_key = None
-        line_words = []
+    for idx, chunk in enumerate(page_chunks):
+        raw_text = chunk.get('text', '')
+        if '\x00' in raw_text:
+            null_bytes += raw_text.count('\x00')
+            raw_text = raw_text.replace('\x00', '')
 
-        def process_line(l_words: list):
-            nonlocal current_chunk_text, current_chunk_rects
-            if not l_words:
-                return
-            lx0 = min(w[0] for w in l_words)
-            ly0 = min(w[1] for w in l_words)
-            lx1 = max(w[2] for w in l_words)
-            ly1 = max(w[3] for w in l_words)
-            line_text = ' '.join(w[4] for w in l_words)
+        cleaned_text = re.sub(r'[ \t]+', ' ', raw_text)
+        if cleaned_text != raw_text:
+            ws_ops += 1
+        raw_text = cleaned_text
 
-            if (
-                len(current_chunk_text) + len(line_text) + 1 > self.max_chars
-                and current_chunk_text
-            ):
-                chunks.append({
-                    'chunk_id': f'chunk_{page_num}_{len(chunks)}',
-                    'page': page_num,
-                    'text': current_chunk_text.strip(),
-                    'rects': current_chunk_rects.copy(),
-                })
-                current_chunk_text = line_text + ' '
-                current_chunk_rects = [[lx0, ly0, lx1, ly1]]
-            else:
-                current_chunk_text += line_text + ' '
-                current_chunk_rects.append([lx0, ly0, lx1, ly1])
+        page_num_0_based = idx
+        lines = raw_text.splitlines()
+        num_lines = len(lines)
+        start_line = current_line
+        end_line = current_line + max(0, num_lines - 1)
 
-        for w in words:
-            block_no = w[5]
-            line_no = w[6]
-            key = (block_no, line_no)
-            if current_line_key != key:
-                if current_line_key is not None:
-                    process_line(line_words)
-                current_line_key = key
-                line_words = []
-            line_words.append(w)
+        size = page_sizes[idx] if idx < len(page_sizes) else {}
+        boxes = [
+            {
+                'class': b.get('class', 'text'),
+                'bbox': list(b.get('bbox', [0, 0, 0, 0])),
+                'pos': list(b.get('pos', [0, 0])),
+            }
+            for b in chunk.get('page_boxes', [])
+        ]
 
-        if line_words:
-            process_line(line_words)
+        page_map.append({
+            'page': page_num_0_based,
+            'start_line': start_line,
+            'end_line': end_line,
+            'char_count': len(raw_text),
+            'char_start': current_char,
+            'width': size.get('width'),
+            'height': size.get('height'),
+            'rotation': size.get('rotation', 0),
+            'boxes': boxes,
+        })
 
-        if current_chunk_text:
-            chunks.append({
-                'chunk_id': f'chunk_{page_num}_{len(chunks)}',
-                'page': page_num,
-                'text': current_chunk_text.strip(),
-                'rects': current_chunk_rects.copy(),
-            })
+        text_parts.append(raw_text)
+        current_line = end_line + 3
+        current_char += len(raw_text) + 2
 
-        return chunks
+    full_markdown = '\n\n'.join(text_parts)
+    return full_markdown, page_map, null_bytes, ws_ops, doc
 
 
 def extract_pdf_chunks(
     full_path: str, source_name: str
 ) -> Tuple[List[Document], int, int, int]:
     """
-    Extrai blocos de texto geométricos de PDF utilizando PyMuPDF.
-    Retorna (chunks, pages_count, null_bytes, whitespace_ops).
+    Executa os 4 estagios em memoria:
+    1. Extração bruta de Markdown e caixas de pagina
+    2. Arvore de secoes com 5 cleaners e papeis
+    3. Fatiamento por secao e por pagina (monopagina)
+    4. Refinamento de retangulos de linha fisica ([[x0, y0, x1, y1], ...])
     """
-    doc = fitz.open(full_path)
-    pages_count = len(doc)
-    chunker = CoordinateChunker(max_chars=1200)
-    raw_chunks = []
-    null_bytes = 0
-    ws_ops = 0
-
-    for i in range(pages_count):
-        for pc in chunker.process_page(doc, i):
-            text = pc['text']
-            if '\x00' in text:
-                null_bytes += text.count('\x00')
-                text = text.replace('\x00', '')
-            cleaned = re.sub(r'\s+', ' ', text).strip()
-            if cleaned != text:
-                ws_ops += 1
-            if not cleaned:
-                continue
-            raw_chunks.append(
-                Document(
-                    page_content=cleaned,
-                    metadata={
-                        'chunk_id': pc['chunk_id'],
-                        'chunk_index': len(raw_chunks),
-                        'page': pc['page'],
-                        'rects': pc['rects'],
-                        'source': source_name,
-                    },
-                )
-            )
-    return raw_chunks, pages_count, null_bytes, ws_ops
+    full_markdown, page_map, null_bytes, ws_ops, doc = (
+        extract_raw_markdown_and_pages(full_path)
+    )
+    try:
+        pages_count = len(page_map)
+        sections = build_sections_tree_from_markdown(full_markdown, page_map)
+        chunks = create_chunks_from_sections(
+            sections, page_map, full_markdown, source_name
+        )
+        enriched_chunks = enrich_chunks_with_line_rects(
+            chunks, doc, page_map, full_markdown
+        )
+        return enriched_chunks, pages_count, null_bytes, ws_ops
+    finally:
+        doc.close()
 
 
 async def extract_pdf_with_telemetry(
@@ -125,7 +121,8 @@ async def extract_pdf_with_telemetry(
     run_id: Optional[UUID] = None,
 ) -> Tuple[List[Document], int]:
     """
-    Executa a extração do PDF com rastreamento no RunLogger.
+    Executa a extracao com registro detalhado no RunLogger mantendo todas
+    as chaves de telemetria legadas.
     """
     run_logger = get_run_logger()
     t_start = datetime.now()
@@ -156,7 +153,7 @@ async def extract_pdf_with_telemetry(
                     'pages_count': pages_count,
                     'chunks_count': chunks_count,
                     'avg_chunk_size': avg_sz,
-                    'extractor_type': 'PyMuPDF',
+                    'extractor_type': 'pymupdf4llm',
                     'sanitization_ops_count': {
                         'null_bytes_removed': null_bytes,
                         'whitespace_normalized': ws_ops,
