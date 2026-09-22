@@ -18,13 +18,15 @@ O motor de IA atende a duas modalidades de consumo distintas que compartilham o 
 ```mermaid
 flowchart TD
     subgraph Ingestao["Pipeline Compartilhado de Ingestão e Vetorização"]
-        Upload[Upload do Arquivo PDF / DOCX / TXT]
-        Extracao[1. Extração de Texto & Coordenadas Geométricas]
-        Secoes[2. Identificação de Seções por LLM]
-        Anon[3. Anonimização LGPD via Presidio]
-        Embed[4. Embeddings OpenAI text-embedding-3-small]
+        Upload[Upload do Arquivo PDF]
+        Extracao[1. Extração Estruturada via PyMuPDF4LLM]
+        Secoes[2. Parsing de Seções, 5 Filtros & Papéis]
+        Chunking[3. Fatiamento Monopágina & Contexto]
+        Coords[4. Alinhamento Geométrico de Retângulos]
+        Anon[5. Anonimização LGPD (Texto e Metadados)]
+        Embed[6. Embeddings OpenAI text-embedding-3-small]
         PGV[(PGVector / PostgreSQL 17)]
-        Upload --> Extracao --> Secoes --> Anon --> Embed --> PGV
+        Upload --> Extracao --> Secoes --> Chunking --> Coords --> Anon --> Embed --> PGV
     end
 
     subgraph Fluxo1["Fluxo 1: Avaliação Estruturada da Base de Conhecimento (Release)"]
@@ -52,104 +54,105 @@ flowchart TD
 
 ---
 
-## 2. Ingestão, Extração de Texto & Coordenadas Geométricas
+## 2. Pipeline de Ingestão de Documentos (4 Estágios em Memória)
 
-O suporte a múltiplos formatos opera através de rotinas específicas para cada extensão:
+A ingestão de documentos adota uma arquitetura determinística, de alta performance e executada **100% em memória**, sem persistência de arquivos intermediários em disco e sem chamadas a modelos de LLM. O processo converte o documento PDF em blocos estruturados e enriquecidos geometricamente através de 4 estágios bem delimitados:
 
-### Arquivos PDF (`.pdf`)
-A extração utiliza a biblioteca **PyMuPDF** (`import fitz`). Cada página do documento é processada chamando `page.get_text('words')`, que retorna uma tupla com a posição física exata de cada palavra:
-```python
-(x0, y0, x1, y1, word, block_no, line_no, word_no)
+```mermaid
+flowchart LR
+    P1["Estágio 1: Extração Bruta<br/>(Markdown + Blocos)"] --> P2["Estágio 2: Árvore de Seções<br/>(5 Filtros & Papéis)"]
+    P2 --> P3["Estágio 3: Fatiamento<br/>(Monopágina + Contexto)"]
+    P3 --> P4["Estágio 4: Posicionamento<br/>(Alinhamento Geométrico)"]
 ```
-Onde `(x0, y0)` representa o canto superior esquerdo e `(x1, y1)` o canto inferior direito na coordenada da página.
 
-### O Algoritmo `CoordinateChunker`
-Para que a inteligência artificial possa embasar suas afirmações em caixas visuais no PDF original sem destacar páginas inteiras desnecessariamente, o fatiamento adota as seguintes regras:
-1. **Limite de 500 Caracteres**: O chunk acumula palavras até o limiar de `max_chars = 500`.
-2. **Agrupamento de Linhas**: Palavras que pertencem ao mesmo `(block_no, line_no)` são agregadas em uma única linha lógica.
-3. **Cálculo da Caixa da Linha**:
-   ```python
-   lx0 = min(w[0] for w in l_words)
-   ly0 = min(w[1] for w in l_words)
-   lx1 = max(w[2] for w in l_words)
-   ly1 = max(w[3] for w in l_words)
-   line_text = ' '.join(w[4] for w in l_words)
-   ```
-4. **Fechamento e Emissão**:
-   Quando a inclusão de uma nova linha faz o bloco ultrapassar 500 caracteres, o chunk atual é emitido com:
-   * `chunk_id`: Formato `chunk_{page}_{index}` (ex: `chunk_2_7`);
-   * `page`: Índice da página no documento;
-   * `text`: Texto acumulado higienizado;
-   * `rects`: Lista com as caixas delimitadoras de cada linha contida no bloco `[[lx0, ly0, lx1, ly1], ...]`.
-### Formatos Suportados
-Atualmente, o pipeline de ingestão opera exclusivamente com documentos `.pdf`. Arquivos `.docx` e `.txt` não são suportados.
-
-### Sanitização
-* **Bytes Nulos**: Caracteres `\x00` comuns em PDFs compilados são removidos para impedir rejeição pelo driver de banco de dados do PostgreSQL.
-* **Espaços Duplos**: Expressões regulares unificam quebras de linha e tabulações redundantes (`re.sub(r'\s+', ' ', text).strip()`).
+### Estágio 1 — Extração Estruturada & Layout de Página
+A extração inicial é realizada via **PyMuPDF4LLM**, preservando nativamente tabelas em formato Markdown, títulos de seções e caixas delimitadoras de cada elemento visual.
+* **Mapeamento Monopágina (`page_map`)**: Gera um índice estruturado por página (indexação 0-based) contendo dimensões (`width`, `height`), rotação e a posição espacial de cada bloco de texto.
+* **Sanitização de Dados**:
+  * *Bytes Nulos*: Caracteres `\x00` comuns em PDFs compilados são removidos para impedir falhas de inserção no driver de banco de dados do PostgreSQL.
+  * *Normalização de Espaços*: Espaços duplos e tabulações redundantes são unificados sem afetar a semântica da marcação.
 
 ---
 
-## 3. Identificação de Seções por LLM & Atribuição de Chunks
+### Estágio 2 — Árvore Hierárquica de Seções & Classificação Semântica
+Identifica as divisões estruturais do documento a partir de cabeçalhos Markdown e informações tipográficas, organizando o conteúdo em uma árvore hierárquica.
 
-Em editais e documentos formais, o contexto normativo de uma exigência depende da seção (com 'ç', referindo-se estritamente à divisão e partes estruturais do texto, como Introdução, Metodologia, Resultados, etc.) em que ela se encontra. O Lumina identifica os limites dessas macro-seções antes da indexação.
+#### Os 5 Filtros Conceituais de Cabeçalhos
+Antes de consolidar as seções, os títulos brutos passam por cinco etapas de higienização sequencial:
+1. **Limpeza de Marcação**: Remove formatações Markdown residuais em títulos (negritos, itálicos, links e sublinhados).
+2. **Supressão de Repetições**: Descarta cabeçalhos repetitivos comuns em documentos formais que aparecem no topo de várias páginas (ex: número de processo, timbres institucionais ou paginações).
+3. **Fusão de Títulos Adjacentes**: Une títulos contíguos de mesmo nível na mesma página que foram fragmentados em quebras de linha visuais.
+4. **Reclassificação por Numeração**: Corrige a hierarquia estrutural com base em padrões numéricos explícitos (ex: `1.` é classificado como Nível 1, `1.1.` como Nível 2, `1.1.1.` como Nível 3).
+5. **Filtragem de Órfãos**: Descarta cabeçalhos declarados sem nenhum conteúdo textual associado antes do próximo título.
 
-### Processamento em Janelas de 3.000 Caracteres
-O texto do documento é percorrido em blocos sequenciais de 3.000 caracteres. Para tratar seções que cruzam a fronteira entre duas janelas, o prompt mantém histórico das seções já encontradas e notifica o modelo quando a seção anterior permaneceu aberta (`end_text is None`).
+#### Árvore Hierárquica & Breadcrumbs
+Os cabeçalhos válidos são organizados em uma árvore de seções pais e filhas. Cada nó calcula seu caminho hierárquico contextual (*breadcrumb*), como por exemplo:
+`["1. Introdução", "1.1. Justificativa e Objetivos"]`
 
-### Schema Pydantic de Saída:
-```python
-class SectionInfo(BaseModel):
-    section_name: str = Field(description='Nome normalizado da macro-seção.')
-    start_text: Optional[str] = Field(
-        description='Trecho literal de 15 a 30 palavras que inicia a seção.'
-    )
-    end_text: Optional[str] = Field(
-        description='Trecho literal de 15 a 30 palavras que encerra a seção.'
-    )
+Caso o documento não apresente cabeçalhos explícitos (como em ofícios ou pareceres curtos em bloco único), o pipeline aciona um **fallback automático** de preâmbulo, encapsulando todo o conteúdo sob uma raiz padronizada (`"Documento"`).
 
-class ChunkSections(BaseModel):
-    sections: List[SectionInfo]
-```
+#### Papéis Semânticos (`SectionRole`)
+Cada seção é classificada com uma função semântica estrutural, orientando futuramente a recuperação e a relevância de respostas:
 
-### Normalização com Mapeamento de Índices (`_normalize_with_mapping`)
-Para encontrar as strings literais `start_text` e `end_text` sem falhas decorrentes de acentuação ou quebras de linha:
-1. O texto é normalizado via decomposição NFKD, removendo diacríticos (`unicodedata.category(c) != 'Mn'`) e convertendo para minúsculas.
-2. É construído um vetor paralelo `mapping[normalized_idx] -> original_idx`.
-3. A busca do trecho ocorre na string simplificada; ao localizar o índice, o vetor `mapping` devolve o offset exato em bytes no texto original.
+| Papel (`SectionRole`) | Finalidade Estrutural | Exemplos Típicos |
+| :--- | :--- | :--- |
+| `title_block` | Bloco inicial de identificação, cabeçalho institucional e metadados | *"Ministério da Saúde", "Edital nº 01/2026"* |
+| `abstract` | Resumo executivo, síntese inicial ou sumário preliminar | *"Resumo", "Abstract", "Síntese Executiva"* |
+| `introduction` | Contextualização, preâmbulo, histórico e motivação | *"1. Introdução", "Do Objeto", "Apresentação"* |
+| `methodology` | Métodos, procedimentos de execução e requisitos técnicos | *"Materiais e Métodos", "Especificação Técnica"* |
+| `results` | Achados, produtos apurados e entregas realizadas | *"Resultados", "Achados da Auditoria"* |
+| `discussion` | Discussão de riscos, contraposição e interpretação técnica | *"Discussão", "Análise de Riscos e Impacto"* |
+| `conclusion` | Considerações finais, encerramento e encaminhamentos | *"Conclusão", "Parecer Conclusivo", "Disposições Finais"* |
+| `references` | Legislação citada, normas regulatórias e bibliografia | *"Referências", "Legislação Aplicável", "Fontes"* |
+| `unknown` | Seções específicas não associadas a papéis padronizados | *"Cronograma Físico-Financeiro", "Anexo I"* |
 
-### Carimbo nos Chunks (`_assign_sections_to_chunks`)
-Com os limites das seções mapeados no documento:
-1. O algoritmo calcula o ponto médio de cada chunk de 500 caracteres (`start_idx <= chunk_start_idx + len(chunk_norm) // 2`).
-2. Identifica qual seção engloba esse ponto médio.
-3. Atribui `chunk.metadata['section_title'] = assigned_section`.
-4. Adiciona o prefixo temático ao conteúdo:
-   ```text
-   SECTION: Qualificação Técnica
-
-   O licitante deverá apresentar certidão de acervo técnico emitida pelo conselho competente...
-   ```
-Esse prefixo garante que a busca por similaridade vetorial priorize os vetores da seção correta.
+* **Classificação em 2 Camadas**:
+  1. *Casamento por Aliases*: Vocabulário controlado de termos em português e inglês com suporte a variações morfológicas.
+  2. *Fallback Posicional*: Detecta resumos ou blocos introdutórios que antecedem a introdução mas não possuem título explícito de "Resumo".
 
 ---
 
-## 4. Anonimização LGPD & Embeddings Vetoriais
+### Estágio 3 — Fatiamento Monopágina & Contextualização
+Nesta etapa, o conteúdo de cada seção é fragmentado em blocos indexáveis (*chunks*):
+* **Fatiamento Estritamente Monopágina**:
+  Se uma seção estende-se por múltiplas páginas, ela é seccionada exatamente nas fronteiras de página registradas no `page_map`. Isso garante que cada chunk pertença exclusivamente a uma única página física (`page: int`), eliminando ambiguidades no visualizador.
+* **Identificadores Estáveis**:
+  Cada fragmento recebe um ID determinístico no formato `chunk_{page}_{idx}` (ex: `chunk_0_0`, `chunk_0_1`).
+* **Injeção de Prefixo Contextual**:
+  O conteúdo textual do chunk recebe um carimbo temático no formato `[{Nome da Seção}]` no início do texto. Esse prefixo informa ao modelo de embeddings o contexto estrutural ao qual o fragmento pertence, melhorando a precisão da busca vetorial (RAG).
+
+---
+
+### Estágio 4 — Posicionamento Geométrico & Bounding Boxes
+Para viabilizar a auditoria visual do documento, cada chunk precisa estar vinculado à sua localização gráfica exata na página:
+* **Alinhamento de Tokens**:
+  O texto do fragmento é alinhado com as palavras físicas extraídas na página via algoritmo de casamento de sequências (`difflib.SequenceMatcher`). Isso descarta cabeçalhos repetitivos de topo de página e foca na área visual do texto real.
+* **Fusão de Linhas Visuais**:
+  Palavras alinhadas que compartilham a mesma linha física são agrupadas, calculando-se o retângulo envolvente de cada linha:
+  `[x0, y0, x1, y1]` *(onde x0, y0 é o canto superior esquerdo e x1, y1 é o canto inferior direito)*.
+* **Retrocompatibilidade de Citação**:
+  A lista resultante de retângulos (`rects`) é gravada nos metadados do chunk. Esse contrato é consumido diretamente pelo validador de citações (`resolve_citations`) e pelo visualizador de PDF no frontend para desenhar as caixas de realce (*highlights*).
+
+---
+
+## 3. Anonimização LGPD & Embeddings Vetoriais
 
 ### Anonimização com Microsoft Presidio
-Antes de qualquer vetorização ou envio para a OpenAI, o `PresidioAnonymizer` inspeciona o texto dos chunks:
+Antes de qualquer vetorização ou envio para a OpenAI, o `PresidioAnonymizer` inspeciona o texto dos chunks e seus metadados estruturais:
 * **Entidades Detectadas**: CPF, CNPJ, RG, nomes de pessoas físicas, telefones, e-mails e quantias monetárias.
 * **Substituição Determinística**: As entidades são substituídas por marcadores indexados (`<CPF_1>`, `<CNPJ_1>`, `<PESSOA_1>`). O mesmo dado pessoal que aparece repetidas vezes recebe o mesmo identificador, preservando a coerência lógica do texto.
+* **Proteção em Metadados**: A higienização estende-se tanto ao corpo do texto (`page_content`) quanto aos metadados contextuais (`section_title` e `section_path`), prevenindo o vazamento de dados pessoais mesmo em títulos de seções institucionais.
 * **Mapa de Reversão**: O dicionário de reversão é salvo apenas no campo `chunk.metadata['presidio_mapping']` e nunca é enviado no corpo dos prompts de avaliação.
 
 ### Embeddings & PGVector
 * **Modelo**: OpenAI `text-embedding-3-small` (1536 dimensões).
 * **Armazenamento**: Extensão `pgvector` no PostgreSQL 17 (tabela `langchain_pg_embedding`).
-* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title` e `presidio_mapping`.
+* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role` e `presidio_mapping`.
 * **Métrica**: Distância por cosseno (`<=>`).
 
 ---
 
-## 5. Avaliação Estruturada da Base de Conhecimento (Release Pipeline)
+## 4. Avaliação Estruturada da Base de Conhecimento (Release Pipeline)
 
 Endpoint disparador:
 ```http
@@ -217,7 +220,7 @@ Ao final da avaliação de todos os ramos:
 
 ---
 
-## 6. Chat com Documento & Assistente
+## 5. Chat com Documento & Assistente
 
 ### Endpoint: Chat RAG com Coordenadas (`POST /doc/{doc_id}/message/ai`)
 Permite dialogar com o documento com retorno de coordenadas visuais para destaque no visualizador de PDF:
@@ -248,44 +251,44 @@ Atua como assistente contínuo sobre o arquivo:
 
 ---
 
-## 7. Observabilidade de Execução do Pipeline e Diagnóstico (Spec 002)
+## 6. Observabilidade de Execução do Pipeline e Diagnóstico (Spec 002)
 
 Para garantir melhoria contínua, transparência e diagnóstico veloz de gargalos de IA sem sobrecarregar o banco relacional PostgreSQL, o Lumina dispõe de um subsistema desacoplado de telemetria e rastreamento de execuções.
 
-### 7.1 Identidade 1:1 e Armazenamento JSONL Desacoplado
+### 6.1 Identidade 1:1 e Armazenamento JSONL Desacoplado
 - **Identidade Unificada**: Cada ciclo de processamento disparado (`POST /doc/{doc_id}/release`) assume rigorosamente `run_id == release_id`. Isso viabiliza a localização instantânea da auditoria informando o próprio ID da release.
 - **Persistência Append-Only**: Em vez de tabelas relacionais transitórias pesadas, os eventos atômicos são registrados em arquivos estruturados JSON Lines (`lumina/storage/pipeline_runs/{run_id}.jsonl`), com um índice otimizado em `index.jsonl`.
 - **Baixo Overhead**: O registro assíncrono consome menos de 2% do tempo total do pipeline, mantendo alta vazão.
 
-### 7.2 Dinamismo Total de Etapas
+### 6.2 Dinamismo Total de Etapas
 O motor `RunLogger` e os schemas Pydantic consolidam o ciclo de vida a partir dos eventos gravados:
-1. Qualquer etapa adicional inserida no pipeline (ex: `extraction`, `table_parsing`, `anonymization`, `embeddings`, `evaluation`, `synthesis`) é registrada por ganchos (`start_stage`, `complete_stage`, `fail_stage`).
+1. Qualquer etapa adicional inserida no pipeline (ex: `extraction`, `sections`, `anonymization`, `embeddings`, `evaluation`, `synthesis`) é registrada por ganchos (`start_stage`, `complete_stage`, `fail_stage`).
 2. A API e a interface web iteram dinamicamente sobre as etapas retornadas, renderizando métricas de duração e status sem modificação de schemas ou de código front-end.
 
-### 7.3 Diagnóstico Granular de Critérios Paralelos
+### 6.3 Diagnóstico Granular de Critérios Paralelos
 Durante o lote de inferência (`chain.abatch`):
 - O evento `CRITERION_EVALUATED` é disparado individualmente para cada critério da árvore normativa.
 - São capturados o tempo de inferência individual, nota atribuída, contagem de citações com coordenadas e eventuais falhas parciais.
 - Isso permite ao operador identificar prontamente critérios problemáticos ou que demandam maior latência.
 
-### 7.4 Salvaguarda de Dados Pessoais (LGPD)
+### 6.4 Salvaguarda de Dados Pessoais (LGPD)
 - O motor de persistência executa filtragem ativa via `sanitize_pii` e `sanitize_dict` em todas as mensagens de erro, metadados e payloads.
 - Padrões de CPF, CNPJ, telefones e e-mails são automaticamente mascarados (`[CPF_MASKED]`, `[EMAIL_MASKED]`, `[PHONE_MASKED]`, `[CNPJ_MASKED]`).
 - Identificadores de sistema (UUIDs como `document_id` e `run_id`) são protegidos contra substituição acidental.
 
-### 7.5 Controle de Acesso Administrativo e Demonstração Interativa
+### 6.5 Controle de Acesso Administrativo e Demonstração Interativa
 - **RBAC Estrito**: Os endpoints REST (`GET /processing-runs`, `GET /processing-runs/{id}`, `GET /processing-runs/{id}/events`) são restritos a usuários com `role = admin` via dependência `AdminUser`. Requisições de não-administradores são rejeitadas com `403 Forbidden`.
 - **Demonstração Nativa**: Conforme o Princípio VII da Constituição do projeto, a interface visual de validação pode ser acessada e exercitada diretamente no navegador em:
   ```
   http://localhost:8000/demos/pipeline_observability/
   ```
 
-### 7.6 Observabilidade Aprofundada das 7 Macroetapas do Pipeline
-Para permitir diagnóstico completo e melhoria contínua sem depender de prints de terminal, cada execução consolida as 7 macroetapas do ciclo de vida:
+### 6.6 Observabilidade Aprofundada das Macroetapas do Pipeline
+Para permitir diagnóstico completo e melhoria contínua sem depender de prints de terminal, cada execução consolida as etapas do ciclo de vida:
 
-1. **Extração e Chunking (`extraction`)**: Registra a tipologia de extração aplicada (PyMuPDF, Docx2txtLoader, TextLoader), total de páginas processadas, chunks gerados, tamanho médio dos blocos para validação do teto de 500 caracteres e contadores de sanitização (remoção de `\x00` e normalização de espaços).
-2. **Identificação de Seções por LLM (`sections`)**: Registra a janela textual de entrada (até 3.000 caracteres em modo depuração), as seções estruturadas identificadas (`section_name`, `start_text`, `end_text`) e a taxa percentual de sucesso na localização física dos marcos (`mapping_success_rate`).
-3. **Anonimização LGPD via Presidio (`anonymization`)**: Captura o quantitativo de entidades sensíveis identificadas e substituídas (CPF, CNPJ, RG, Telefone, E-mail) e as chaves anônimas de reversão (`<CPF_1>`, `<CNPJ_1>`), assegurando total ausência de dados pessoais (PII) nos logs estruturados.
+1. **Extração Estruturada e Layout (`extraction`)**: Registra a tipologia de extração aplicada (PyMuPDF4LLM), total de páginas processadas, chunks gerados, tamanho médio dos blocos e contadores de sanitização (remoção de `\x00` e normalização de espaços).
+2. **Mapeamento de Seções e Papéis (`sections`)**: Registra as seções identificadas na árvore estruturada (`section_name`, `role`, `level`), os papéis semânticos atribuídos e a taxa de sucesso no mapeamento.
+3. **Anonimização LGPD via Presidio (`anonymization`)**: Captura o quantitativo de entidades sensíveis identificadas e substituídas tanto no texto quanto nos metadados (`section_title` e `section_path`), assegurando total ausência de dados pessoais (PII) nos logs estruturados.
 4. **Recuperação Semântica Ponderada (Retriever)**: Registra a string da query executada com triplicação do nome da seção para ancoragem de contexto e os `chunk_id` retornados na busca vetorial direta (`MAX_CHUNKS = 5`).
 5. **Avaliação Estruturada de Critérios (`evaluation`)**: Para cada critério avaliado concorrentemente no lote, registra a tríade completa:
    * *Entrada*: Query executada, chunks recuperados e cópia integral do prompt montado (`DOCUMENT_ANALYSIS_PROMPT` em modo debug);
@@ -295,7 +298,7 @@ Para permitir diagnóstico completo e melhoria contínua sem depender de prints 
 6. **Resolução de Coordenadas e Citações (`citations`)**: Monitora a integridade referencial cruzando os `chunk_id` citados pelo modelo contra os metadados reais, quantificando citações resolvidas em retângulos físicos (`resolved_boxes_count`) e detectando alucinações de IDs inexistentes (`hallucinated_citations_count`).
 7. **Síntese Executiva OiacIA (`synthesis`)**: Registra a seleção dos extremos de nota (2 critérios com maiores notas e 2 com menores notas) enviados no prompt e particiona a síntese em 4 blocos textuais (`greeting`, `fulfilled_points`, `improvement_points`, `final_guidance`).
 
-### 7.7 Política de Retenção e Rotação Automática de Logs
+### 6.7 Política de Retenção e Rotação Automática de Logs
 Para prevenir esgotamento de espaço em disco em ambientes de longa duração:
 - **Limite por Quantidade**: Mantém no máximo as **30 execuções mais recentes** no diretório `lumina/storage/pipeline_runs/`.
 - **Limite Temporal**: Remove automaticamente arquivos de execuções gerados há mais de **7 dias**.

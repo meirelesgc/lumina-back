@@ -1,3 +1,4 @@
+import contextlib
 from contextlib import contextmanager
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
@@ -14,7 +15,6 @@ from lumina.app import app
 from lumina.core.database import get_session
 from lumina.core.llm import set_fast_model_override
 from lumina.core.security import get_password_hash
-from lumina.core.settings import Settings
 from lumina.models import User, table_registry
 from lumina.schemas.branch import (
     BranchSectionRequirement,
@@ -67,6 +67,46 @@ def mock_fast_model_for_tests(request):
         yield None
 
 
+def _build_null_session() -> MagicMock:
+    """Sessão fake sem efeitos colaterais, para tarefas em background."""
+    session = MagicMock()
+    session.add = MagicMock()
+    session.flush = AsyncMock()
+    session.commit = AsyncMock()
+    scalars_result = MagicMock()
+    scalars_result.all.return_value = []
+    session.scalars = AsyncMock(return_value=scalars_result)
+    session.execute = AsyncMock(return_value=MagicMock())
+    return session
+
+
+@contextlib.asynccontextmanager
+async def _null_async_session():
+    yield _build_null_session()
+
+
+@pytest.fixture(autouse=True)
+def isolate_background_task_db_writes(monkeypatch):
+    """
+    Impede que tarefas em background disparadas por create_branch/
+    update_branch (análise de seção, geração de expansões de consulta)
+    gravem no banco real configurado em DATABASE_URL quando disparadas
+    fora de uma sessão de teste controlada — via `asyncio.create_task`
+    ou o `BackgroundTasks` real do FastAPI/TestClient. Mesmo espírito de
+    `mock_fast_model_for_tests`: nenhum teste rotineiro deve ter efeitos
+    colaterais em serviços externos (aqui, o Postgres configurado no
+    ambiente local/`.env`, e não o container efêmero de testes).
+    """
+    monkeypatch.setattr(
+        'lumina.services.ai.branch_analyzer.async_session',
+        _null_async_session,
+    )
+    monkeypatch.setattr(
+        'lumina.services.ai.query_expansion_service.async_session',
+        _null_async_session,
+    )
+
+
 @pytest.fixture
 def client(session):
     def get_session_override():
@@ -81,21 +121,9 @@ def client(session):
 
 @pytest.fixture(scope='session')
 def engine():
-    # Caso do windows + Docker no CI
-    import sys  # noqa: PLC0415
-
-    if sys.platform == 'win32':
-        yield create_async_engine(Settings().DATABASE_URL)
-
-    else:
-        try:
-            with PostgresContainer(
-                'postgres:16', driver='psycopg'
-            ) as postgres:
-                _engine = create_async_engine(postgres.get_connection_url())
-                yield _engine
-        except Exception:
-            yield create_async_engine(Settings().DATABASE_URL)
+    with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+        _engine = create_async_engine(postgres.get_connection_url())
+        yield _engine
 
 
 @pytest_asyncio.fixture(scope='session', loop_scope='session', autouse=True)

@@ -5,8 +5,14 @@ from uuid import UUID
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import PromptTemplate
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from lumina.core.database import async_session
 from lumina.core.llm import get_fast_model
+from lumina.models import (
+    BranchSectionRequirement as BranchSectionRequirementModel,
+)
+from lumina.repositories import branch_section_requirement_repo
 from lumina.schemas.branch import (
     BranchSectionRequirement,
     SectionRequirementScope,
@@ -86,20 +92,61 @@ async def analyze_branch_section_requirement(
     )
 
 
+async def persist_branch_section_requirement(
+    session: AsyncSession,
+    branch_id: UUID,
+    requirement: BranchSectionRequirement,
+    generation_model: str,
+    user_id: Optional[UUID] = None,
+) -> None:
+    """Desativa a análise anterior e persiste a nova versão ativa."""
+    previous_version = (
+        await branch_section_requirement_repo.get_latest_generation_version(
+            session, branch_id
+        )
+    )
+    await branch_section_requirement_repo.deactivate_active(session, branch_id)
+
+    db_requirement = BranchSectionRequirementModel(
+        branch_id=branch_id,
+        scope=requirement.scope.value,
+        expected_section=requirement.expected_section,
+        reasoning=requirement.reasoning,
+        generation_model=generation_model,
+        generation_version=previous_version + 1,
+        is_active=True,
+    )
+    db_requirement.set_creation_audit(user_id)
+    branch_section_requirement_repo.add(session, db_requirement)
+    await session.flush()
+
+
 async def run_branch_section_analysis_background(
     branch_id: UUID,
     context: BranchNormativeContext,
     model: Optional[BaseChatModel] = None,
 ) -> Optional[BranchSectionRequirement]:
-    """Executado em background task após a criação do branch.
+    """Executado em background task após a criação/atualização do branch.
 
-    Processa a análise e registra o resultado em log, sem efeitos colaterais.
+    Analisa o escopo de busca do critério e persiste o resultado
+    (Fase 2 — roteamento por seção), para uso no motor de recuperação.
     """
     try:
         requirement = await analyze_branch_section_requirement(
             context=context,
             model=model,
         )
+        llm = model or get_fast_model()
+
+        async with async_session() as session:
+            await persist_branch_section_requirement(
+                session=session,
+                branch_id=branch_id,
+                requirement=requirement,
+                generation_model=getattr(llm, 'model_name', 'unknown'),
+            )
+            await session.commit()
+
         logger.info(
             'Branch %s analisada com sucesso: scope=%s, expected_section=%s',
             branch_id,

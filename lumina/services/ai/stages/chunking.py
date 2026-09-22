@@ -4,7 +4,14 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from lumina.core.settings import Settings
+from lumina.services.ai.stages.contextualization import (
+    DocumentMetadata,
+    generate_chunk_context,
+)
 from lumina.services.ai.stages.section_models import Section
+
+SETTINGS = Settings()
 
 ChunkCleaner = Callable[[List[Document]], List[Document]]
 
@@ -189,6 +196,14 @@ def create_chunks_from_sections(  # noqa: PLR0914
                     page_content=prefixed_content,
                     metadata=metadata,
                 )
+
+                if SETTINGS.CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED:
+                    chunk_context = generate_chunk_context(
+                        doc, sec, DocumentMetadata(source_name=source_name)
+                    )
+                    if chunk_context:
+                        doc.metadata['chunk_context'] = chunk_context
+
                 docs_by_page.setdefault(slice_page, []).append(doc)
                 all_docs.append(doc)
 
@@ -202,3 +217,50 @@ def create_chunks_from_sections(  # noqa: PLR0914
         doc.metadata['chunk_index'] = global_idx
 
     return run_chunk_pipeline(all_docs)
+
+
+def documents_to_dict(docs: List[Document]) -> List[Dict[str, Any]]:
+    """
+    Serializa lista de Documents para dicionários utilizáveis em JSON.
+    """
+    return [
+        {
+            'page_content': doc.page_content,
+            'metadata': doc.metadata,
+            'char_count': len(doc.page_content),
+        }
+        for doc in docs
+    ]
+
+
+def documents_to_markdown_preview(
+    source_name: str, docs: List[Document]
+) -> str:
+    """
+    Gera visualização de inspeção rápida em Markdown dos chunks gerados.
+    """
+    lines = [
+        f'# Chunks Gerados: {source_name}',
+        '',
+        f'Total de chunks: **{len(docs)}**',
+        '',
+    ]
+
+    for idx, doc in enumerate(docs, start=1):
+        meta = doc.metadata
+        page_val = meta.get('page', meta.get('page_number', '-'))
+        level_val = meta.get('section_level', '-')
+        lines.append(
+            f'### Chunk {idx} (Pág: {page_val} | Nível: H{level_val})'
+        )
+        lines.append(f'**Caminho**: `{meta.get("section_path", "")}`  ')
+        lines.append(f'**Tamanho**: {len(doc.page_content)} caracteres')
+        lines.append('')
+        lines.append('```text')
+        lines.append(doc.page_content)
+        lines.append('```')
+        lines.append('')
+        lines.append('---')
+        lines.append('')
+
+    return '\n'.join(lines) + '\n'

@@ -1,6 +1,7 @@
 # ruff: noqa: PLR2004
 from langchain_core.documents import Document
 
+from lumina.services.ai.stages import chunking
 from lumina.services.ai.stages.chunking import (
     clean_whitespace,
     create_chunks_from_sections,
@@ -101,3 +102,48 @@ def test_clean_whitespace():
     ]
     cleaned = clean_whitespace(docs)
     assert cleaned[0].page_content == 'Texto 1\n\nTexto 2'
+
+
+def _single_section_chunks_args():
+    md = '# Objeto\n\nAquisicao de computadores.'
+    page_map = [{'page': 0, 'char_start': 0, 'char_count': len(md)}]
+    sec = Section(
+        heading=Heading(
+            line_number=1, level=1, title='Objeto', raw='# Objeto', page=0
+        ),
+        breadcrumb=['Objeto'],
+        content='Aquisicao de computadores.',
+        char_start=md.index('Aquisicao'),
+        char_end=md.index('Aquisicao') + len('Aquisicao de computadores.'),
+    )
+    return [sec], page_map, md
+
+
+def test_chunk_context_not_called_when_flag_disabled(mocker):
+    mock_generate = mocker.patch.object(
+        chunking, 'generate_chunk_context', return_value='contexto extra'
+    )
+    mocker.patch.object(
+        chunking.SETTINGS, 'CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED', False
+    )
+
+    sections, page_map, md = _single_section_chunks_args()
+    docs = create_chunks_from_sections(sections, page_map, md, 'doc.pdf')
+
+    mock_generate.assert_not_called()
+    assert 'chunk_context' not in docs[0].metadata
+
+
+def test_chunk_context_called_when_flag_enabled(mocker):
+    mock_generate = mocker.patch.object(
+        chunking, 'generate_chunk_context', return_value='contexto extra'
+    )
+    mocker.patch.object(
+        chunking.SETTINGS, 'CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED', True
+    )
+
+    sections, page_map, md = _single_section_chunks_args()
+    docs = create_chunks_from_sections(sections, page_map, md, 'doc.pdf')
+
+    mock_generate.assert_called()
+    assert docs[0].metadata['chunk_context'] == 'contexto extra'

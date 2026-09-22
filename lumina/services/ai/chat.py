@@ -103,21 +103,27 @@ async def get_document_auto_context(
 
 
 async def get_prompt_context(
-    vstore: VStore, db_release: Any, msg: str
+    session: AsyncSession, vstore: VStore, db_release: Any, msg: str
 ) -> tuple[List[str], List[Any]]:
     if not msg:
         return [], []
 
     base_filter = stages.retrieval.get_base_filter(db_release)
-    original_chunks = await vstore.asimilarity_search(
+    dense_chunks = await vstore.asimilarity_search(
         msg, k=5, filter=base_filter
     )
-    if not original_chunks:
+    lexical_chunks = await stages.vector_store_sql.lexical_search(
+        session, msg, base_filter.get('source'), k=5
+    )
+    fused_chunks = stages.retrieval.reciprocal_rank_fusion(
+        [dense_chunks, lexical_chunks], top_n=5
+    )
+    if not fused_chunks:
         return [], []
 
     return (
-        stages.retrieval.build_chunk_prompts(original_chunks),
-        original_chunks,
+        stages.retrieval.build_chunk_prompts(fused_chunks),
+        fused_chunks,
     )
 
 
@@ -151,11 +157,11 @@ async def create_ai_response(  # noqa: PLR0913, PLR0917
     explicit_prompts = await get_explicit_context(session, data.content)
 
     b_prm, branch_chunks = await get_prompt_context(
-        vstore, db_release, '\n---\n'.join(explicit_prompts)
+        session, vstore, db_release, '\n---\n'.join(explicit_prompts)
     )
 
     m_prm, msg_chunks = await get_prompt_context(
-        vstore, db_release, data.content
+        session, vstore, db_release, data.content
     )
 
     all_chunks = branch_chunks + msg_chunks

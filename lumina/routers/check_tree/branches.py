@@ -54,8 +54,11 @@ async def update_branch(
     branch: BranchUpdate,
     session: Session,
     current_user: CurrentUser,
+    background_tasks: BackgroundTasks,
 ):
-    return await branch_service.update_branch(session, current_user.id, branch)
+    return await branch_service.update_branch(
+        session, current_user.id, branch, background_tasks
+    )
 
 
 @router.delete(

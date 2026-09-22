@@ -78,6 +78,9 @@ async def test_create_ai_response_structured():
     mock_model.with_structured_output.return_value = mock_structured
 
     mock_session = AsyncMock()
+    sql_result = MagicMock()
+    sql_result.all.return_value = []
+    mock_session.execute = AsyncMock(return_value=sql_result)
     mock_release = MagicMock(spec=DocumentRelease)
     mock_release.file_path = 'path/file.pdf'
 

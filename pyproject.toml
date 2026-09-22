@@ -67,6 +67,8 @@ seed = 'python -m lumina.scripts.seed_demo'
 
 analyze-branches = 'python -m lumina.scripts.analyze_existing_branches'
 
+enrich-branches = 'python -m lumina.scripts.enrich_existing_branches'
+
 test = 'pytest -s -x --cov=lumina -vv'
 
 test-ai = 'pytest -s -x --run-ai -m ai -vv'

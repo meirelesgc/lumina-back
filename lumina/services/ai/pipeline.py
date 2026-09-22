@@ -15,8 +15,13 @@ from lumina.models import (
     AppliedTaxonomy,
     AppliedTypification,
     DocumentRelease,
+    Typification,
 )
-from lumina.repositories import release_repo
+from lumina.repositories import (
+    branch_query_expansion_repo,
+    branch_section_requirement_repo,
+    release_repo,
+)
 from lumina.schemas.common import WSMessage
 from lumina.schemas.document import DocumentProcessingStatus
 from lumina.schemas.document_release import DocumentReleasePublic
@@ -138,6 +143,12 @@ async def save_applied_snapshot(
             feedback=branch_data.get('feedback'),
             presidio_mapping=str(branch_data.get('presidio_mapping')),
             references=branch_data.get('references', []),
+            expansion_generation_version=branch_data.get(
+                'expansion_generation_version'
+            ),
+            section_requirement_version=branch_data.get(
+                'section_requirement_version'
+            ),
         )
         release_repo.add_applied_entity(session, applied_branch)
 
@@ -179,9 +190,21 @@ async def run_document_ingestion(
     anonymized = await stages.anonymization.anonymize_chunks(
         formatted_docs, run_id=run_id
     )
-    await stages.indexing.index_chunks_to_vstore(
-        vstore, anonymized, run_id=run_id
+    section_docs = stages.sections.build_section_summary_documents(
+        anonymized, source_name
     )
+    await stages.indexing.index_chunks_to_vstore(
+        vstore, anonymized + section_docs, run_id=run_id
+    )
+
+
+def _collect_branch_ids(tree: list[Typification]) -> list[UUID]:
+    return [
+        branch.id
+        for typification in tree
+        for taxonomy in typification.taxonomies
+        for branch in taxonomy.branches
+    ]
 
 
 async def process_release_pipeline(
@@ -217,8 +240,39 @@ async def process_release_pipeline(
     await run_logger.start_stage(run_id=release_id, stage='evaluation')
     try:
         tree = await tree_service.get_tree_by_release(session, db_release)
+        branch_ids = _collect_branch_ids(tree)
+        active_expansions = (
+            await branch_query_expansion_repo.list_active_grouped(
+                session, branch_ids
+            )
+        )
+        expansions_by_branch = {
+            branch_id: (
+                expansions[0].generation_version,
+                [e.expansion_text for e in expansions],
+            )
+            for branch_id, expansions in active_expansions.items()
+        }
+        active_requirements = (
+            await branch_section_requirement_repo.get_active_grouped(
+                session, branch_ids
+            )
+        )
+        section_requirements_by_branch = {
+            branch_id: {
+                'scope': req.scope,
+                'expected_section': req.expected_section,
+                'generation_version': req.generation_version,
+            }
+            for branch_id, req in active_requirements.items()
+        }
         simplified_args = await stages.retrieval.retrieve_evaluation_payloads(
-            vstore, tree, db_release
+            session,
+            vstore,
+            tree,
+            db_release,
+            expansions_by_branch=expansions_by_branch,
+            section_requirements_by_branch=section_requirements_by_branch,
         )
         chain = stages.evaluation.get_evaluation_chain(model)
         await stages.evaluation.evaluate_criteria_batch(

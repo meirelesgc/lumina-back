@@ -19,6 +19,18 @@ from lumina.services.ai.branch_analyzer import (
     BranchNormativeContext,
     run_branch_section_analysis_background,
 )
+from lumina.services.ai.query_expansion_service import (
+    run_branch_query_expansion_background,
+)
+
+
+def _dispatch_background(
+    background_tasks: Optional[BackgroundTasks], func, *args
+) -> None:
+    if background_tasks is not None:
+        background_tasks.add_task(func, *args)
+    else:
+        asyncio.create_task(func(*args))
 
 
 async def create_branch(
@@ -81,16 +93,18 @@ async def create_branch(
     await session.commit()
     await session.refresh(db_branch)
 
-    if background_tasks is not None:
-        background_tasks.add_task(
-            run_branch_section_analysis_background,
-            db_branch.id,
-            context,
-        )
-    else:
-        asyncio.create_task(
-            run_branch_section_analysis_background(db_branch.id, context)
-        )
+    _dispatch_background(
+        background_tasks,
+        run_branch_section_analysis_background,
+        db_branch.id,
+        context,
+    )
+    _dispatch_background(
+        background_tasks,
+        run_branch_query_expansion_background,
+        db_branch.id,
+        context,
+    )
 
     return db_branch
 
@@ -120,7 +134,10 @@ async def get_branch_by_id(session: AsyncSession, branch_id: UUID) -> Branch:
 
 
 async def update_branch(
-    session: AsyncSession, user_id: UUID, data: BranchUpdate
+    session: AsyncSession,
+    user_id: UUID,
+    data: BranchUpdate,
+    background_tasks: Optional[BackgroundTasks] = None,
 ) -> Branch:
     db_branch = await branch_repo.get_by_id(session, data.id)
 
@@ -133,6 +150,7 @@ async def update_branch(
     old_data = BranchPublic.model_validate(db_branch).model_dump(mode='json')
 
     title_changed = data.title != db_branch.title
+    description_changed = data.description != db_branch.description
     taxonomy_changed = data.taxonomy_id != db_branch.taxonomy_id
 
     if title_changed or taxonomy_changed:
@@ -172,6 +190,37 @@ async def update_branch(
 
     await session.commit()
     await session.refresh(db_branch)
+
+    if title_changed or description_changed:
+        taxonomy = await branch_repo.get_taxonomy(
+            session, db_branch.taxonomy_id
+        )
+        typification = None
+        if taxonomy and taxonomy.typification_id:
+            typification = await session.get(
+                Typification, taxonomy.typification_id
+            )
+
+        context = BranchNormativeContext(
+            branch_title=db_branch.title,
+            branch_description=db_branch.description,
+            taxonomy_title=taxonomy.title if taxonomy else None,
+            taxonomy_description=taxonomy.description if taxonomy else None,
+            typification_name=typification.name if typification else None,
+        )
+        _dispatch_background(
+            background_tasks,
+            run_branch_section_analysis_background,
+            db_branch.id,
+            context,
+        )
+        _dispatch_background(
+            background_tasks,
+            run_branch_query_expansion_background,
+            db_branch.id,
+            context,
+        )
+
     return db_branch
 
 

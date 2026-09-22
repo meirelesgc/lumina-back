@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from lumina.schemas import BranchCreate, BranchUpdate
 from lumina.services import branch_service
@@ -87,6 +87,115 @@ async def test_create_branch_taxonomy_not_found(session, mock_branch_repo):
         await branch_service.create_branch(session, user_id, data)
 
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_create_branch_dispatches_query_expansion_background(
+    session, mock_branch_repo, mock_audit_service, mocker
+):
+    dispatch = mocker.patch(
+        'lumina.services.branch_service.run_branch_query_expansion_background'
+    )
+    user_id = uuid4()
+    taxonomy_id = uuid4()
+    data = BranchCreate(
+        title='New Branch', description='Desc', taxonomy_id=taxonomy_id
+    )
+    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
+    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
+
+    background_tasks = MagicMock(spec=BackgroundTasks)
+    branch = await branch_service.create_branch(
+        session, user_id, data, background_tasks
+    )
+
+    dispatched_funcs = [
+        call.args[0] for call in background_tasks.add_task.call_args_list
+    ]
+    assert dispatch in dispatched_funcs
+    dispatched_branch_id = next(
+        call.args[1]
+        for call in background_tasks.add_task.call_args_list
+        if call.args[0] is dispatch
+    )
+    assert dispatched_branch_id == branch.id
+
+
+@pytest.mark.asyncio
+async def test_update_branch_dispatches_on_title_change(
+    session, mock_branch_repo, mock_audit_service, mocker
+):
+    dispatch = mocker.patch(
+        'lumina.services.branch_service.run_branch_query_expansion_background'
+    )
+    user_id = uuid4()
+    branch_id = uuid4()
+    taxonomy_id = uuid4()
+    data = BranchUpdate(
+        id=branch_id,
+        title='Updated Branch',
+        description='Old Desc',
+        taxonomy_id=taxonomy_id,
+    )
+    db_branch = MagicMock(
+        id=branch_id,
+        title='Old Branch',
+        description='Old Desc',
+        taxonomy_id=taxonomy_id,
+        deleted_at=None,
+    )
+    mock_branch_repo.get_by_id.return_value = db_branch
+    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
+    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
+
+    background_tasks = MagicMock(spec=BackgroundTasks)
+    await branch_service.update_branch(
+        session, user_id, data, background_tasks
+    )
+
+    dispatched_funcs = [
+        call.args[0] for call in background_tasks.add_task.call_args_list
+    ]
+    assert dispatch in dispatched_funcs
+
+
+@pytest.mark.asyncio
+async def test_update_branch_skips_dispatch_when_unchanged(
+    session, mock_branch_repo, mock_audit_service, mocker
+):
+    dispatch = mocker.patch(
+        'lumina.services.branch_service.run_branch_query_expansion_background'
+    )
+    user_id = uuid4()
+    branch_id = uuid4()
+    taxonomy_id = uuid4()
+    other_taxonomy_id = uuid4()
+    data = BranchUpdate(
+        id=branch_id,
+        title='Same Branch',
+        description='Same Desc',
+        taxonomy_id=other_taxonomy_id,
+    )
+    db_branch = MagicMock(
+        id=branch_id,
+        title='Same Branch',
+        description='Same Desc',
+        taxonomy_id=taxonomy_id,
+        deleted_at=None,
+    )
+    mock_branch_repo.get_by_id.return_value = db_branch
+    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
+    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
+
+    background_tasks = MagicMock(spec=BackgroundTasks)
+    await branch_service.update_branch(
+        session, user_id, data, background_tasks
+    )
+
+    dispatched_funcs = [
+        call.args[0] for call in background_tasks.add_task.call_args_list
+    ]
+    assert dispatch not in dispatched_funcs
 
 
 @pytest.mark.asyncio

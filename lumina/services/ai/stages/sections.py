@@ -501,12 +501,56 @@ def tree_to_dict(sections: List[Section]) -> List[Dict[str, Any]]:
             'role_confidence': s.role_confidence,
             'level': s.level,
             'level_source': s.heading.level_source,
+            'line_number': s.heading.line_number,
+            'raw_heading': s.heading.raw,
+            'page': s.heading.page,
             'char_start': s.char_start,
             'char_end': s.char_end,
+            'heading_char_start': s.heading_char_start,
+            'breadcrumb': s.breadcrumb,
+            'content_length': len(s.content),
+            'content': s.content,
+            'parent_title': s.parent_title,
             'children': [sec_dict(c) for c in s.children],
         }
 
     return [sec_dict(s) for s in sections]
+
+
+def tree_to_markdown(source_name: str, sections: List[Section]) -> str:
+    """
+    Gera relatório em Markdown da árvore com breadcrumbs e contagem.
+    """
+    all_flat = flatten_sections(sections)
+
+    lines = [
+        f'# Árvore de Seções: {source_name}',
+        '',
+        f'Total de seções estruturadas: **{len(all_flat)}**',
+        '',
+        '| Linha | Pág. | Nível | Caminho (Breadcrumb) | Caracteres |',
+        '|---|---|---|---|---|',
+    ]
+
+    for sec in all_flat:
+        page_str = (
+            str(sec.heading.page) if sec.heading.page is not None else '-'
+        )
+        path_str = ' > '.join(sec.breadcrumb).replace('|', '\\|')
+        lines.append(
+            f'| {sec.heading.line_number} | {page_str} | H{sec.heading.level} '
+            f'| **{path_str}** | {len(sec.content)} |'
+        )
+
+    lines.append('\n## Hierarquia de Seções\n')
+    for sec in all_flat:
+        indent = '  ' * (sec.heading.level - 1)
+        lines.append(
+            f'{indent}- **H{sec.heading.level}** `{sec.heading.title}` '
+            f'(L{sec.heading.line_number})'
+        )
+
+    return '\n'.join(lines) + '\n'
 
 
 def normalize_title_for_alias(title: str) -> str:
@@ -695,3 +739,49 @@ def assign_sections_to_chunks(
         'default_assigned': DEFAULT_SECTION_TITLE,
     }
     return chunks, meta
+
+
+SECTION_SUMMARY_RECORD_TYPE = 'section_summary'
+SECTION_SUMMARY_EXCERPT_CHARS = 500
+
+
+def build_section_summary_documents(
+    chunks: List[Document], source_name: str
+) -> List[Document]:
+    """
+    Constrói um Document de resumo por seção (título + trecho inicial),
+    a partir dos chunks já produzidos e anonimizados, para indexação
+    adicional na base vetorial (Fase 2 — roteamento por seção). Marcados
+    com `record_type=section_summary` para serem excluídos da busca
+    normal de chunks (ver `retrieval.get_base_filter`).
+    """
+    first_chunk_by_section: Dict[int, Document] = {}
+    for chunk in chunks:
+        section_index = chunk.metadata.get('section_index')
+        if section_index is None or section_index in first_chunk_by_section:
+            continue
+        first_chunk_by_section[section_index] = chunk
+
+    summaries: List[Document] = []
+    for section_index, chunk in first_chunk_by_section.items():
+        section_title = chunk.metadata.get(
+            'section_title', DEFAULT_SECTION_TITLE
+        )
+        excerpt = chunk.page_content[:SECTION_SUMMARY_EXCERPT_CHARS]
+        summaries.append(
+            Document(
+                page_content=f'{section_title}\n{excerpt}',
+                metadata={
+                    'record_type': SECTION_SUMMARY_RECORD_TYPE,
+                    'source': source_name,
+                    'section_title': section_title,
+                    'section_path': chunk.metadata.get('section_path', ''),
+                    'section_role': chunk.metadata.get(
+                        'section_role', 'unknown'
+                    ),
+                    'section_index': section_index,
+                },
+            )
+        )
+
+    return summaries

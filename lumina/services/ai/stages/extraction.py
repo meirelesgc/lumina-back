@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -7,12 +8,17 @@ import fitz
 import pymupdf4llm
 from langchain_core.documents import Document
 
+from lumina.core.settings import Settings
+from lumina.services.ai.stages.audit import export_ingestion_audit
 from lumina.services.ai.stages.chunking import create_chunks_from_sections
 from lumina.services.ai.stages.positioning import enrich_chunks_with_line_rects
 from lumina.services.ai.stages.sections import (
     build_sections_tree_from_markdown,
 )
 from lumina.services.run_logger import get_run_logger
+
+logger = logging.getLogger(__name__)
+SETTINGS = Settings()
 
 
 def extract_raw_markdown_and_pages(  # noqa: PLR0914
@@ -110,6 +116,22 @@ def extract_pdf_chunks(
         enriched_chunks = enrich_chunks_with_line_rects(
             chunks, doc, page_map, full_markdown
         )
+        if SETTINGS.DEBUG_INGESTION_AUDIT:
+            try:
+                export_ingestion_audit(
+                    full_path=full_path,
+                    source_name=source_name,
+                    full_markdown=full_markdown,
+                    page_map=page_map,
+                    sections=sections,
+                    chunks=enriched_chunks,
+                )
+            except Exception as audit_exc:
+                logger.warning(
+                    'Falha ao exportar auditoria de ingestão para %s: %s',
+                    full_path,
+                    audit_exc,
+                )
         return enriched_chunks, pages_count, null_bytes, ws_ops
     finally:
         doc.close()

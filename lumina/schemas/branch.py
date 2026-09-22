@@ -63,3 +63,28 @@ class BranchSectionRequirement(BaseModel):
         default=None,
         description='Justificativa técnica concisa do modelo.',
     )
+
+
+class ExpansionType(str, Enum):
+    PARAPHRASE = 'paraphrase'
+    SUB_QUESTION = 'sub_question'
+    SECTION_HINT = 'section_hint'
+
+
+class QueryExpansionItem(BaseModel):
+    expansion_text: str = Field(
+        description='Formulação alternativa da consulta do critério.'
+    )
+    expansion_type: ExpansionType = Field(
+        description=(
+            'Classificação da expansão: paraphrase, sub_question ou '
+            'section_hint.'
+        )
+    )
+
+
+class QueryExpansionList(BaseModel):
+    expansions: list[QueryExpansionItem] = Field(
+        default_factory=list,
+        description='2 a 4 formulações alternativas geradas para o critério.',
+    )

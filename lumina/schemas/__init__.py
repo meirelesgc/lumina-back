@@ -22,6 +22,9 @@ from .branch import (
     BranchSchema,
     BranchSectionRequirement,
     BranchUpdate,
+    ExpansionType,
+    QueryExpansionItem,
+    QueryExpansionList,
     SectionRequirementScope,
 )
 from .common import FilterPage, Message, Token, WSMessage
@@ -174,6 +177,9 @@ __all__ = [
     'BranchSectionRequirement',
     'BranchUpdate',
     'SectionRequirementScope',
+    'ExpansionType',
+    'QueryExpansionItem',
+    'QueryExpansionList',
     'FilterPage',
     'Message',
     'Token',

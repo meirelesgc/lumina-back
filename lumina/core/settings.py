@@ -47,7 +47,11 @@ class Settings(BaseSettings):
     TEMPLATES_DIRECTORY: Path = 'lumina/storage/template_conformity/uploads'
     PIPELINE_RUNS_DIRECTORY: Path = 'lumina/storage/pipeline_runs'
     DEBUG_PIPELINE_RUNS: bool = False
+    DEBUG_INGESTION_AUDIT: bool = False
+    INGESTION_AUDIT_DIRECTORY: Path = 'lumina/storage/ingestion_audit'
     STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'
+    CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED: bool = False
+    CROSS_ENCODER_RERANKING_ENABLED: bool = False
 
 
 SETTINGS = Settings()
