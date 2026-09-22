@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.models import PasswordReset, User, UserImage
@@ -13,6 +13,14 @@ async def get_by_id(session: AsyncSession, user_id: UUID) -> Optional[User]:
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def get_by_email(session: AsyncSession, email: str) -> Optional[User]:
+    stmt = select(User).where(
+        User.deleted_at.is_(None),
+        func.lower(User.email) == func.lower(email),
+    )
+    return await session.scalar(stmt)
 
 
 async def get_by_email_or_phone(

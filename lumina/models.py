@@ -1518,6 +1518,59 @@ class Advisorship(AuditMixin):
 
 
 @table_registry.mapped_as_dataclass
+class Invitation(AuditMixin):
+    __tablename__ = 'invitations'
+
+    id: Mapped[UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    inviter_id: Mapped[UUID] = mapped_column(
+        ForeignKey('users.id', name='fk_invitations_inviter_id'),
+        nullable=False,
+    )
+    token: Mapped[str] = mapped_column(
+        String(128),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
+    project_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('projects.id', name='fk_invitations_project_id'),
+        nullable=True,
+        default=None,
+    )
+    role_type: Mapped[str] = mapped_column(
+        default='MAIN_ADVISOR', nullable=False
+    )
+    topic: Mapped[Optional[str]] = mapped_column(nullable=True, default=None)
+    status: Mapped[str] = mapped_column(default='PENDING', nullable=False)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(
+        init=False, nullable=True, default=None
+    )
+    rejected_at: Mapped[Optional[datetime]] = mapped_column(
+        init=False, nullable=True, default=None
+    )
+
+    inviter: Mapped['User'] = relationship(
+        'User',
+        foreign_keys=[inviter_id],
+        lazy='selectin',
+        init=False,
+    )
+    project: Mapped[Optional['Project']] = relationship(
+        'Project',
+        foreign_keys=[project_id],
+        lazy='selectin',
+        init=False,
+    )
+
+
+@table_registry.mapped_as_dataclass
 class TemplateConformityResult(AuditMixin):
     __tablename__ = 'template_conformity_results'
 

@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'
     CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED: bool = False
     CROSS_ENCODER_RERANKING_ENABLED: bool = False
+    INVITATION_EXPIRE_DAYS: int = 7
 
 
 SETTINGS = Settings()
