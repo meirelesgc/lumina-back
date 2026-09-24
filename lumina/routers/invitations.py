@@ -62,6 +62,25 @@ async def list_invitations(
 
 
 @router.get(
+    '/pending-for-me',
+    response_model=InvitationList,
+    summary='Listar convites pendentes recebidos',
+    description=(
+        'Lista todos os convites pendentes e válidos direcionados ao e-mail'
+        ' do usuário atual.'
+    ),
+)
+async def list_pending_for_me(
+    session: Session,
+    current_user: CurrentUser,
+):
+    items = await invitation_service.list_pending_for_user(
+        session, current_user
+    )
+    return {'invitations': items}
+
+
+@router.get(
     '/{token}',
     response_model=InvitationPublicCheck,
     summary='Consultar convite por token',

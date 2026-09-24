@@ -1,10 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
 from sqlalchemy import select
 
-from lumina.models import Advisorship, User
+from lumina.models import Advisorship, Invitation, User
 
 EXPECTED_MIN_DAYS = 6
 EXPECTED_MAX_DAYS = 7
@@ -294,3 +294,108 @@ async def test_list_invitations(client, user, token):
     emails = [i['email'] for i in invitations]
     assert 'convidado1@teste.com' in emails
     assert 'convidado2@teste.com' in emails
+
+
+@pytest.mark.asyncio
+async def test_list_pending_for_me_unauthenticated(client):
+    response = client.get('/invitations/pending-for-me')
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.asyncio
+async def test_list_pending_for_me_empty(client, user, token):
+    response = client.get(
+        '/invitations/pending-for-me',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert data['invitations'] == []
+
+
+@pytest.mark.asyncio
+async def test_list_pending_for_me_multiple_invitations(
+    client, session, user, other_user, token
+):
+    # user cria convite para other_user
+    res1 = client.post(
+        '/invitations',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'email': other_user.email,
+            'topic': 'Projeto de Tese 1',
+        },
+    )
+    assert res1.status_code == HTTPStatus.CREATED
+
+    # Login de other_user
+    res_login = client.post(
+        '/auth/token',
+        data={
+            'username': other_user.email,
+            'password': other_user.clean_password,
+        },
+    )
+    other_token = res_login.json()['access_token']
+
+    # other_user consulta seus convites pendentes
+    res_list = client.get(
+        '/invitations/pending-for-me',
+        headers={'Authorization': f'Bearer {other_token}'},
+    )
+    assert res_list.status_code == HTTPStatus.OK
+    invitations = res_list.json()['invitations']
+    assert len(invitations) == 1
+    assert invitations[0]['email'] == other_user.email
+    assert invitations[0]['status'] == 'PENDING'
+    assert invitations[0]['topic'] == 'Projeto de Tese 1'
+    assert invitations[0]['inviter'] is not None
+    assert invitations[0]['inviter']['email'] == user.email
+
+
+@pytest.mark.asyncio
+async def test_list_pending_for_me_excludes_expired_and_accepted(
+    client, session, user, other_user, token
+):
+    # user cria convite 1
+    res1 = client.post(
+        '/invitations',
+        headers={'Authorization': f'Bearer {token}'},
+        json={'email': other_user.email, 'topic': 'Convite Valido'},
+    )
+    assert res1.status_code == HTTPStatus.CREATED
+    valid_id = res1.json()['id']
+
+    # Login de other_user
+    res_login = client.post(
+        '/auth/token',
+        data={
+            'username': other_user.email,
+            'password': other_user.clean_password,
+        },
+    )
+    other_token = res_login.json()['access_token']
+
+    # Criar convite expirado diretamente no banco
+    expired_invitation = Invitation(
+        email=other_user.email,
+        inviter_id=user.id,
+        token='expired_token_123',
+        topic='Convite Expirado',
+        status='PENDING',
+        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+    )
+    session.add(expired_invitation)
+    await session.commit()
+
+    # other_user consulta seus convites pendentes
+    res_list = client.get(
+        '/invitations/pending-for-me',
+        headers={'Authorization': f'Bearer {other_token}'},
+    )
+    assert res_list.status_code == HTTPStatus.OK
+    invitations = res_list.json()['invitations']
+    # Apenas o convite válido deve vir
+    assert len(invitations) == 1
+    assert invitations[0]['id'] == valid_id
+    assert invitations[0]['topic'] == 'Convite Valido'

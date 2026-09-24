@@ -125,3 +125,25 @@ async def list_all(
 
     result = await session.scalars(stmt)
     return result.all()
+
+
+async def list_pending_by_email(
+    session: AsyncSession,
+    email: str,
+) -> Sequence[Invitation]:
+    stmt = (
+        select(Invitation)
+        .options(
+            selectinload(Invitation.inviter),
+            selectinload(Invitation.project),
+        )
+        .where(
+            Invitation.deleted_at.is_(None),
+            func.lower(Invitation.email) == func.lower(email),
+            Invitation.status == 'PENDING',
+            Invitation.expires_at > func.now(),
+        )
+        .order_by(Invitation.created_at.desc())
+    )
+    result = await session.scalars(stmt)
+    return result.all()

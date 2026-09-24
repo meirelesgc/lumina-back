@@ -399,3 +399,11 @@ async def list_invitations(
         filters.inviter_id = current_user.id
 
     return await invitation_repo.list_all(session, filters)
+
+
+async def list_pending_for_user(
+    session: AsyncSession, current_user: User
+) -> Sequence[Invitation]:
+    return await invitation_repo.list_pending_by_email(
+        session, current_user.email
+    )
