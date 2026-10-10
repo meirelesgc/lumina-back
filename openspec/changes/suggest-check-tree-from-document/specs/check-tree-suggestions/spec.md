@@ -90,6 +90,29 @@ Cada item sugerido SHALL conter: `kind` (`source`, `typification`, `taxonomy` ou
 - **WHEN** o gerador produz uma sugestão cuja evidência não pode ser localizada no texto extraído
 - **THEN** a sugestão não é persistida como item da sessão
 
+### Requirement: Content-only rules
+O sistema SHALL propor como itens da sessão apenas regras verificáveis pelo conteúdo textual do documento avaliado. Regras de formatação ou leiaute, que dependem da aparência ou da posição do texto na página (família ou tamanho de fonte, margens, espaçamento, recuo, alinhamento, posição, paginação), MUST NOT gerar itens `typification`, `taxonomy` ou `branch`. Essas regras SHALL ser listadas na sessão como regras excluídas (`excluded_rules`), cada uma com título, trecho literal e páginas, e MUST NOT ser enviadas a outros módulos nem alterar qualquer outra configuração do sistema.
+
+#### Scenario: Formatting rule is not proposed as item
+- **WHEN** o documento contém uma regra de formatação (ex.: "o texto deve ser digitado em fonte Arial tamanho 12")
+- **THEN** nenhum item da sessão representa essa regra
+
+#### Scenario: Formatting rules are reported in the session
+- **WHEN** uma sessão chega a `ready` e o gerador identificou regras de formatação com evidência localizável no texto
+- **THEN** a leitura da sessão retorna essas regras em `excluded_rules`, com `title`, `quote` e `pages` (base 1), sem duplicar trechos iguais
+
+#### Scenario: Unverifiable formatting rules are not reported
+- **WHEN** o trecho citado para uma regra de formatação não pode ser localizado no texto extraído
+- **THEN** a regra não aparece em `excluded_rules`
+
+#### Scenario: Content and formatting in the same passage
+- **WHEN** um mesmo trecho define uma exigência de conteúdo e uma de formatação (ex.: "o resumo deve ter até 500 palavras, em espaçamento simples")
+- **THEN** a exigência de conteúdo pode gerar um item e a de formatação aparece apenas em `excluded_rules`
+
+#### Scenario: Taxonomy without content rules
+- **WHEN** todas as regras extraídas para um agrupamento temático são de formatação
+- **THEN** a sessão não contém item `taxonomy` para esse agrupamento
+
 ### Requirement: Enrich mode proposals
 No modo `enrich`, o sistema SHALL propor apenas: novas taxonomias sob a tipificação alvo; novos ramos sob taxonomias existentes ou sob taxonomias sugeridas; e alterações (`operation=update`) de título e/ou descrição em taxonomias e ramos existentes da tipificação alvo. O sistema MUST NOT propor remoções nem itens fora da subárvore da tipificação alvo.
 

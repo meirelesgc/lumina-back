@@ -23,6 +23,7 @@ Ver `proposal.md` (Why) e `specs/check-tree-suggestions/spec.md` (requisitos). E
 - Reprocessar ou regenerar uma sessão existente; para tentar de novo, cria-se uma nova sessão.
 - Fila de jobs distribuída ou retomada após restart; o timeout cobre esse caso (ver Riscos).
 - Front-end (só a API é coberta aqui).
+- Avaliar ou encaminhar regras de formatação/leiaute. Elas são apenas classificadas e reportadas; não há integração com `lumina/features/template_check/` nem com qualquer outro módulo de conformidade.
 - Edição dos campos de `document_group_id`/`document_group_item_id` da tipificação; eles ficam nulos nas tipificações criadas por sugestão.
 
 ## Decisions
@@ -32,7 +33,8 @@ Ver `proposal.md` (Why) e `specs/check-tree-suggestions/spec.md` (requisitos). E
 **Sessão** (`TreeSuggestionSession`, com `AuditMixin`):
 - `id`, `mode` (`create` | `enrich`), `status` (`processing` | `ready` | `failed` | `completed`), `target_typification_id` (FK nullable);
 - `file_path`, `original_filename`, `page_count`;
-- `error_message`, `run_id` (UUID da telemetria), `generation_model`, `processing_started_at`, `processing_finished_at`.
+- `error_message`, `run_id` (UUID da telemetria), `generation_model`, `processing_started_at`, `processing_finished_at`;
+- `excluded_rules` (JSONB, lista de `{title, quote, pages}`): regras de formatação identificadas e verificadas, fora da árvore (ver §2.1).
 
 **Item** (`TreeSuggestionItem`):
 - `id`, `session_id` (FK), `kind` (`source` | `typification` | `taxonomy` | `branch`), `operation` (`create` | `update`), `status` (`pending` | `confirmed` | `discarded`);
@@ -57,6 +59,16 @@ Função pública `generate_tree_suggestions(pdf_path, mode, existing_tree, mode
 4. **Validação de evidência (determinística)**: normaliza (casefold, espaços e hifenização de quebra de linha) e procura o `quote` no texto completo. Aceita correspondência exata ou, quando não houver, a melhor janela com `rapidfuzz.fuzz.partial_ratio >= TREE_SUGGESTION_EVIDENCE_MIN_SCORE` (padrão 90). As páginas vêm do offset encontrado e do `page_map`. Candidatos sem evidência válida são descartados e contados na telemetria.
 5. **Consolidação (reduce)**: agrupa os candidatos por tipificação e por título de taxonomia normalizado. Depois, uma chamada ao LLM por tipificação recebe os candidatos agrupados **e a subárvore existente** e retorna a árvore final: taxonomias e ramos unificados, cada um marcado como `new`, `update_of:<id>` ou `similar_to:<id>`. As evidências são herdadas da união dos candidatos de origem. As referências a IDs devolvidas pelo LLM são validadas contra a subárvore carregada, e IDs inexistentes são ignorados.
 6. **Duplicatas (determinístico, complementar)**: para cada item `create`, compara o título normalizado com entidades ativas do mesmo escopo; no modo `create`, as tipificações são comparadas globalmente. Uma correspondência preenche `similar_to_id`, mesmo que o LLM não a tenha sinalizado.
+
+#### 2.1 Classificação conteúdo × formatação
+
+Na etapa 3, cada `RuleCandidate` traz `rule_type: 'content' | 'formatting'`. O prompt define formatação como tudo o que depende da aparência ou da posição do texto na página: família e tamanho de fonte, margens, espaçamento, recuo, alinhamento, posição, numeração de páginas e leiaute de tabelas e figuras. Conteúdo é o que se verifica lendo o texto: presença de seções e elementos, o que devem conter, limites de palavras ou de itens, citações exigidas. Quando um trecho mistura os dois, o modelo deve emitir uma regra de cada tipo.
+
+O filtro é determinístico. Depois da validação de evidência (etapa 4), as regras `formatting` são separadas: não entram na consolidação e viram `excluded_rules` (deduplicadas pelo trecho normalizado). Regras `formatting` sem evidência localizável são descartadas, como as de conteúdo. A telemetria registra as contagens de cada tipo.
+
+*Por que classificar em vez de pedir ao modelo que omita:* rotular é uma tarefa mais estável que omitir. O filtro no código é testável, e o revisor vê o que ficou de fora, em vez de uma omissão silenciosa.
+
+*Por que não encaminhar ao `template_check`:* esse módulo tem outro responsável e outro ciclo. Aqui as regras de formatação são apenas informativas.
 
 *Por que map-reduce em vez de uma única chamada:* normas universitárias passam de 50 páginas. Lotes por seção mantêm o contexto do modelo focado e permitem paralelismo, e a etapa de consolidação resolve a fragmentação entre lotes.
 
