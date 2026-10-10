@@ -12,8 +12,8 @@
 
 ## 3. Repositório e schemas
 
-- [ ] 3.1 Criar `lumina/repositories/tree_suggestion_repo.py` com: criar sessão, obter sessão com itens, listar com filtro e paginação, obter item com `FOR UPDATE`, coletar descendentes pendentes (CTE recursiva), contar pendentes e inserir itens em lote; verificar com testes de integração em `tests/integration/repositories/`
-- [ ] 3.2 Criar `lumina/schemas/tree_suggestion.py` (`TreeSuggestionSessionPublic`, `TreeSuggestionSessionDetail`, `TreeSuggestionSessionList`, `TreeSuggestionItemPublic`, `TreeSuggestionItemConfirm`, `TreeSuggestionFilter`, `Evidence`) e exportá-los em `lumina/schemas/__init__.py`; verificar serialização com teste unitário de `model_validate` a partir dos modelos ORM
+- [x] 3.1 Criar `lumina/repositories/tree_suggestion_repo.py` com: criar sessão, obter sessão com itens, listar com filtro e paginação, obter item com `FOR UPDATE`, coletar descendentes pendentes (CTE recursiva), contar pendentes e inserir itens em lote; verificar com testes de integração em `tests/integration/repositories/`
+- [x] 3.2 Criar `lumina/schemas/tree_suggestion.py` (`TreeSuggestionSessionPublic`, `TreeSuggestionSessionDetail`, `TreeSuggestionSessionList`, `TreeSuggestionItemPublic`, `TreeSuggestionItemConfirm`, `TreeSuggestionFilter`, `Evidence`) e exportá-los em `lumina/schemas/__init__.py`; verificar serialização com teste unitário de `model_validate` a partir dos modelos ORM
 
 ## 4. Motor de geração (IA)
 

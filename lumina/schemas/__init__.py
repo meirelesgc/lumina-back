@@ -136,6 +136,20 @@ from .taxonomy import (
     TaxonomySchema,
     TaxonomyUpdate,
 )
+from .tree_suggestion import (
+    Evidence,
+    TreeSuggestionFilter,
+    TreeSuggestionItemConfirm,
+    TreeSuggestionItemKind,
+    TreeSuggestionItemOperation,
+    TreeSuggestionItemPublic,
+    TreeSuggestionItemStatus,
+    TreeSuggestionMode,
+    TreeSuggestionSessionDetail,
+    TreeSuggestionSessionList,
+    TreeSuggestionSessionPublic,
+    TreeSuggestionStatus,
+)
 from .typification import (
     TypificationCreate,
     TypificationFilter,
@@ -294,4 +308,16 @@ __all__ = [
     'InvitationRegisterResponse',
     'InvitationRoleType',
     'InvitationStatus',
+    'Evidence',
+    'TreeSuggestionFilter',
+    'TreeSuggestionItemConfirm',
+    'TreeSuggestionItemKind',
+    'TreeSuggestionItemOperation',
+    'TreeSuggestionItemPublic',
+    'TreeSuggestionItemStatus',
+    'TreeSuggestionMode',
+    'TreeSuggestionSessionDetail',
+    'TreeSuggestionSessionList',
+    'TreeSuggestionSessionPublic',
+    'TreeSuggestionStatus',
 ]
