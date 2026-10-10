@@ -203,6 +203,18 @@ async def test_generation_success_creates_pending_items(ready_session):
 
 
 @pytest.mark.asyncio
+async def test_generation_reports_formatting_rules(ready_session):
+    titles = {i.proposed_title for i in ready_session.items}
+
+    assert [r.title for r in ready_session.excluded_rules] == [
+        'Fonte Arial 12',
+        'Margens de 3 cm',
+    ]
+    assert ready_session.excluded_rules[0].pages == [2]
+    assert not titles & {'Fonte Arial 12', 'Margens de 3 cm', 'Formatação'}
+
+
+@pytest.mark.asyncio
 async def test_generation_without_rules_keeps_only_source(
     session, user, fake_generation
 ):
@@ -214,6 +226,7 @@ async def test_generation_without_rules_keeps_only_source(
 
     assert detail.status == 'ready'
     assert [i.kind for i in detail.items] == ['source']
+    assert detail.excluded_rules == []
 
 
 @pytest.mark.asyncio

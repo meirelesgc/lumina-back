@@ -93,6 +93,11 @@ def test_full_review_flow(api, token, pdf_path):
         f'/tree-suggestion/{session_id}', headers=_headers(token)
     ).json()
     assert detail['status'] == 'ready'
+    assert detail['excluded_rules'][0] == {
+        'title': 'Fonte Arial 12',
+        'quote': 'O texto deve ser digitado em fonte Arial tamanho 12.',
+        'pages': [2],
+    }
     assert _item(detail, 'branch', INTRODUCAO)['evidence'][0]['pages'] == [4]
 
     listed = api.get(

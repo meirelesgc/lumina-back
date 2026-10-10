@@ -311,6 +311,7 @@ async def _generate_items(session: AsyncSession, suggestion_id: UUID) -> None:
         suggestion.status = TreeSuggestionStatus.READY.value
         suggestion.page_count = result.page_count
         suggestion.generation_model = result.model_name
+        suggestion.excluded_rules = result.excluded_rules
         suggestion.processing_finished_at = _utcnow()
         await session.commit()
         await run_logger.complete_run(
