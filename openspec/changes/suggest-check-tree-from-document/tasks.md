@@ -40,5 +40,5 @@
 
 ## 7. Documentação e verificação final
 
-- [ ] 7.1 Documentar o fluxo de sugestões em `docs/base-de-conhecimento.md` (seção da árvore de verificação) e verificar com `poetry run task docs-build`
-- [ ] 7.2 Executar `poetry run task test` e `poetry run ruff check` e `poetry run ruff format --check` sem falhas, e `openspec validate suggest-check-tree-from-document --strict` sem erros
+- [x] 7.1 Documentar o fluxo de sugestões em `docs/base-de-conhecimento.md` (seção da árvore de verificação) e verificar com `poetry run task docs-build`
+- [x] 7.2 Executar `poetry run task test` sem falhas, `ruff check` e `ruff format --check` sem erros novos nos arquivos alterados (o projeto já tem pendências de lint anteriores a esta mudança), e `openspec validate suggest-check-tree-from-document --strict` sem erros

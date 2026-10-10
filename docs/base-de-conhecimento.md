@@ -45,6 +45,25 @@ Representa o embasamento legal ou regulamentar que fundamenta a existência daqu
 * Instruções Normativas da Secretaria de Gestão (SEGES/MGI);
 * Normas Técnicas da ABNT (NBR 6023, NBR 14724).
 
+### Sugestões a partir de documento normativo (`/tree-suggestion`)
+Além do cadastro manual, a árvore pode ser montada ou enriquecida a partir de um PDF normativo (por exemplo, o regulamento de trabalhos acadêmicos de uma universidade). O fluxo é um **dry-run**: o motor gera uma *sessão de sugestão* e nada entra na árvore real sem confirmação explícita, item a item.
+
+* **Modos**: *criar do zero* (sem `typification_id`), que pode propor várias tipificações quando o documento regula mais de um tipo documental, e *enriquecer* (com `typification_id`), que propõe novas taxonomias e ramos, sugere alterações de título e descrição em itens existentes e nunca propõe remoções.
+* **Fonte**: o próprio documento é sugerido como `Source`. Se confirmado, recebe o arquivo e é vinculado às tipificações e taxonomias aplicadas pela sessão, antes ou depois dele.
+* **Evidência**: cada sugestão traz o trecho literal e as páginas que a fundamentam. Trechos que não são encontrados no texto extraído são descartados antes da revisão.
+* **Duplicatas**: itens com título equivalente a uma entidade ativa do mesmo escopo são sinalizados (`similar_to_id`), sem bloquear a confirmação.
+* **Revisão**: confirmar aplica o item imediatamente, com as mesmas regras do CRUD (unicidade, auditoria e, para ramos, análise de seção e expansão de consultas), e aceita edição de título e descrição. O filho só pode ser confirmado depois do pai. Descartar um item descarta seus filhos pendentes. Alterações cuja entidade mudou desde a sugestão são recusadas com `409`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> processing: POST /tree-suggestion (PDF)
+    processing --> ready: geração concluída
+    processing --> failed: erro ou timeout
+    ready --> completed: nenhum item pendente
+```
+
+A geração roda em background: extração do PDF, identificação do escopo, extração de regras por lotes de seções, validação das evidências e consolidação contra a árvore existente. A demo em `/demos/tree_suggestions/` mostra o fluxo de revisão; o modo `#exemplo` funciona sem a API.
+
 ---
 
 ## 2. Snapshots Imutáveis de Release (`Applied*`)
