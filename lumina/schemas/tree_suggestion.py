@@ -43,6 +43,12 @@ class Evidence(BaseModel):
     pages: list[int] = Field(default_factory=list)
 
 
+class ExcludedRule(BaseModel):
+    title: str
+    quote: str
+    pages: list[int] = Field(default_factory=list)
+
+
 class TreeSuggestionFilter(FilterPage):
     status: Optional[TreeSuggestionStatus] = None
 
@@ -95,6 +101,7 @@ class TreeSuggestionSessionPublic(BaseModel):
 
 class TreeSuggestionSessionDetail(TreeSuggestionSessionPublic):
     items: list[TreeSuggestionItemPublic] = Field(default_factory=list)
+    excluded_rules: list[ExcludedRule] = Field(default_factory=list)
 
 
 class TreeSuggestionSessionList(BaseModel):

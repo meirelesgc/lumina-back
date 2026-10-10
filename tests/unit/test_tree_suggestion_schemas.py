@@ -14,6 +14,13 @@ def test_session_detail_from_orm():
         mode='create',
         file_path='/uploads/norma.pdf',
         original_filename='norma.pdf',
+        excluded_rules=[
+            {
+                'title': 'Fonte Arial 12',
+                'quote': 'O texto deve ser digitado em fonte Arial',
+                'pages': [2],
+            }
+        ],
     )
     suggestion_session.created_at = datetime.now()
     item = TreeSuggestionItem(
@@ -33,3 +40,5 @@ def test_session_detail_from_orm():
     assert detail.items[0].kind == TreeSuggestionItemKind.BRANCH
     assert detail.items[0].evidence[0].pages == [3]
     assert detail.items[0].parent_entity_title is None
+    assert detail.excluded_rules[0].title == 'Fonte Arial 12'
+    assert detail.excluded_rules[0].pages == [2]

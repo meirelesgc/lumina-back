@@ -1672,6 +1672,9 @@ class TreeSuggestionSession(AuditMixin):
     processing_finished_at: Mapped[Optional[datetime]] = mapped_column(
         nullable=True, default=None
     )
+    excluded_rules: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default_factory=list
+    )
 
     items: Mapped[List['TreeSuggestionItem']] = relationship(
         back_populates='session',

@@ -138,6 +138,7 @@ from .taxonomy import (
 )
 from .tree_suggestion import (
     Evidence,
+    ExcludedRule,
     TreeSuggestionFilter,
     TreeSuggestionItemConfirm,
     TreeSuggestionItemKind,
@@ -309,6 +310,7 @@ __all__ = [
     'InvitationRoleType',
     'InvitationStatus',
     'Evidence',
+    'ExcludedRule',
     'TreeSuggestionFilter',
     'TreeSuggestionItemConfirm',
     'TreeSuggestionItemKind',
