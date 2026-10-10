@@ -63,6 +63,9 @@
     .warn { font-size: 12px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 6px 8px; border-radius: 4px; margin-top: 8px; }
     .applied { font-size: 12px; color: #166534; margin-top: 6px; }
     details { margin-top: 8px; font-size: 13px; }
+    .excluded { background: #f8fafc; border-style: dashed; }
+    .excluded-rule { font-size: 13px; margin-bottom: 8px; }
+    .excluded blockquote { border-left-color: #94a3b8; }
     summary { cursor: pointer; color: #0056b3; font-weight: 600; font-size: 12px; }
     blockquote { margin: 6px 0; padding: 6px 10px; background: #f8fafc; border-left: 3px solid #f59e0b; color: #334155; }
     blockquote small { display: block; color: #64748b; margin-top: 2px; }
@@ -320,6 +323,16 @@
       if (session.status !== 'processing' && !items.length && session.status !== 'failed') {
         html += '<div class="box">Nenhuma sugestão gerada.</div>';
       }
+
+      const excluded = session.excluded_rules || [];
+      if (excluded.length) {
+        html += `<div class="group-title">Fora do escopo da árvore — formatação (${excluded.length})</div>
+          <div class="box excluded">
+            <div class="hint" style="margin:0 0 8px">Regras que dependem da aparência ou da posição do texto. Não viram itens da árvore e não são enviadas a outros módulos; ficam aqui apenas para conferência.</div>
+            ${excluded.map((r) => `<div class="excluded-rule"><b>${esc(r.title)}</b>
+              <blockquote>“${esc(r.quote)}”<small>p. ${r.pages.join(', ')}</small></blockquote></div>`).join('')}
+          </div>`;
+      }
       $('main').innerHTML = html;
     }
 
@@ -386,15 +399,20 @@
       const items = [
         { id: 's', kind: 'source', operation: 'create', proposed_title: 'Regulamento de Trabalhos Acadêmicos', proposed_description: 'Normas para elaboração de TCCs e dissertações.', evidence: [] },
         { id: 't1', kind: 'typification', operation: 'create', proposed_title: 'Trabalho de Conclusão de Curso', evidence: ev('Este regulamento estabelece as normas para elaboração de Trabalhos de Conclusão de Curso', [1]), rationale: 'Tipo documental regulado pelo documento.', similar_to_id: 'x', similarity_note: 'Título equivalente a um item já existente na árvore.' },
-        { id: 'x1', kind: 'taxonomy', operation: 'create', parent_item_id: 't1', proposed_title: 'Formatação', proposed_description: 'Regras de formatação do texto.', evidence: ev('O texto deve ser digitado em fonte Arial tamanho 12.', [2]) },
-        { id: 'b1', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Fonte Arial 12', proposed_description: 'Verificar se o corpo do texto usa Arial 12.', evidence: ev('O texto deve ser digitado em fonte Arial tamanho 12.', [2]), rationale: 'Obrigação explícita de fonte.' },
-        { id: 'b2', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Margens superior e esquerda de 3 cm', proposed_description: 'Verificar as margens.', evidence: ev('As margens superior e esquerda devem ter 3 cm.', [2]) },
+        { id: 'x1', kind: 'taxonomy', operation: 'create', parent_item_id: 't1', proposed_title: 'Estrutura do trabalho', proposed_description: 'Seções obrigatórias e o que devem conter.', evidence: ev('A introdução deve apresentar o objetivo geral do trabalho.', [4]) },
+        { id: 'b1', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Introdução com objetivo geral', proposed_description: 'Verificar se a introdução declara o objetivo geral do trabalho.', evidence: ev('A introdução deve apresentar o objetivo geral do trabalho.', [4]), rationale: 'Obrigação explícita sobre o conteúdo da introdução.' },
+        { id: 'b2', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Metodologia com procedimentos de coleta', proposed_description: 'Verificar se a metodologia descreve como os dados foram coletados.', evidence: ev('A metodologia deve descrever os procedimentos de coleta de dados.', [4]) },
         { id: 'x2', kind: 'taxonomy', operation: 'create', parent_item_id: 't1', proposed_title: 'Elementos pré-textuais', proposed_description: 'Elementos que antecedem o texto.', evidence: ev('O resumo deve conter no máximo 500 palavras.', [3]) },
         { id: 'b3', kind: 'branch', operation: 'create', parent_item_id: 'x2', proposed_title: 'Resumo com até 500 palavras', proposed_description: 'Contar as palavras do resumo.', evidence: ev('O resumo deve conter no máximo 500 palavras.', [3]) },
-        { id: 'b4', kind: 'branch', operation: 'create', parent_entity_id: 'e1', parent_entity_title: 'Citações e referências', proposed_title: 'Citações diretas longas recuadas 4 cm', proposed_description: 'Verificar o recuo das citações com mais de três linhas.', evidence: ev('As citações diretas com mais de três linhas devem ter recuo de 4 cm.', [4]) },
-        { id: 'u1', kind: 'branch', operation: 'update', target_entity_id: 'e2', target_snapshot: { title: 'Fonte', description: 'Verificar a fonte.' }, proposed_title: 'Fonte Arial ou Times 12', proposed_description: 'Aceitar Arial ou Times New Roman tamanho 12.', evidence: ev('Admite-se também a fonte Times New Roman.', [2]), rationale: 'O documento amplia a regra existente.' },
+        { id: 'b4', kind: 'branch', operation: 'create', parent_entity_id: 'e1', parent_entity_title: 'Citações e referências', proposed_title: 'Citação direta com autor, ano e página', proposed_description: 'Verificar se toda citação direta informa autor, ano e página.', evidence: ev('Toda citação direta deve indicar autor, ano e página da fonte.', [5]) },
+        { id: 'u1', kind: 'branch', operation: 'update', target_entity_id: 'e2', target_snapshot: { title: 'Resumo', description: 'Verificar a presença do resumo.' }, proposed_title: 'Resumo com palavras-chave', proposed_description: 'Verificar se o resumo é seguido de três a cinco palavras-chave.', evidence: ev('O resumo deve ser seguido de três a cinco palavras-chave.', [3]), rationale: 'O documento detalha a regra existente.' },
       ].map((i, idx) => ({ status: 'pending', position: idx, parent_item_id: null, parent_entity_id: null, ...i }));
-      render({ id: 'exemplo', mode: 'create', status: 'ready', original_filename: 'regulamento-exemplo.pdf', page_count: 4, generation_model: 'exemplo local', items });
+      const excluded_rules = [
+        { title: 'Fonte Arial 12', quote: 'O texto deve ser digitado em fonte Arial tamanho 12.', pages: [2] },
+        { title: 'Margens superior e esquerda de 3 cm', quote: 'As margens superior e esquerda devem ter 3 cm.', pages: [2] },
+        { title: 'Citações longas com recuo de 4 cm', quote: 'As citações diretas com mais de três linhas devem ter recuo de 4 cm.', pages: [5] },
+      ];
+      render({ id: 'exemplo', mode: 'create', status: 'ready', original_filename: 'regulamento-exemplo.pdf', page_count: 5, generation_model: 'exemplo local', items, excluded_rules });
       toast('Modo exemplo: as ações não chamam a API.');
     }
 
