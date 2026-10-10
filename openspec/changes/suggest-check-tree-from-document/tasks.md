@@ -1,9 +1,9 @@
 ## 1. Modelo de dados e configuração
 
-- [ ] 1.1 Adicionar em `lumina/core/settings.py` as configurações `TREE_SUGGESTION_*` (tamanho máximo, páginas máximas, timeout, orçamento de lote, concorrência, score mínimo de evidência) e verificar a leitura com `poetry run python -c "from lumina.core.settings import Settings; print(Settings().TREE_SUGGESTION_MAX_PAGES)"`
-- [ ] 1.2 Criar os enums (`TreeSuggestionMode`, `TreeSuggestionStatus`, `TreeSuggestionItemKind`, `TreeSuggestionItemOperation`, `TreeSuggestionItemStatus`) e os modelos `TreeSuggestionSession` e `TreeSuggestionItem` em `lumina/models.py`, conforme o design §1; verificar que a importação de `lumina.models` não falha
-- [ ] 1.3 Gerar a migração Alembic das duas tabelas com os índices do Migration Plan e verificar com `alembic upgrade head` seguido de `alembic downgrade -1` e `alembic upgrade head`
-- [ ] 1.4 Adicionar a dependência `rapidfuzz` via Poetry e verificar `poetry run python -c "import rapidfuzz"`
+- [x] 1.1 Adicionar em `lumina/core/settings.py` as configurações `TREE_SUGGESTION_*` (tamanho máximo, páginas máximas, timeout, orçamento de lote, concorrência, score mínimo de evidência) e verificar a leitura com `poetry run python -c "from lumina.core.settings import Settings; print(Settings().TREE_SUGGESTION_MAX_PAGES)"`
+- [x] 1.2 Criar os enums (`TreeSuggestionMode`, `TreeSuggestionStatus`, `TreeSuggestionItemKind`, `TreeSuggestionItemOperation`, `TreeSuggestionItemStatus`) e os modelos `TreeSuggestionSession` e `TreeSuggestionItem` em `lumina/models.py`, conforme o design §1; verificar que a importação de `lumina.models` não falha
+- [x] 1.3 Gerar a migração Alembic das duas tabelas com os índices do Migration Plan e verificar com `alembic upgrade head` seguido de `alembic downgrade -1` e `alembic upgrade head`
+- [x] 1.4 Adicionar a dependência `rapidfuzz` via Poetry e verificar `poetry run python -c "import rapidfuzz"`
 
 ## 2. Services existentes: modo sem commit
 
