@@ -105,6 +105,10 @@ def isolate_background_task_db_writes(monkeypatch):
         'lumina.services.ai.query_expansion_service.async_session',
         _null_async_session,
     )
+    monkeypatch.setattr(
+        'lumina.services.tree_suggestion_service.async_session',
+        _null_async_session,
+    )
 
 
 @pytest.fixture

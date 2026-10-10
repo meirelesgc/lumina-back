@@ -25,12 +25,12 @@
 
 ## 5. Service de sessões de sugestão
 
-- [ ] 5.1 Implementar em `lumina/services/tree_suggestion_service.py` a criação da sessão (validação de content-type e magic bytes, tamanho, páginas, tipificação alvo ativa), o salvamento do arquivo via `Storage` e o agendamento do background; verificar com testes os erros 415, 413 e 404 e o caso de sucesso em `processing`
-- [ ] 5.2 Implementar `run_tree_suggestion_background` (sessão de banco própria, carga da subárvore, persistência transacional dos itens com `position`, `target_snapshot` e exatamente um item `source`, transição para `ready` ou `failed` com mensagem sanitizada); verificar com testes de sucesso, de geração sem regras (apenas o Source) e de falha
-- [ ] 5.3 Implementar leitura e listagem com timeout preguiçoso de `processing`; verificar com teste que uma sessão antiga em `processing` é retornada como `failed`
-- [ ] 5.4 Implementar `confirm_item` conforme o design §4 (lock, checagem de status da sessão, resolução de pai, checagem de snapshot em `update`, aplicação via services com `commit=False`, vínculo com o Source, `completed` automático, commit único e disparo do enriquecimento de Branch); verificar com testes de: criação com edição, pai pendente (409), filho de pai confirmado, update válido, update obsoleto (409), item não pendente (409), sessão não pronta (409) e colisão de título (409, item continua `pending`)
-- [ ] 5.5 Implementar a confirmação do item `source` (cria o Source com o arquivo da sessão e vincula às tipificações e taxonomias já aplicadas e à tipificação alvo no modo `enrich`) e o vínculo das confirmações posteriores; verificar com testes as duas ordens de confirmação e o caso de Source descartado
-- [ ] 5.6 Implementar `discard_item` (cascata nos descendentes pendentes) e `discard_session`; verificar com testes a cascata, a preservação dos itens confirmados e a transição para `completed`
+- [x] 5.1 Implementar em `lumina/services/tree_suggestion_service.py` a criação da sessão (validação de content-type e magic bytes, tamanho, páginas, tipificação alvo ativa), o salvamento do arquivo via `Storage` e o agendamento do background; verificar com testes os erros 415, 413 e 404 e o caso de sucesso em `processing`
+- [x] 5.2 Implementar `run_tree_suggestion_background` (sessão de banco própria, carga da subárvore, persistência transacional dos itens com `position`, `target_snapshot` e exatamente um item `source`, transição para `ready` ou `failed` com mensagem sanitizada); verificar com testes de sucesso, de geração sem regras (apenas o Source) e de falha
+- [x] 5.3 Implementar leitura e listagem com timeout preguiçoso de `processing`; verificar com teste que uma sessão antiga em `processing` é retornada como `failed`
+- [x] 5.4 Implementar `confirm_item` conforme o design §4 (lock, checagem de status da sessão, resolução de pai, checagem de snapshot em `update`, aplicação via services com `commit=False`, vínculo com o Source, `completed` automático, commit único e disparo do enriquecimento de Branch); verificar com testes de: criação com edição, pai pendente (409), filho de pai confirmado, update válido, update obsoleto (409), item não pendente (409), sessão não pronta (409) e colisão de título (409, item continua `pending`)
+- [x] 5.5 Implementar a confirmação do item `source` (cria o Source com o arquivo da sessão e vincula às tipificações e taxonomias já aplicadas e à tipificação alvo no modo `enrich`) e o vínculo das confirmações posteriores; verificar com testes as duas ordens de confirmação e o caso de Source descartado
+- [x] 5.6 Implementar `discard_item` (cascata nos descendentes pendentes) e `discard_session`; verificar com testes a cascata, a preservação dos itens confirmados e a transição para `completed`
 
 ## 6. API
 
