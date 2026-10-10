@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina - Sugestões da Árvore</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; margin: 0; background: #f1f5f9; color: #1e293b; }
+    #sidebar { width: 360px; min-width: 360px; padding: 20px; background: #f8f9fa; height: 100vh; overflow-y: auto; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 14px; }
+    #main { flex: 1; height: 100vh; overflow-y: auto; padding: 24px 32px; }
+    .box { background: white; padding: 14px; border-radius: 8px; border: 1px solid #ddd; }
+    .box h3 { margin: 0 0 10px; font-size: 15px; }
+    label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="password"], select, textarea { width: 100%; padding: 7px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; font: inherit; font-size: 13px; }
+    textarea { min-height: 60px; resize: vertical; }
+    button { padding: 7px 12px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; }
+    button:hover { background: #004494; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    button.block { width: 100%; }
+    button.ghost { background: transparent; color: #0056b3; border: 1px solid #0056b3; }
+    button.ghost:hover { background: #e8f0fb; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #b02a37; }
+    .hint { font-size: 12px; color: #64748b; margin-top: 6px; }
+
+    .session-row { padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 6px; background: white; }
+    .session-row:hover, .session-row.active { border-color: #0056b3; background: #eef4fc; }
+    .session-row small { color: #64748b; display: block; }
+
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+    .st-processing { background: #fef3c7; color: #92400e; }
+    .st-ready { background: #dbeafe; color: #1e40af; }
+    .st-failed { background: #fee2e2; color: #991b1b; }
+    .st-completed { background: #dcfce7; color: #166534; }
+    .st-pending { background: #f1f5f9; color: #475569; }
+    .st-confirmed { background: #dcfce7; color: #166534; }
+    .st-discarded { background: #fee2e2; color: #991b1b; }
+    .k-source { background: #ede9fe; color: #5b21b6; }
+    .k-typification { background: #e0f2fe; color: #075985; }
+    .k-taxonomy { background: #fef9c3; color: #854d0e; }
+    .k-branch { background: #f1f5f9; color: #334155; }
+    .op-update { background: #ffedd5; color: #9a3412; }
+
+    .session-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+    .session-header h2 { margin: 0 0 6px; font-size: 20px; }
+    .counters { display: flex; gap: 8px; margin-top: 8px; }
+    .error-box { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+
+    .group-title { font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; margin: 18px 0 8px; }
+    .node { background: white; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+    .node.confirmed { border-left-color: #28a745; }
+    .node.discarded { border-left-color: #dc3545; opacity: .55; }
+    .children { margin-left: 26px; border-left: 2px dashed #e2e8f0; padding-left: 12px; }
+    .node-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .node-title { font-weight: 600; margin: 6px 0 2px; }
+    .node-desc { font-size: 13px; color: #475569; line-height: 1.45; }
+    .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .actions button { padding: 5px 10px; font-size: 12px; }
+    .diff { font-size: 13px; margin-top: 6px; display: grid; grid-template-columns: 70px 1fr; gap: 2px 8px; }
+    .diff .old { color: #991b1b; text-decoration: line-through; }
+    .diff .new { color: #166534; }
+    .warn { font-size: 12px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 6px 8px; border-radius: 4px; margin-top: 8px; }
+    .applied { font-size: 12px; color: #166534; margin-top: 6px; }
+    details { margin-top: 8px; font-size: 13px; }
+    summary { cursor: pointer; color: #0056b3; font-weight: 600; font-size: 12px; }
+    blockquote { margin: 6px 0; padding: 6px 10px; background: #f8fafc; border-left: 3px solid #f59e0b; color: #334155; }
+    blockquote small { display: block; color: #64748b; margin-top: 2px; }
+    .edit-form { margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; }
+    .placeholder { color: #64748b; margin-top: 20vh; text-align: center; }
+    #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; max-width: 420px; }
+    #toast.error { background: #991b1b; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="box">
+      <h3>Autenticação</h3>
+      <label>E-mail</label>
+      <input type="text" id="email" placeholder="usuario@exemplo.com">
+      <label>Senha</label>
+      <input type="password" id="password">
+      <button class="block" onclick="login()">Entrar (POST /auth/token)</button>
+      <label style="margin-top:10px">Token (Bearer)</label>
+      <input type="text" id="auth-token" placeholder="Preenchido após o login, ou cole um token">
+    </div>
+
+    <div class="box">
+      <h3>Nova sessão de sugestão</h3>
+      <label>Documento normativo (PDF)</label>
+      <input type="file" id="file" accept="application/pdf" style="margin-bottom:8px">
+      <label>Modo</label>
+      <select id="typification">
+        <option value="">Criar do zero (novas tipificações)</option>
+      </select>
+      <button class="block" onclick="createSession()">Enviar (POST /tree-suggestion)</button>
+      <div class="hint">Enriquecer: escolha uma tipificação existente. A lista carrega após autenticar.</div>
+    </div>
+
+    <div class="box">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        Sessões <button class="ghost" onclick="loadSessions()">Atualizar</button>
+      </h3>
+      <div id="sessions"><div class="hint">Autentique para listar.</div></div>
+    </div>
+
+    <button class="ghost block" onclick="loadExample()">Ver exemplo sem API</button>
+  </div>
+
+  <div id="main">
+    <div class="placeholder">
+      <h2>Revisão de sugestões da árvore de verificação</h2>
+      <p>Envie um PDF normativo ou abra uma sessão existente.<br>Nada entra na árvore real até que cada item seja confirmado.</p>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const KIND_LABEL = { source: 'Fonte', typification: 'Tipificação', taxonomy: 'Taxonomia', branch: 'Ramo' };
+    const STATUS_LABEL = {
+      processing: 'processando', ready: 'em revisão', failed: 'falhou', completed: 'concluída',
+      pending: 'pendente', confirmed: 'confirmado', discarded: 'descartado',
+    };
+    let current = null;      // sessão aberta (detail)
+    let exampleMode = false; // true = dados locais, sem API
+    let pollTimer = null;
+    let editing = null;      // id do item em edição
+
+    // ---------- utilidades ----------
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const badge = (cls, text) => `<span class="badge ${cls}">${esc(text)}</span>`;
+
+    function toast(message, isError = false) {
+      const el = $('toast');
+      el.textContent = message;
+      el.className = isError ? 'error' : '';
+      el.style.display = 'block';
+      clearTimeout(el._t);
+      el._t = setTimeout(() => (el.style.display = 'none'), 4000);
+    }
+
+    async function api(path, options = {}) {
+      const headers = options.headers || {};
+      const token = $('auth-token').value.trim();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(path, { ...options, headers });
+      const body = res.status === 204 ? null : await res.json().catch(() => null);
+      if (!res.ok) {
+        const detail = body && body.detail ? (typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)) : res.statusText;
+        throw new Error(`${res.status} — ${detail}`);
+      }
+      return body;
+    }
+
+    // ---------- autenticação ----------
+    async function login() {
+      try {
+        const form = new URLSearchParams({ username: $('email').value.trim(), password: $('password').value });
+        const data = await api('/auth/token', { method: 'POST', body: form });
+        $('auth-token').value = data.access_token;
+        toast('Autenticado.');
+        await Promise.all([loadTypifications(), loadSessions()]);
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function loadTypifications() {
+      try {
+        const data = await api('/typification?limit=500');
+        const select = $('typification');
+        select.innerHTML = '<option value="">Criar do zero (novas tipificações)</option>' +
+          data.typifications.map((t) => `<option value="${t.id}">Enriquecer: ${esc(t.name)}</option>`).join('');
+      } catch (err) { toast(err.message, true); }
+    }
+
+    // ---------- sessões ----------
+    async function loadSessions() {
+      try {
+        const data = await api('/tree-suggestion?limit=50');
+        const list = $('sessions');
+        if (!data.sessions.length) { list.innerHTML = '<div class="hint">Nenhuma sessão ainda.</div>'; return; }
+        list.innerHTML = data.sessions.map((s) => `
+          <div class="session-row ${current && current.id === s.id ? 'active' : ''}" onclick="openSession('${s.id}')">
+            ${badge('st-' + s.status, STATUS_LABEL[s.status])} ${esc(s.original_filename)}
+            <small>${s.mode === 'enrich' ? 'Enriquecer' : 'Criar do zero'} · ${new Date(s.created_at).toLocaleString('pt-BR')}</small>
+          </div>`).join('');
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function createSession() {
+      const file = $('file').files[0];
+      if (!file) { toast('Selecione um PDF.', true); return; }
+      const form = new FormData();
+      form.append('file', file);
+      if ($('typification').value) form.append('typification_id', $('typification').value);
+      try {
+        const data = await api('/tree-suggestion', { method: 'POST', body: form });
+        exampleMode = false;
+        toast('Sessão criada. Processando o documento...');
+        render(data);
+        await loadSessions();
+        schedulePoll(data);
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function openSession(id) {
+      try {
+        exampleMode = false;
+        editing = null;
+        const data = await api(`/tree-suggestion/${id}`);
+        render(data);
+        schedulePoll(data);
+        loadSessions();
+      } catch (err) { toast(err.message, true); }
+    }
+
+    function schedulePoll(session) {
+      clearTimeout(pollTimer);
+      if (session.status === 'processing' && !exampleMode) {
+        pollTimer = setTimeout(async () => {
+          const data = await api(`/tree-suggestion/${session.id}`).catch(() => null);
+          if (!data) return;
+          render(data);
+          if (data.status !== 'processing') loadSessions();
+          schedulePoll(data);
+        }, 3000);
+      }
+    }
+
+    // ---------- ações de revisão ----------
+    async function confirmItem(itemId, withEdits) {
+      let payload = null;
+      if (withEdits) {
+        payload = { title: $(`edit-title-${itemId}`).value.trim(), description: $(`edit-desc-${itemId}`).value };
+      }
+      if (exampleMode) return exampleConfirm(itemId, payload);
+      try {
+        await api(`/tree-suggestion/${current.id}/items/${itemId}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload ? JSON.stringify(payload) : undefined,
+        });
+        editing = null;
+        toast('Item aplicado na árvore.');
+        await openSession(current.id);
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function discardItem(itemId) {
+      if (exampleMode) return exampleDiscard([itemId]);
+      try {
+        render(await api(`/tree-suggestion/${current.id}/items/${itemId}/discard`, { method: 'POST' }));
+        toast('Item descartado (e seus filhos pendentes).');
+        loadSessions();
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function discardSession() {
+      if (!confirm('Descartar todos os itens pendentes desta sessão?')) return;
+      if (exampleMode) return exampleDiscard(current.items.filter((i) => i.status === 'pending').map((i) => i.id));
+      try {
+        render(await api(`/tree-suggestion/${current.id}/discard`, { method: 'POST' }));
+        loadSessions();
+      } catch (err) { toast(err.message, true); }
+    }
+
+    function toggleEdit(itemId) {
+      editing = editing === itemId ? null : itemId;
+      render(current);
+    }
+
+    // ---------- renderização ----------
+    function render(session) {
+      current = session;
+      const items = session.items || [];
+      const count = (st) => items.filter((i) => i.status === st).length;
+      const byParent = {};
+      items.forEach((i) => { (byParent[i.parent_item_id || 'root'] ||= []).push(i); });
+
+      let html = `
+        <div class="session-header">
+          <div>
+            <h2>${esc(session.original_filename)}</h2>
+            ${badge('st-' + session.status, STATUS_LABEL[session.status])}
+            <span class="hint">${session.mode === 'enrich'
+              ? `Enriquecendo <b>${esc(session.target_typification_name || session.target_typification_id)}</b>`
+              : 'Criando do zero'} · ${session.page_count ?? '?'} páginas${session.generation_model ? ' · ' + esc(session.generation_model) : ''}</span>
+            <div class="counters">
+              ${badge('st-pending', count('pending') + ' pendentes')}
+              ${badge('st-confirmed', count('confirmed') + ' confirmados')}
+              ${badge('st-discarded', count('discarded') + ' descartados')}
+            </div>
+          </div>
+          ${session.status === 'ready' ? '<button class="danger" onclick="discardSession()">Descartar pendentes</button>' : ''}
+        </div>`;
+
+      if (session.status === 'processing') {
+        html += '<div class="box">⏳ Processando o documento: extração, identificação de regras e validação de evidências. Esta página atualiza sozinha.</div>';
+      }
+      if (session.status === 'failed') {
+        html += `<div class="error-box"><b>Falha na geração:</b> ${esc(session.error_message)}</div>`;
+      }
+
+      const roots = byParent.root || [];
+      const sources = roots.filter((i) => i.kind === 'source');
+      const typifications = roots.filter((i) => i.kind === 'typification');
+      const updates = roots.filter((i) => i.operation === 'update');
+      const underExisting = roots.filter((i) => i.operation === 'create' && i.parent_entity_id);
+
+      if (sources.length) html += '<div class="group-title">Fonte normativa</div>' + sources.map((i) => nodeHtml(i, byParent, items)).join('');
+      if (typifications.length) html += '<div class="group-title">Novas tipificações</div>' + typifications.map((i) => nodeHtml(i, byParent, items)).join('');
+
+      const groups = {};
+      underExisting.forEach((i) => { (groups[i.parent_entity_title || i.parent_entity_id] ||= []).push(i); });
+      Object.entries(groups).forEach(([parent, list]) => {
+        html += `<div class="group-title">Novos itens em: ${esc(parent)} (existente)</div>` + list.map((i) => nodeHtml(i, byParent, items)).join('');
+      });
+      if (updates.length) html += '<div class="group-title">Alterações em itens existentes</div>' + updates.map((i) => nodeHtml(i, byParent, items)).join('');
+
+      if (session.status !== 'processing' && !items.length && session.status !== 'failed') {
+        html += '<div class="box">Nenhuma sugestão gerada.</div>';
+      }
+      $('main').innerHTML = html;
+    }
+
+    function nodeHtml(item, byParent, items) {
+      const parent = item.parent_item_id ? items.find((p) => p.id === item.parent_item_id) : null;
+      const blocked = parent && parent.status !== 'confirmed';
+      const pending = item.status === 'pending' && current.status === 'ready';
+      const title = item.final_title || item.proposed_title;
+      const desc = item.final_description ?? item.proposed_description;
+
+      let body = `<div class="node-title">${esc(title)}</div>`;
+      if (item.operation === 'update' && item.target_snapshot) {
+        body += `<div class="diff">
+          <span>Título</span><span><span class="old">${esc(item.target_snapshot.title)}</span> → <span class="new">${esc(item.proposed_title)}</span></span>
+          <span>Descrição</span><span><span class="old">${esc(item.target_snapshot.description)}</span> → <span class="new">${esc(item.proposed_description)}</span></span>
+        </div>`;
+      } else if (desc) {
+        body += `<div class="node-desc">${esc(desc)}</div>`;
+      }
+      if (item.similar_to_id) body += `<div class="warn">⚠ Possível duplicata: ${esc(item.similarity_note)}</div>`;
+      if (item.evidence && item.evidence.length) {
+        body += `<details><summary>Evidências (${item.evidence.length})${item.rationale ? ' e justificativa' : ''}</summary>
+          ${item.evidence.map((e) => `<blockquote>“${esc(e.quote)}”<small>p. ${e.pages.join(', ')}</small></blockquote>`).join('')}
+          ${item.rationale ? `<div class="hint">${esc(item.rationale)}</div>` : ''}</details>`;
+      }
+      if (item.status === 'confirmed') body += `<div class="applied">✓ Aplicado na árvore (${esc(item.applied_entity_id)})</div>`;
+      if (editing === item.id) {
+        body += `<div class="edit-form">
+          <label>${item.kind === 'source' || item.kind === 'typification' ? 'Nome' : 'Título'}</label>
+          <input type="text" id="edit-title-${item.id}" value="${esc(item.proposed_title)}">
+          ${item.kind === 'typification' ? `<input type="hidden" id="edit-desc-${item.id}" value="">` : `<label>Descrição</label><textarea id="edit-desc-${item.id}">${esc(item.proposed_description)}</textarea>`}
+          <button onclick="confirmItem('${item.id}', true)">Confirmar com edição</button>
+          <button class="ghost" onclick="toggleEdit('${item.id}')">Cancelar</button>
+        </div>`;
+      }
+
+      const actions = pending ? `<div class="actions">
+          <button onclick="confirmItem('${item.id}', false)" ${blocked ? 'disabled title="Confirme o item pai primeiro"' : ''}>Confirmar</button>
+          <button class="ghost" onclick="toggleEdit('${item.id}')" ${blocked ? 'disabled' : ''}>Editar</button>
+          <button class="ghost" onclick="discardItem('${item.id}')">Descartar</button>
+        </div>` : '';
+
+      const children = (byParent[item.id] || []).map((c) => nodeHtml(c, byParent, items)).join('');
+      return `<div class="node ${item.status}">
+          <div class="node-top">
+            <div>
+              ${badge('k-' + item.kind, KIND_LABEL[item.kind])}
+              ${item.operation === 'update' ? badge('op-update', 'alteração') : ''}
+              ${badge('st-' + item.status, STATUS_LABEL[item.status])}
+              ${blocked && pending ? '<span class="hint">aguarda confirmação do pai</span>' : ''}
+            </div>
+            ${actions}
+          </div>
+          ${body}
+        </div>${children ? `<div class="children">${children}</div>` : ''}`;
+    }
+
+    // ---------- modo exemplo (sem API) ----------
+    function loadExample() {
+      exampleMode = true;
+      editing = null;
+      clearTimeout(pollTimer);
+      const ev = (quote, pages) => [{ quote, pages }];
+      const items = [
+        { id: 's', kind: 'source', operation: 'create', proposed_title: 'Regulamento de Trabalhos Acadêmicos', proposed_description: 'Normas para elaboração de TCCs e dissertações.', evidence: [] },
+        { id: 't1', kind: 'typification', operation: 'create', proposed_title: 'Trabalho de Conclusão de Curso', evidence: ev('Este regulamento estabelece as normas para elaboração de Trabalhos de Conclusão de Curso', [1]), rationale: 'Tipo documental regulado pelo documento.', similar_to_id: 'x', similarity_note: 'Título equivalente a um item já existente na árvore.' },
+        { id: 'x1', kind: 'taxonomy', operation: 'create', parent_item_id: 't1', proposed_title: 'Formatação', proposed_description: 'Regras de formatação do texto.', evidence: ev('O texto deve ser digitado em fonte Arial tamanho 12.', [2]) },
+        { id: 'b1', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Fonte Arial 12', proposed_description: 'Verificar se o corpo do texto usa Arial 12.', evidence: ev('O texto deve ser digitado em fonte Arial tamanho 12.', [2]), rationale: 'Obrigação explícita de fonte.' },
+        { id: 'b2', kind: 'branch', operation: 'create', parent_item_id: 'x1', proposed_title: 'Margens superior e esquerda de 3 cm', proposed_description: 'Verificar as margens.', evidence: ev('As margens superior e esquerda devem ter 3 cm.', [2]) },
+        { id: 'x2', kind: 'taxonomy', operation: 'create', parent_item_id: 't1', proposed_title: 'Elementos pré-textuais', proposed_description: 'Elementos que antecedem o texto.', evidence: ev('O resumo deve conter no máximo 500 palavras.', [3]) },
+        { id: 'b3', kind: 'branch', operation: 'create', parent_item_id: 'x2', proposed_title: 'Resumo com até 500 palavras', proposed_description: 'Contar as palavras do resumo.', evidence: ev('O resumo deve conter no máximo 500 palavras.', [3]) },
+        { id: 'b4', kind: 'branch', operation: 'create', parent_entity_id: 'e1', parent_entity_title: 'Citações e referências', proposed_title: 'Citações diretas longas recuadas 4 cm', proposed_description: 'Verificar o recuo das citações com mais de três linhas.', evidence: ev('As citações diretas com mais de três linhas devem ter recuo de 4 cm.', [4]) },
+        { id: 'u1', kind: 'branch', operation: 'update', target_entity_id: 'e2', target_snapshot: { title: 'Fonte', description: 'Verificar a fonte.' }, proposed_title: 'Fonte Arial ou Times 12', proposed_description: 'Aceitar Arial ou Times New Roman tamanho 12.', evidence: ev('Admite-se também a fonte Times New Roman.', [2]), rationale: 'O documento amplia a regra existente.' },
+      ].map((i, idx) => ({ status: 'pending', position: idx, parent_item_id: null, parent_entity_id: null, ...i }));
+      render({ id: 'exemplo', mode: 'create', status: 'ready', original_filename: 'regulamento-exemplo.pdf', page_count: 4, generation_model: 'exemplo local', items });
+      toast('Modo exemplo: as ações não chamam a API.');
+    }
+
+    function exampleConfirm(itemId, payload) {
+      const item = current.items.find((i) => i.id === itemId);
+      const parent = current.items.find((i) => i.id === item.parent_item_id);
+      if (parent && parent.status !== 'confirmed') return toast('409 — Parent item must be confirmed first', true);
+      item.status = 'confirmed';
+      item.final_title = (payload && payload.title) || item.proposed_title;
+      item.final_description = payload ? payload.description : item.proposed_description;
+      item.applied_entity_id = 'novo-' + itemId;
+      editing = null;
+      finishExample();
+    }
+
+    function exampleDiscard(ids) {
+      const queue = [...ids];
+      while (queue.length) {
+        const id = queue.shift();
+        const item = current.items.find((i) => i.id === id);
+        if (item.status === 'pending') item.status = 'discarded';
+        current.items.filter((c) => c.parent_item_id === id && c.status === 'pending').forEach((c) => queue.push(c.id));
+      }
+      finishExample();
+    }
+
+    function finishExample() {
+      if (!current.items.some((i) => i.status === 'pending')) current.status = 'completed';
+      render(current);
+    }
+
+    if ($('auth-token').value) { loadTypifications(); loadSessions(); }
+    if (location.hash === '#exemplo') loadExample();
+  </script>
+</body>
+</html>
