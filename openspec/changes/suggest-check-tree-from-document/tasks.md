@@ -17,11 +17,11 @@
 
 ## 4. Motor de geração (IA)
 
-- [ ] 4.1 Criar `lumina/services/ai/tree_suggestion/` com os modelos Pydantic de saída estruturada (escopo, candidatos de regra, árvore consolidada) e os prompts em português; verificar que a importação do pacote funciona
-- [ ] 4.2 Implementar a etapa de extração reutilizando `extract_raw_markdown_and_pages`, `build_sections_tree_from_markdown` e o agrupamento de seções em lotes por `TREE_SUGGESTION_BATCH_CHARS`; verificar com teste unitário que nenhum lote excede o orçamento (salvo seção única maior que ele) e que a ordem é preservada
-- [ ] 4.3 Implementar a validação determinística de evidência (normalização, busca exata, fallback `rapidfuzz.partial_ratio` e mapeamento offset→páginas base 1 via `page_map`); verificar com testes unitários de trecho exato, trecho com quebra de linha/hífen, trecho inexistente (rejeitado) e páginas corretas
-- [ ] 4.4 Implementar a deduplicação determinística por título normalizado no escopo correto (global para tipificação, por tipificação para taxonomia, por taxonomia para ramo); verificar com testes unitários
-- [ ] 4.5 Implementar `generate_tree_suggestions` orquestrando escopo → regras (map com semáforo) → evidência → consolidação → duplicatas, validando IDs devolvidos pelo LLM contra a subárvore existente e registrando etapas no `run_logger`; verificar com testes unitários usando modelo fake (override) nos modos `create` (múltiplas tipificações) e `enrich` (itens `create` e `update`, nenhum de remoção)
+- [x] 4.1 Criar `lumina/services/ai/tree_suggestion/` com os modelos Pydantic de saída estruturada (escopo, candidatos de regra, árvore consolidada) e os prompts em português; verificar que a importação do pacote funciona
+- [x] 4.2 Implementar a etapa de extração reutilizando `extract_raw_markdown_and_pages`, `build_sections_tree_from_markdown` e o agrupamento de seções em lotes por `TREE_SUGGESTION_BATCH_CHARS`; verificar com teste unitário que nenhum lote excede o orçamento (salvo seção única maior que ele) e que a ordem é preservada
+- [x] 4.3 Implementar a validação determinística de evidência (normalização, busca exata, fallback `rapidfuzz.partial_ratio` e mapeamento offset→páginas base 1 via `page_map`); verificar com testes unitários de trecho exato, trecho com quebra de linha/hífen, trecho inexistente (rejeitado) e páginas corretas
+- [x] 4.4 Implementar a deduplicação determinística por título normalizado no escopo correto (global para tipificação, por tipificação para taxonomia, por taxonomia para ramo); verificar com testes unitários
+- [x] 4.5 Implementar `generate_tree_suggestions` orquestrando escopo → regras (map com semáforo) → evidência → consolidação → duplicatas, validando IDs devolvidos pelo LLM contra a subárvore existente e registrando etapas no `run_logger`; verificar com testes unitários usando modelo fake (override) nos modos `create` (múltiplas tipificações) e `enrich` (itens `create` e `update`, nenhum de remoção)
 
 ## 5. Service de sessões de sugestão
 
