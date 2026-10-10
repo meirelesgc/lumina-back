@@ -32,6 +32,7 @@ from lumina.routers.check_tree import (
     projects,
     sources,
     taxonomies,
+    tree_suggestions,
     typifications,
 )
 from lumina.routers.docs import (
@@ -140,6 +141,7 @@ app.include_router(docs_ws.router)
 app.include_router(typifications.router)
 app.include_router(taxonomies.router)
 app.include_router(branches.router)
+app.include_router(tree_suggestions.router)
 
 
 app.include_router(auth.router)

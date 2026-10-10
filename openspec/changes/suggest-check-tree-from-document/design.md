@@ -108,6 +108,8 @@ Router `lumina/routers/check_tree/tree_suggestions.py`, prefixo `/tree-suggestio
 
 Os itens são devolvidos como lista plana, ordenada por `position`, com `parent_item_id`/`parent_entity_id`. O front monta a árvore. Isso evita esquemas recursivos e facilita a cascata.
 
+Para exibição, a leitura resolve rótulos das entidades existentes: `target_typification_name` na sessão e `parent_entity_title` em cada item com `parent_entity_id`. Esses campos são calculados na leitura, não persistidos. A demo em `/demos/tree_suggestions/` usa esse payload como referência visual para o front-end.
+
 ### 7. Configuração (`Settings`)
 
 `TREE_SUGGESTION_MAX_FILE_MB=20`, `TREE_SUGGESTION_MAX_PAGES=300`, `TREE_SUGGESTION_PROCESSING_TIMEOUT_MINUTES=30`, `TREE_SUGGESTION_BATCH_CHARS=24000`, `TREE_SUGGESTION_MAX_CONCURRENCY=4`, `TREE_SUGGESTION_EVIDENCE_MIN_SCORE=90`.

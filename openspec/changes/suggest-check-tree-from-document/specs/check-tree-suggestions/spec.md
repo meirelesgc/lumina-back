@@ -57,6 +57,7 @@ O sistema SHALL fornecer `GET /tree-suggestion`, para listar sessões com pagina
 #### Scenario: Read session with items
 - **WHEN** um usuário autenticado consulta uma sessão existente
 - **THEN** o sistema retorna HTTP 200 com modo, status, tipificação alvo (se houver), arquivo, criador, datas e a lista de itens
+- **THEN** a sessão traz o nome atual da tipificação alvo (`target_typification_name`), e cada item com pai existente traz o título atual desse pai (`parent_entity_title`), sem exigir chamadas adicionais
 
 #### Scenario: Session not found
 - **WHEN** o `session_id` não existe

@@ -34,8 +34,9 @@
 
 ## 6. API
 
-- [ ] 6.1 Criar `lumina/routers/check_tree/tree_suggestions.py` com os seis endpoints do design §6, protegidos por `CurrentUser`, e registrar o router em `lumina/app.py`; verificar que as rotas aparecem em `/openapi.json`
-- [ ] 6.2 Adicionar testes de API em `tests/api/check_tree/test_tree_suggestions_api.py` cobrindo o fluxo ponta a ponta (upload → background com modelo fake → leitura → confirmações → descarte → `completed`) e 401 sem autenticação; verificar com `poetry run pytest tests/api/check_tree/test_tree_suggestions_api.py`
+- [x] 6.1 Criar `lumina/routers/check_tree/tree_suggestions.py` com os seis endpoints do design §6, protegidos por `CurrentUser`, e registrar o router em `lumina/app.py`; verificar que as rotas aparecem em `/openapi.json`
+- [x] 6.2 Resolver `target_typification_name` e `parent_entity_title` na leitura da sessão e verificar nos testes de serviço e de API que os rótulos refletem os nomes atuais
+- [x] 6.3 Adicionar testes de API em `tests/api/check_tree/test_tree_suggestions_api.py` cobrindo o fluxo ponta a ponta (upload → background com modelo fake → leitura → confirmações → descarte → `completed`) e 401 sem autenticação; verificar com `poetry run pytest tests/api/check_tree/test_tree_suggestions_api.py`
 
 ## 7. Documentação e verificação final
 
