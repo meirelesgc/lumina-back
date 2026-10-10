@@ -33,11 +33,51 @@ def _dispatch_background(
         asyncio.create_task(func(*args))
 
 
+async def build_branch_context(
+    session: AsyncSession, branch: Branch
+) -> BranchNormativeContext:
+    taxonomy = await branch_repo.get_taxonomy(session, branch.taxonomy_id)
+    typification = None
+    if taxonomy and taxonomy.typification_id:
+        typification = await session.get(
+            Typification, taxonomy.typification_id
+        )
+
+    return BranchNormativeContext(
+        branch_title=branch.title,
+        branch_description=branch.description,
+        taxonomy_title=taxonomy.title if taxonomy else None,
+        taxonomy_description=taxonomy.description if taxonomy else None,
+        typification_name=typification.name if typification else None,
+    )
+
+
+def dispatch_branch_enrichment(
+    background_tasks: Optional[BackgroundTasks],
+    branch_id: UUID,
+    context: BranchNormativeContext,
+) -> None:
+    """Dispara a análise de seção e a expansão de consultas do ramo."""
+    _dispatch_background(
+        background_tasks,
+        run_branch_section_analysis_background,
+        branch_id,
+        context,
+    )
+    _dispatch_background(
+        background_tasks,
+        run_branch_query_expansion_background,
+        branch_id,
+        context,
+    )
+
+
 async def create_branch(
     session: AsyncSession,
     user_id: UUID,
     data: BranchCreate,
     background_tasks: Optional[BackgroundTasks] = None,
+    commit: bool = True,
 ) -> Branch:
     # Verifica duplicidade
     existing_branch = await branch_repo.get_by_title_and_taxonomy(
@@ -90,21 +130,14 @@ async def create_branch(
         old_data=None,
     )
 
+    if not commit:
+        await session.flush()
+        return db_branch
+
     await session.commit()
     await session.refresh(db_branch)
 
-    _dispatch_background(
-        background_tasks,
-        run_branch_section_analysis_background,
-        db_branch.id,
-        context,
-    )
-    _dispatch_background(
-        background_tasks,
-        run_branch_query_expansion_background,
-        db_branch.id,
-        context,
-    )
+    dispatch_branch_enrichment(background_tasks, db_branch.id, context)
 
     return db_branch
 
@@ -138,6 +171,7 @@ async def update_branch(
     user_id: UUID,
     data: BranchUpdate,
     background_tasks: Optional[BackgroundTasks] = None,
+    commit: bool = True,
 ) -> Branch:
     db_branch = await branch_repo.get_by_id(session, data.id)
 
@@ -188,38 +222,16 @@ async def update_branch(
         new_data=new_data,
     )
 
+    if not commit:
+        await session.flush()
+        return db_branch
+
     await session.commit()
     await session.refresh(db_branch)
 
     if title_changed or description_changed:
-        taxonomy = await branch_repo.get_taxonomy(
-            session, db_branch.taxonomy_id
-        )
-        typification = None
-        if taxonomy and taxonomy.typification_id:
-            typification = await session.get(
-                Typification, taxonomy.typification_id
-            )
-
-        context = BranchNormativeContext(
-            branch_title=db_branch.title,
-            branch_description=db_branch.description,
-            taxonomy_title=taxonomy.title if taxonomy else None,
-            taxonomy_description=taxonomy.description if taxonomy else None,
-            typification_name=typification.name if typification else None,
-        )
-        _dispatch_background(
-            background_tasks,
-            run_branch_section_analysis_background,
-            db_branch.id,
-            context,
-        )
-        _dispatch_background(
-            background_tasks,
-            run_branch_query_expansion_background,
-            db_branch.id,
-            context,
-        )
+        context = await build_branch_context(session, db_branch)
+        dispatch_branch_enrichment(background_tasks, db_branch.id, context)
 
     return db_branch
 

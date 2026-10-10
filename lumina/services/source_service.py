@@ -17,7 +17,10 @@ from lumina.services import audit_service
 
 
 async def create_source(
-    session: AsyncSession, user_id: UUID, data: SourceCreate
+    session: AsyncSession,
+    user_id: UUID,
+    data: SourceCreate,
+    commit: bool = True,
 ) -> Source:
     existing_source = await source_repo.get_by_name(session, data.name)
     if existing_source:
@@ -43,6 +46,10 @@ async def create_source(
         record_id=db_source.id,
         old_data=None,
     )
+
+    if not commit:
+        await session.flush()
+        return db_source
 
     await session.commit()
     await session.refresh(db_source)

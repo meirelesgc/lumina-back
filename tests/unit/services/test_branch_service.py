@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -282,3 +283,69 @@ async def test_delete_branch_success(
 
     db_branch.set_deletion_audit.assert_called_once_with(user_id)
     mock_audit_service.register_action.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_branch_without_commit_skips_enrichment(
+    session, mock_branch_repo, mock_audit_service
+):
+    data = BranchCreate(title='Ramo', description='Desc', taxonomy_id=uuid4())
+    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
+    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
+    background_tasks = BackgroundTasks()
+
+    branch = await branch_service.create_branch(
+        session, uuid4(), data, background_tasks, commit=False
+    )
+
+    assert branch.title == 'Ramo'
+    session.commit.assert_not_called()
+    session.flush.assert_awaited()
+    assert background_tasks.tasks == []
+
+
+@pytest.mark.asyncio
+async def test_update_branch_without_commit_skips_enrichment(
+    session, mock_branch_repo, mock_audit_service
+):
+    taxonomy_id = uuid4()
+    db_branch = branch_service.Branch(
+        title='Antigo', description='Desc', taxonomy_id=taxonomy_id
+    )
+    db_branch.created_at = datetime.now()
+    mock_branch_repo.get_by_id.return_value = db_branch
+    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
+    background_tasks = BackgroundTasks()
+    data = BranchUpdate(
+        id=db_branch.id,
+        title='Novo',
+        description='Desc',
+        taxonomy_id=taxonomy_id,
+    )
+
+    branch = await branch_service.update_branch(
+        session, uuid4(), data, background_tasks, commit=False
+    )
+
+    assert branch.title == 'Novo'
+    session.commit.assert_not_called()
+    assert background_tasks.tasks == []
+
+
+def test_dispatch_branch_enrichment_schedules_both_tasks():
+    background_tasks = BackgroundTasks()
+    branch_id = uuid4()
+    context = branch_service.BranchNormativeContext(branch_title='Ramo')
+
+    branch_service.dispatch_branch_enrichment(
+        background_tasks, branch_id, context
+    )
+
+    scheduled = [task.func for task in background_tasks.tasks]
+    assert scheduled == [
+        branch_service.run_branch_section_analysis_background,
+        branch_service.run_branch_query_expansion_background,
+    ]
+    assert all(
+        task.args == (branch_id, context) for task in background_tasks.tasks
+    )

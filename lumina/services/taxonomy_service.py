@@ -16,7 +16,10 @@ from lumina.services import audit_service
 
 
 async def create_taxonomy(
-    session: AsyncSession, user_id: UUID, data: TaxonomyCreate
+    session: AsyncSession,
+    user_id: UUID,
+    data: TaxonomyCreate,
+    commit: bool = True,
 ) -> Taxonomy:
     # Verifica duplicidade
     conflict = await taxonomy_repo.get_conflict(
@@ -78,6 +81,10 @@ async def create_taxonomy(
         old_data=None,
     )
 
+    if not commit:
+        await session.flush()
+        return db_taxonomy
+
     await session.commit()
     await session.refresh(db_taxonomy)
     return db_taxonomy
@@ -102,7 +109,10 @@ async def get_taxonomy_by_id(
 
 
 async def update_taxonomy(
-    session: AsyncSession, user_id: UUID, data: TaxonomyUpdate
+    session: AsyncSession,
+    user_id: UUID,
+    data: TaxonomyUpdate,
+    commit: bool = True,
 ) -> Taxonomy:
     db_taxonomy = await taxonomy_repo.get_by_id(session, data.id)
 
@@ -170,6 +180,10 @@ async def update_taxonomy(
         old_data=old_data,
         new_data=new_data,
     )
+
+    if not commit:
+        await session.flush()
+        return db_taxonomy
 
     await session.commit()
     await session.refresh(db_taxonomy)

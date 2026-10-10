@@ -7,8 +7,8 @@
 
 ## 2. Services existentes: modo sem commit
 
-- [ ] 2.1 Adicionar `commit: bool = True` em `source_service.create_source`, `typification_service.create_typification`, `taxonomy_service.create_taxonomy/update_taxonomy` e `branch_service.create_branch/update_branch` (com `commit=False` apenas fazem flush e, no Branch, não disparam o background); verificar que a suíte atual dos CRUDs continua passando
-- [ ] 2.2 Extrair `branch_service.dispatch_branch_enrichment` a partir do disparo atual de análise de seção e expansão de consultas, e cobrir com teste unitário que `commit=False` não dispara nada e que o helper dispara as duas tarefas
+- [x] 2.1 Adicionar `commit: bool = True` em `source_service.create_source`, `typification_service.create_typification`, `taxonomy_service.create_taxonomy/update_taxonomy` e `branch_service.create_branch/update_branch` (com `commit=False` apenas fazem flush e, no Branch, não disparam o background); verificar que a suíte atual dos CRUDs continua passando
+- [x] 2.2 Extrair `branch_service.dispatch_branch_enrichment` a partir do disparo atual de análise de seção e expansão de consultas, e cobrir com teste unitário que `commit=False` não dispara nada e que o helper dispara as duas tarefas
 
 ## 3. Repositório e schemas
 

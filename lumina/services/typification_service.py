@@ -20,7 +20,10 @@ from lumina.services.report_service import typification_report
 
 
 async def create_typification(
-    session: AsyncSession, user_id: UUID, data: TypificationCreate
+    session: AsyncSession,
+    user_id: UUID,
+    data: TypificationCreate,
+    commit: bool = True,
 ) -> Typification:
     existing_typification = await typification_repo.get_by_name(
         session, data.name
@@ -71,6 +74,10 @@ async def create_typification(
         record_id=db_typification.id,
         old_data=None,
     )
+
+    if not commit:
+        await session.flush()
+        return db_typification
 
     await session.commit()
     await session.refresh(db_typification)
