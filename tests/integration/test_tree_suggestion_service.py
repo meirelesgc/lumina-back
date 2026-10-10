@@ -28,6 +28,9 @@ from lumina.services.ai.tree_suggestion.structures import (
     RuleBatchResult,
 )
 from tests.factories.tree_suggestion_factory import (
+    ESTRUTURA,
+    INTRODUCAO,
+    METODOLOGIA,
     TCC,
     FakeStructuredModel,
     build_normative_pdf,
@@ -120,7 +123,7 @@ async def test_create_session_success(session, user, pdf_path):
 
     assert detail.status == 'processing'
     assert detail.mode == 'create'
-    assert detail.page_count == 3  # noqa: PLR2004
+    assert detail.page_count == 4  # noqa: PLR2004
     assert detail.created_by == user.id
     assert detail.file_path.startswith('/uploads/')
     assert len(background_tasks.tasks) == 1
@@ -195,8 +198,8 @@ async def test_generation_success_creates_pending_items(ready_session):
     assert kinds.count('typification') == 2  # noqa: PLR2004
     assert all(i.status == 'pending' for i in ready_session.items)
     assert ready_session.generation_model == 'fake-model'
-    branch = _item(ready_session, 'branch', 'Fonte Arial 12')
-    assert branch.evidence[0].pages == [2]
+    branch = _item(ready_session, 'branch', INTRODUCAO)
+    assert branch.evidence[0].pages == [4]
 
 
 @pytest.mark.asyncio
@@ -270,7 +273,7 @@ async def test_confirm_create_with_edits(session, user, ready_session):
 async def test_confirm_child_requires_confirmed_parent(
     session, user, ready_session
 ):
-    taxonomy = _item(ready_session, 'taxonomy', 'Formatação')
+    taxonomy = _item(ready_session, 'taxonomy', ESTRUTURA)
 
     with pytest.raises(HTTPException) as exc:
         await service.confirm_item(
@@ -284,8 +287,8 @@ async def test_confirm_chain_and_dispatch_branch_enrichment(
     session, user, ready_session
 ):
     typ = _item(ready_session, 'typification', TCC)
-    taxonomy = _item(ready_session, 'taxonomy', 'Formatação')
-    branch = _item(ready_session, 'branch', 'Fonte Arial 12')
+    taxonomy = _item(ready_session, 'taxonomy', ESTRUTURA)
+    branch = _item(ready_session, 'branch', INTRODUCAO)
     background_tasks = BackgroundTasks()
 
     await service.confirm_item(session, user.id, ready_session.id, typ.id)
@@ -343,14 +346,14 @@ async def _enrich_session(session, user, fake_generation):
     session.add(typification)
     await session.flush()
     taxonomy = Taxonomy(
-        title='Formatação',
-        description='Regras de formatação.',
+        title=ESTRUTURA,
+        description='Seções obrigatórias do trabalho.',
         typification_id=typification.id,
     )
     session.add(taxonomy)
     await session.flush()
     branch = Branch(
-        title='Fonte', description='Fonte.', taxonomy_id=taxonomy.id
+        title='Introdução', description='Introdução.', taxonomy_id=taxonomy.id
     )
     session.add(branch)
     await session.commit()
@@ -359,36 +362,37 @@ async def _enrich_session(session, user, fake_generation):
         rules=[
             rule(
                 TCC,
-                'Formatação',
-                'Fonte Arial 12',
-                'O texto deve ser digitado em fonte Arial tamanho 12.',
+                ESTRUTURA,
+                INTRODUCAO,
+                'A introdução deve apresentar o objetivo geral do trabalho.',
             ),
             rule(
                 TCC,
-                'Formatação',
-                'Margens de 3 cm',
-                'As margens superior e esquerda devem ter 3 cm.',
+                ESTRUTURA,
+                METODOLOGIA,
+                'A metodologia deve descrever os procedimentos de coleta de '
+                'dados.',
             ),
         ]
     )
     fake_generation[ConsolidationResult] = ConsolidationResult(
         taxonomies=[
             ConsolidatedTaxonomy(
-                title='Formatação',
-                description='Regras de formatação.',
+                title=ESTRUTURA,
+                description='Seções obrigatórias do trabalho.',
                 decision='same',
                 existing_id='T1',
                 branches=[
                     ConsolidatedBranch(
-                        title='Fonte Arial 12',
-                        description='Fonte Arial tamanho 12.',
+                        title=INTRODUCAO,
+                        description='Objetivo geral.',
                         candidate_ids=[1],
                         decision='update',
                         existing_id='B1',
                     ),
                     ConsolidatedBranch(
-                        title='Margens de 3 cm',
-                        description='Superior e esquerda.',
+                        title=METODOLOGIA,
+                        description='Procedimentos de coleta.',
                         candidate_ids=[2],
                     ),
                 ],
@@ -409,11 +413,11 @@ async def test_enrich_update_and_create_under_existing(
         session, user, fake_generation
     )
     assert detail.target_typification_name == TCC
-    update = _item(detail, 'branch', 'Fonte Arial 12')
-    new_branch = _item(detail, 'branch', 'Margens de 3 cm')
+    update = _item(detail, 'branch', INTRODUCAO)
+    new_branch = _item(detail, 'branch', METODOLOGIA)
     assert update.operation == 'update'
-    assert update.target_snapshot['title'] == 'Fonte'
-    assert new_branch.parent_entity_title == 'Formatação'
+    assert update.target_snapshot['title'] == 'Introdução'
+    assert new_branch.parent_entity_title == ESTRUTURA
 
     await service.confirm_item(session, user.id, detail.id, update.id)
     created = await service.confirm_item(
@@ -421,7 +425,7 @@ async def test_enrich_update_and_create_under_existing(
     )
 
     await session.refresh(branch)
-    assert branch.title == 'Fonte Arial 12'
+    assert branch.title == INTRODUCAO
     applied = await session.get(Branch, created.applied_entity_id)
     assert applied.taxonomy_id == taxonomy.id
 
@@ -433,14 +437,14 @@ async def test_enrich_stale_update_is_rejected(session, user, fake_generation):
     )
     branch.description = 'Alterada por outra pessoa.'
     await session.commit()
-    update = _item(detail, 'branch', 'Fonte Arial 12')
+    update = _item(detail, 'branch', INTRODUCAO)
 
     with pytest.raises(HTTPException) as exc:
         await service.confirm_item(session, user.id, detail.id, update.id)
 
     assert exc.value.status_code == HTTPStatus.CONFLICT
     await session.refresh(branch)
-    assert branch.title == 'Fonte'
+    assert branch.title == 'Introdução'
 
 
 # --- 5.5 Vínculo com o Source ---------------------------------------------
@@ -451,7 +455,7 @@ async def test_source_confirmed_after_tree_items_links_them(
     session, user, ready_session
 ):
     typ = _item(ready_session, 'typification', TCC)
-    taxonomy = _item(ready_session, 'taxonomy', 'Formatação')
+    taxonomy = _item(ready_session, 'taxonomy', ESTRUTURA)
     typ_item = await service.confirm_item(
         session, user.id, ready_session.id, typ.id
     )

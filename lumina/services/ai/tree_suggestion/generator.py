@@ -47,6 +47,7 @@ from lumina.services.ai.tree_suggestion.text import (
     build_batches,
     build_text_units,
     find_similar_title,
+    normalize,
     normalize_title,
 )
 from lumina.services.run_logger import get_run_logger
@@ -214,6 +215,31 @@ def _resolve_type(
         if normalize_title(doc_type.name) == target:
             return doc_type.name
     return types[0].name if len(types) == 1 else None
+
+
+def _collect_excluded(
+    candidates: Sequence[Tuple[RuleCandidate, TextBatch]],
+    locator: EvidenceLocator,
+) -> List[Dict[str, Any]]:
+    """Regras de formatação verificadas, deduplicadas pelo trecho."""
+    excluded: List[Dict[str, Any]] = []
+    seen = set()
+    for rule, batch in candidates:
+        match = locator.locate(
+            rule.quote, hint_range=(batch.char_start, batch.char_end)
+        )
+        if not match:
+            continue
+        key = normalize(match.quote)
+        if key in seen:
+            continue
+        seen.add(key)
+        excluded.append({
+            'title': rule.branch_title,
+            'quote': match.quote,
+            'pages': match.pages,
+        })
+    return excluded
 
 
 def _validate_evidence(
@@ -512,7 +538,14 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
         candidates, failed = await _run_rules(
             model, batches, types, SETTINGS.TREE_SUGGESTION_MAX_CONCURRENCY
         )
-        stats['rules'] = {'candidates': len(candidates), 'failed': failed}
+        formatting = [c for c in candidates if c[0].rule_type == 'formatting']
+        candidates = [c for c in candidates if c[0].rule_type != 'formatting']
+        stats['rules'] = {
+            'candidates': len(candidates) + len(formatting),
+            'content': len(candidates),
+            'formatting': len(formatting),
+            'failed': failed,
+        }
 
     async with _stage(run_id, 'evidence', stats):
         locator = EvidenceLocator(
@@ -521,9 +554,13 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
         by_type, matches = await asyncio.to_thread(
             _validate_evidence, candidates, locator, types
         )
+        excluded_rules = await asyncio.to_thread(
+            _collect_excluded, formatting, locator
+        )
         stats['evidence'] = {
             'accepted': len(matches),
             'dropped': len(candidates) - len(matches),
+            'excluded': len(excluded_rules),
         }
 
     rules = {cid: rule for group in by_type.values() for cid, rule in group}
@@ -556,6 +593,7 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
         page_count=len(page_map),
         model_name=_model_name(model),
         nodes=builder.nodes,
+        excluded_rules=excluded_rules,
         stats=stats,
     )
 

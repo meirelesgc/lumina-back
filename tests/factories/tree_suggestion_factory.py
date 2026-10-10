@@ -29,6 +29,12 @@ NORMATIVE_PAGES = [
         'Art. 4 O resumo deve conter no máximo 500 palavras.\n'
         'Art. 5 A dissertação deve apresentar abstract em língua inglesa.'
     ),
+    (
+        'Capítulo IV Da Estrutura\n\n'
+        'Art. 6 A introdução deve apresentar o objetivo geral do trabalho.\n'
+        'Art. 7 A metodologia deve descrever os procedimentos de coleta de '
+        'dados.'
+    ),
 ]
 
 
@@ -77,6 +83,7 @@ def rule(  # noqa: PLR0913, PLR0917
     branch: str,
     quote: str,
     description: str = 'Verificar a regra.',
+    rule_type: str = 'content',
 ) -> RuleCandidate:
     return RuleCandidate(
         document_type=document_type,
@@ -86,11 +93,16 @@ def rule(  # noqa: PLR0913, PLR0917
         branch_description=description,
         quote=quote,
         rationale='Trecho define a obrigação.',
+        rule_type=rule_type,
     )
 
 
 TCC = 'Trabalho de Conclusão de Curso'
 DISSERTATION = 'Dissertação de Mestrado'
+ESTRUTURA = 'Estrutura do trabalho'
+INTRODUCAO = 'Introdução com objetivo geral'
+METODOLOGIA = 'Metodologia com procedimentos de coleta'
+RESUMO = 'Resumo com até 500 palavras'
 
 
 def default_create_responses() -> Dict[Any, Response]:
@@ -107,14 +119,8 @@ def default_create_responses() -> Dict[Any, Response]:
         rules=[
             rule(
                 TCC,
-                'Formatação',
-                'Fonte Arial 12',
-                'O texto deve ser digitado em fonte Arial tamanho 12.',
-            ),
-            rule(
-                TCC,
                 'Elementos pré-textuais',
-                'Resumo com até 500 palavras',
+                RESUMO,
                 'O resumo deve conter no máximo 500 palavras.',
             ),
             rule(
@@ -125,9 +131,43 @@ def default_create_responses() -> Dict[Any, Response]:
             ),
             rule(
                 TCC,
+                'Estrutura do trabalho',
+                INTRODUCAO,
+                'A introdução deve apresentar o objetivo geral do trabalho.',
+            ),
+            rule(
+                TCC,
+                'Estrutura do trabalho',
+                'Aprovação pelo comitê de ética',
+                'A metodologia deve ser aprovada pelo comitê de ética.',
+            ),
+            rule(
+                TCC,
+                'Formatação',
+                'Fonte Arial 12',
+                'O texto deve ser digitado em fonte Arial tamanho 12.',
+                rule_type='formatting',
+            ),
+            rule(
+                TCC,
+                'Formatação',
+                'Margens de 3 cm',
+                'As margens superior e esquerda devem ter 3 cm.',
+                rule_type='formatting',
+            ),
+            rule(
+                TCC,
                 'Formatação',
                 'Espaçamento duplo',
                 'O espaçamento entre linhas deve ser duplo.',
+                rule_type='formatting',
+            ),
+            rule(
+                DISSERTATION,
+                'Formatação',
+                'Fonte Arial 12',
+                'O texto deve ser digitado em fonte Arial tamanho 12.',
+                rule_type='formatting',
             ),
         ]
     )
@@ -143,7 +183,7 @@ def default_create_responses() -> Dict[Any, Response]:
                             ConsolidatedBranch(
                                 title='Abstract em inglês',
                                 description='Verificar abstract.',
-                                candidate_ids=[3],
+                                candidate_ids=[2],
                             )
                         ],
                     )
@@ -152,16 +192,16 @@ def default_create_responses() -> Dict[Any, Response]:
         return ConsolidationResult(
             taxonomies=[
                 ConsolidatedTaxonomy(
-                    title='Formatação',
-                    description='Regras de formatação.',
+                    title=ESTRUTURA,
+                    description='Seções obrigatórias do trabalho.',
                     branches=[
                         ConsolidatedBranch(
-                            title='Fonte Arial 12',
-                            description='Verificar fonte.',
-                            candidate_ids=[1],
+                            title=INTRODUCAO,
+                            description='Verificar o objetivo geral.',
+                            candidate_ids=[3],
                         ),
                         ConsolidatedBranch(
-                            title='Espaçamento duplo',
+                            title='Aprovação pelo comitê de ética',
                             description='Sem evidência válida.',
                             candidate_ids=[99],
                         ),
@@ -172,9 +212,9 @@ def default_create_responses() -> Dict[Any, Response]:
                     description='Elementos antes do texto.',
                     branches=[
                         ConsolidatedBranch(
-                            title='Resumo com até 500 palavras',
+                            title=RESUMO,
                             description='Verificar resumo.',
-                            candidate_ids=[2],
+                            candidate_ids=[1],
                         )
                     ],
                 ),

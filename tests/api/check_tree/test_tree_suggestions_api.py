@@ -10,6 +10,8 @@ from lumina.core.storage_provider import get_storage_provider
 from lumina.services import tree_suggestion_service as service
 from lumina.services.ai.tree_suggestion import generate_tree_suggestions
 from tests.factories.tree_suggestion_factory import (
+    ESTRUTURA,
+    INTRODUCAO,
     TCC,
     FakeStructuredModel,
     build_normative_pdf,
@@ -91,9 +93,7 @@ def test_full_review_flow(api, token, pdf_path):
         f'/tree-suggestion/{session_id}', headers=_headers(token)
     ).json()
     assert detail['status'] == 'ready'
-    assert _item(detail, 'branch', 'Fonte Arial 12')['evidence'][0][
-        'pages'
-    ] == [2]
+    assert _item(detail, 'branch', INTRODUCAO)['evidence'][0]['pages'] == [4]
 
     listed = api.get(
         '/tree-suggestion', params={'status': 'ready'}, headers=_headers(token)
@@ -110,8 +110,8 @@ def test_full_review_flow(api, token, pdf_path):
     assert response.status_code == HTTPStatus.OK
     assert response.json()['final_title'] == 'TCC'
 
-    taxonomy = _item(detail, 'taxonomy', 'Formatação')
-    branch = _item(detail, 'branch', 'Fonte Arial 12')
+    taxonomy = _item(detail, 'taxonomy', ESTRUTURA)
+    branch = _item(detail, 'branch', INTRODUCAO)
     assert (
         api.post(
             f'{base}/{taxonomy["id"]}/confirm', headers=_headers(token)

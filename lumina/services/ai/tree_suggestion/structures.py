@@ -48,6 +48,12 @@ class RuleCandidate(BaseModel):
         description='Trecho LITERAL do documento que fundamenta a regra.'
     )
     rationale: str = Field(description='Por que o trecho gera essa regra.')
+    rule_type: Literal['content', 'formatting'] = Field(
+        description=(
+            "'formatting' se a regra depende da aparência ou da posição do "
+            "texto na página; 'content' se é verificável lendo o texto."
+        )
+    )
 
 
 class RuleBatchResult(BaseModel):
@@ -129,4 +135,5 @@ class GenerationResult:
     page_count: int
     model_name: str
     nodes: List[SuggestedNode] = field(default_factory=list)
+    excluded_rules: List[Dict[str, Any]] = field(default_factory=list)
     stats: Dict[str, Any] = field(default_factory=dict)
