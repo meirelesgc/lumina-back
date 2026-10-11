@@ -167,9 +167,10 @@ POST /doc/{doc_id}/release
    * `complete`: Conclusão e disponibilidade do relatório.
 3. **Snapshot Imutável**: Clona a árvore normativa ativa nas tabelas `Applied*` (`AppliedTypification`, `AppliedTaxonomy`, `AppliedBranch`, `AppliedSource`).
 
-### Recuperação Semântica Ponderada
-Para cada critério (`Branch`) da árvore:
-1. Monta a query com o título da seção triplicado para forçar alta similaridade semântica:
+### Recuperação de Evidências por Critério
+Implementada em `lumina/services/ai/stages/retrieval.py` (`retrieve_criteria_payload`). Para cada critério (`Branch`) da árvore:
+
+1. **Montagem da query**: o título da seção (taxonomia) é triplicado para ancorar a similaridade semântica:
    ```python
    QUERY = """
    SECTION: {section}
@@ -178,8 +179,18 @@ Para cada critério (`Branch`) da árvore:
    --- {branch_title}: {branch_description}
    """
    ```
-2. Recupera os **5 chunks mais similares** (`MAX_CHUNKS = 5`) filtrados estritamente pelo arquivo do documento (`source`).
-3. Formata os blocos de evidência recuperados identificando cada fragmento por `[FONTE] chunk_id: {id}` e delimitando o contexto da seção, entregando os trechos diretamente para a LLM.
+   Se o critério tiver **expansões de consulta** ativas (paráfrases geradas por LLM e persistidas por critério), cada expansão gera uma query adicional no mesmo formato.
+2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, a seção esperada é buscada entre os resumos de seção indexados (`record_type` de resumo). As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
+3. **Busca híbrida**:
+   * *Densa*: uma busca vetorial no PGVector por query (original + expansões), executadas em paralelo;
+   * *Léxica*: full-text search do PostgreSQL (`plainto_tsquery('portuguese', ...)` ranqueado por `ts_rank`) sobre `{branch_title}: {branch_description}`. Não aplica o roteamento por seção.
+
+   Todas as buscas são filtradas pelo arquivo do documento (`source`) e excluem os resumos de seção. As listas são fundidas por **Reciprocal Rank Fusion** (`RRF_K = 60`), com deduplicação por `chunk_id`, mantendo os **5 melhores** (`MAX_CHUNKS = 5`).
+4. **Reranking (não implementado)**: com `CROSS_ENCODER_RERANKING_ENABLED=true`, cada busca traz 25 candidatos (`RERANK_CANDIDATE_K`) para reordenação por cross-encoder. Hoje `rerank_chunks` retorna `None` e a flag vem desligada, então vale a ordem do RRF.
+5. **Expansão de vizinhos**: cada chunk selecionado é mesclado com os vizinhos da mesma seção e página (`chunk_index_in_section ± 1`), removendo o texto duplicado pelo overlap do splitter. Se a seção tiver até 4 chunks, ela entra inteira. Janelas idênticas são deduplicadas, e os retângulos (`rects`) de todos os chunks mesclados são preservados para as citações.
+6. **Formatação**: os blocos são ordenados por posição no documento e entregues à LLM agrupados por `## CONTEXTO DA SEÇÃO: {título}`, cada um identificado por `[FONTE] chunk_id: {id}`.
+
+Critérios sem nenhuma evidência recuperada não são enviados para avaliação.
 
 ### O Barema de Pontuação e Regras de Avaliação
 O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com base no seguinte barema de 0 a 10 pontos:
