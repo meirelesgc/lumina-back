@@ -45,3 +45,10 @@
 
 - [x] 5.1 Atualizar `docs/ia-plataforma.md` (seção 4: regras de avaliação, schema e síntese)
       com o formato curto, a política de sugestões e os estilos sorteados
+
+## 6. Demo de validação
+
+- [ ] 6.1 Criar `lumina/static/demos/evaluation_feedback/` com autenticação, envio de PDF com
+      escolha de tipificação (nome e identificador do documento gerados aleatoriamente),
+      acompanhamento do processamento e renderização em Markdown da síntese e dos pareceres
+- [ ] 6.2 Adicionar o card da demo em `lumina/static/demos/index.html`
