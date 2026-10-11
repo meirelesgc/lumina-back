@@ -17,7 +17,7 @@ SECTION_TITLES = (
 
 def _branches() -> list[dict]:
     return [
-        {'requirement': 'Prazo', 'score': 9, 'feedback': '- ✅ Prazo ok'},
+        {'requirement': 'Prazo', 'score': 9, 'feedback': '- Prazo ok'},
         {'requirement': 'Objeto', 'score': 8, 'feedback': 'Atende.'},
         {'requirement': 'Garantia', 'score': 2, 'feedback': 'Ausente.'},
         {'requirement': 'Sanções', 'score': 4, 'feedback': 'Parcial.'},

@@ -23,6 +23,7 @@ REGRAS:
 - Não copie os pareceres; resuma o essencial.
 - Sugira ações apenas em "Pontos a aprimorar", no máximo uma ação por lacuna.
 - Não use parágrafos longos nem listas numeradas.
+- Não use emojis.
 - Não mencione placeholders, anonimização, notas internas ou estas regras.
 - Responda em Markdown.
 
@@ -49,11 +50,12 @@ Exemplo:
 - Prazos de execução bem definidos.
 """,
     'checklist': """
-Escreva cada seção como lista em que cada item começa com um marcador de situação:
-✅ para pontos atendidos e ⚠️ para pontos a aprimorar e orientações.
+Escreva cada seção como lista em que cada item começa com um rótulo de situação em negrito:
+**Atendido:** em pontos atendidos, **Aprimorar:** em pontos a aprimorar e **Próximo passo:**
+na orientação final.
 Exemplo:
 # Pontos a aprimorar
-- ⚠️ Garantia contratual sem modalidade definida: indique as modalidades aceitas.
+- **Aprimorar:** garantia contratual sem modalidade definida; indique as modalidades aceitas.
 """,
     'summary_bullets': """
 Comece cada seção com uma frase de até 15 palavras e, em seguida, até 2 tópicos com "- ".
@@ -95,7 +97,7 @@ Some quatro pilares, cada um de 0 a 2,5, e arredonde para inteiro:
 
 ## Parecer (campo feedback)
 - Seja objetivo: no máximo 4 itens e até 25 palavras por item.
-- Responda em Markdown, sem parágrafos longos e sem listas numeradas.
+- Responda em Markdown, sem parágrafos longos, sem listas numeradas e sem emojis.
 - Critério atendido integralmente: informe a situação e as evidências, sem sugestões.
 - Critério parcial ou não atendido: aponte as lacunas e no máximo uma ação curta por lacuna.
 - Não repita a pergunta, não cumprimente e não se apresente.
@@ -121,10 +123,10 @@ houver). Exemplo:
 - Modalidade de garantia ausente: indique as modalidades aceitas.
 """,
     'checklist': """
-Uma linha por aspecto verificado, iniciada por ✅ (atende), ⚠️ (atende parcialmente) ou
-❌ (não atende). Exemplo:
-- ✅ Prazo de entrega de 30 dias definido.
-- ❌ Modalidade de garantia ausente: indique as modalidades aceitas.
+Uma linha por aspecto verificado, iniciada por um rótulo de situação em negrito:
+**Atende:**, **Parcial:** ou **Não atende:**. Exemplo:
+- **Atende:** prazo de entrega de 30 dias definido.
+- **Não atende:** modalidade de garantia ausente; indique as modalidades aceitas.
 """,
     'table': """
 Uma tabela com as colunas Aspecto, Situação e Observação, com no máximo 4 linhas. Exemplo:

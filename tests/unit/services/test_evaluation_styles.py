@@ -1,3 +1,4 @@
+import re
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -15,6 +16,9 @@ from lumina.services.ai.stages.evaluation import (
 
 EXPECTED_STYLE_COUNT = 4
 EXPECTED_ATTEMPTS = 2
+EMOJI_PATTERN = re.compile(
+    '[\U0001f000-\U0001faff\u2600-\u27bf\u2b00-\u2bff\ufe0f]'
+)
 
 
 def _eval_item(branch_id: str) -> dict:
@@ -122,3 +126,15 @@ def test_with_low_verbosity_keeps_model_without_field():
     model = FakeListChatModel(responses=['ok'])
 
     assert with_low_verbosity(model) is model
+
+
+def test_prompts_and_styles_have_no_emojis():
+    texts = [
+        PROMPTS.DOCUMENT_ANALYSIS_PROMPT,
+        PROMPTS.DESCRIPTION,
+        *PROMPTS.EVALUATION_STYLES.values(),
+        *PROMPTS.SYNTHESIS_STYLES.values(),
+    ]
+
+    for text in texts:
+        assert not EMOJI_PATTERN.search(text)
