@@ -21,8 +21,6 @@ from lumina.schemas.branch import (
     SectionRequirementScope,
 )
 
-pytest_plugins = ['tests.ai.fixtures.ai_fixtures']
-
 
 def pytest_addoption(parser):
     parser.addoption(
