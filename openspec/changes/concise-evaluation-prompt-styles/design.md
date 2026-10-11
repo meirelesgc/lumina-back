@@ -49,16 +49,18 @@ O modelo padrão é `gpt-5-mini` (`lumina/core/llm.py`), compartilhado com o cha
 - **Parecer por critério** (`EVALUATION_STYLES`):
   - `verdict_lists` (Veredito + listas): linha `**Situação:**`, seguida das listas
     `**Evidências**` e `**Lacunas**` (esta omitida quando não houver lacunas).
-  - `checklist`: uma linha por aspecto verificado, marcada com ✅ (atende), ⚠️ (parcial) ou
-    ❌ (não atende).
+  - `checklist`: uma linha por aspecto verificado, iniciada por um rótulo de situação em texto
+    (`**Atende:**`, `**Parcial:**` ou `**Não atende:**`).
   - `table`: tabela `Aspecto | Situação | Observação`, com até 4 linhas.
   - `summary_bullets` (Resumo + tópicos): uma frase de veredito de até 25 palavras e até 3
     tópicos.
-- **Síntese** (`SYNTHESIS_STYLES`): `bullets` (listas simples), `checklist` (marcadores ✅/⚠️ nas
-  seções) e `summary_bullets` (uma frase de abertura por seção seguida de até 3 tópicos). A
+- **Síntese** (`SYNTHESIS_STYLES`): `bullets` (listas simples), `checklist` (rótulos de situação em
+  texto nas seções) e `summary_bullets` (uma frase de abertura por seção seguida de até 3 tópicos). A
   tabela não entra na síntese porque as seções já são fixas e curtas.
 - Limites comuns: até 4 itens por lista; até 25 palavras por item no parecer; saudação da síntese
   em uma frase, sem autoapresentação.
+- Nenhum estilo usa emojis, e os prompts-base proíbem explicitamente o uso de emojis na resposta;
+  a situação de cada item é sempre indicada por texto.
 
 ### 3. Sorteio por critério, no início de `evaluate_criteria_batch`
 - **Decisão**: antes do laço de retentativas, cada item de `eval_args` recebe
@@ -93,7 +95,7 @@ O modelo padrão é `gpt-5-mini` (`lumina/core/llm.py`), compartilhado com o cha
   saída estruturada.
 
 ### 6. Linguagem dos prompts
-- Instruções em segunda pessoa ao modelo, sem persona extensa, emojis decorativos ou texto
+- Instruções em segunda pessoa ao modelo, sem persona extensa, emojis ou texto
   dirigido ao analista dentro do prompt. As descrições de schema seguem a mesma linha
   (`feedback`: "Parecer curto em Markdown, no formato indicado").
 
@@ -129,7 +131,5 @@ A cargo da equipe de frontend; nada disso é implementado neste repositório.
    puro.
 3. **Tabelas**: garantir estilo e rolagem horizontal em telas estreitas (estilo `table` do
    parecer, até 3 colunas e 4 linhas).
-4. **Emojis de situação** (✅ ⚠️ ❌): usados nos estilos `checklist`; conferir a renderização
-   na fonte da interface.
-5. **Segurança**: renderizar Markdown sem HTML bruto (por exemplo, `react-markdown` sem
+4. **Segurança**: renderizar Markdown sem HTML bruto (por exemplo, `react-markdown` sem
    `rehype-raw`), já que o conteúdo vem do modelo.

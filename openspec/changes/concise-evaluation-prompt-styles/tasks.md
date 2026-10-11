@@ -11,6 +11,8 @@
       `lumina/prompts.py`
 - [x] 1.5 Atualizar a descrição do campo `feedback` em `DocumentReleaseFeedback`
       (`lumina/schemas/document_release.py`)
+- [ ] 1.6 Proibir emojis nas respostas dos prompts-base e usar rótulos de situação em texto
+      nos estilos `checklist` de parecer e de síntese
 
 ## 2. Avaliação por critério
 
@@ -37,6 +39,7 @@
       devolve inalterado um modelo sem o campo
 - [x] 4.4 Executar `poetry run ruff check` e `poetry run task test` e confirmar suíte completa
       passando
+- [ ] 4.5 Teste garantindo que nenhum prompt-base ou bloco de estilo contém emojis
 
 ## 5. Documentação
 
