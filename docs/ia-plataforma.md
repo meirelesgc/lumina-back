@@ -194,7 +194,7 @@ O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com bas
 ### Diretrizes Inegociáveis da Avaliação:
 * **Fato sobre Opinião**: O modelo considera exclusivamente o que está escrito nos trechos fornecidos. Se a exigência não constar nos blocos recuperados, ela não é considerada atendida.
 * **Citação Obrigatória de Chunks**: Cada afirmação deve obrigatoriamente referenciar o `chunk_id` de origem. É expressamente vedado inventar identificadores.
-* **Parecer Objetivo**: O campo `feedback` é curto e em Markdown (no máximo 4 itens, até 25 palavras por item), sem parágrafos longos, listas numeradas, saudação ou autoapresentação.
+* **Parecer Objetivo**: O campo `feedback` é curto e em Markdown (no máximo 4 itens, até 25 palavras por item), sem parágrafos longos, listas numeradas, emojis, saudação ou autoapresentação.
 * **Sugestões Apenas em Lacunas**: Critério atendido integralmente não recebe sugestão. Critério parcial ou não atendido recebe no máximo uma ação curta por lacuna identificada.
 
 ### Estilos de Resposta do Parecer
@@ -203,7 +203,7 @@ O prompt é composto por uma base fixa (barema, regras, citações e formato JSO
 | Estilo | Formato |
 | :--- | :--- |
 | `verdict_lists` | Linha de situação, seguida das listas de evidências e de lacunas |
-| `checklist` | Uma linha por aspecto, marcada com ✅, ⚠️ ou ❌ |
+| `checklist` | Uma linha por aspecto, iniciada por rótulo em texto (`Atende`, `Parcial` ou `Não atende`) |
 | `table` | Tabela `Aspecto \| Situação \| Observação`, com até 4 linhas |
 | `summary_bullets` | Frase de veredito de até 25 palavras e até 3 tópicos |
 
