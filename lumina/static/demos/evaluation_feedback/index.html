@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina - Pareceres da Avaliação</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; margin: 0; background: #f1f5f9; color: #1e293b; }
+    #sidebar { width: 360px; min-width: 360px; padding: 20px; background: #f8f9fa; height: 100vh; overflow-y: auto; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 14px; }
+    #main { flex: 1; height: 100vh; overflow-y: auto; padding: 24px 32px; }
+    .box { background: white; padding: 14px; border-radius: 8px; border: 1px solid #ddd; }
+    .box h3 { margin: 0 0 10px; font-size: 15px; }
+    label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 7px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; font: inherit; font-size: 13px; }
+    button { padding: 7px 12px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; }
+    button:hover { background: #004494; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    button.block { width: 100%; }
+    button.ghost { background: transparent; color: #0056b3; border: 1px solid #0056b3; }
+    button.ghost:hover { background: #e8f0fb; }
+    .hint { font-size: 12px; color: #64748b; margin-top: 6px; }
+    code.inline { font-size: 12px; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; word-break: break-all; }
+
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+    .st-QUEUED { background: #f1f5f9; color: #475569; }
+    .st-PROCESSING { background: #fef3c7; color: #92400e; }
+    .st-IDLE { background: #dcfce7; color: #166534; }
+    .st-FAILED { background: #fee2e2; color: #991b1b; }
+    .ok { background: #dcfce7; color: #166534; }
+    .nok { background: #fee2e2; color: #991b1b; }
+    .score { background: #e0f2fe; color: #075985; }
+    .words { background: #f1f5f9; color: #475569; }
+
+    .header h2 { margin: 0 0 6px; font-size: 20px; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .error-box { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin: 16px 0; }
+    .group-title { font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; margin: 22px 0 8px; }
+    .typ-title { font-size: 16px; font-weight: 700; margin: 26px 0 4px; }
+    .card { background: white; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+    .card.fulfilled { border-left-color: #28a745; }
+    .card.unfulfilled { border-left-color: #dc3545; }
+    .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .card-title { font-weight: 600; margin: 0 0 2px; }
+    .card-desc { font-size: 12px; color: #64748b; }
+    .synthesis { border-left-color: #0056b3; }
+
+    .md { font-size: 14px; line-height: 1.55; margin-top: 10px; }
+    .md > :first-child { margin-top: 0; }
+    .md > :last-child { margin-bottom: 0; }
+    .md h1, .md h2, .md h3 { font-size: 14px; margin: 14px 0 6px; padding: 3px 10px; border-radius: 5px; display: inline-block; background: #f1f5f9; }
+    .md ul, .md ol { margin: 6px 0; padding-left: 22px; }
+    .md li { margin: 2px 0; }
+    .md p { margin: 6px 0; }
+    .md table { border-collapse: collapse; margin: 8px 0; font-size: 13px; display: block; overflow-x: auto; max-width: 100%; }
+    .md th, .md td { border: 1px solid #e2e8f0; padding: 5px 9px; text-align: left; vertical-align: top; }
+    .md th { background: #f8fafc; }
+    .md code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+    .synthesis .md h1:nth-of-type(1) { background: #dcfce7; color: #166534; }
+    .synthesis .md h1:nth-of-type(2) { background: #ffedd5; color: #9a3412; }
+    .synthesis .md h1:nth-of-type(3) { background: #e0f2fe; color: #075985; }
+
+    details { margin-top: 8px; font-size: 12px; }
+    summary { cursor: pointer; color: #0056b3; font-weight: 600; }
+    pre.raw { white-space: pre-wrap; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin: 6px 0 0; font-size: 12px; }
+    .placeholder { color: #64748b; margin-top: 20vh; text-align: center; }
+    #toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; max-width: 420px; }
+    #toast.error { background: #991b1b; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="box">
+      <h3>Autenticação</h3>
+      <label>E-mail</label>
+      <input type="text" id="email" placeholder="usuario@exemplo.com">
+      <label>Senha</label>
+      <input type="password" id="password">
+      <button class="block" onclick="login()">Entrar (POST /auth/token)</button>
+      <label style="margin-top:10px">Token (Bearer)</label>
+      <input type="text" id="auth-token" placeholder="Preenchido após o login, ou cole um token">
+    </div>
+
+    <div class="box">
+      <h3>Enviar documento</h3>
+      <label>Documento (PDF)</label>
+      <input type="file" id="file" accept="application/pdf" style="margin-bottom:8px">
+      <label>Tipificação</label>
+      <select id="typification">
+        <option value="">Autentique para carregar</option>
+      </select>
+      <button class="block" id="send-btn" onclick="sendDocument()">Enviar e avaliar</button>
+      <div class="hint">Cria um documento com nome e identificador aleatórios (POST /doc), envia o PDF como release (POST /doc/{id}/release) e acompanha o processamento.</div>
+    </div>
+
+    <div class="box">
+      <h3>Abrir resultado</h3>
+      <label>ID do documento</label>
+      <input type="text" id="doc-id" placeholder="Preenchido após o envio">
+      <button class="ghost block" onclick="openDocument($('doc-id').value.trim())">Carregar última release</button>
+    </div>
+
+    <button class="ghost block" onclick="loadExample()">Ver exemplo sem API</button>
+  </div>
+
+  <div id="main">
+    <div class="placeholder">
+      <h2>Pareceres e síntese da avaliação</h2>
+      <p>Envie um PDF com uma tipificação para ver a síntese executiva e o parecer de cada critério<br>renderizados em Markdown, como o frontend deverá exibir.</p>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const STATUS_LABEL = { QUEUED: 'na fila', PROCESSING: 'processando', IDLE: 'concluído', FAILED: 'falhou' };
+    let pollTimer = null;
+
+    // ---------- utilidades ----------
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const badge = (cls, text) => `<span class="badge ${cls}">${esc(text)}</span>`;
+    const md = (text) => DOMPurify.sanitize(marked.parse(String(text ?? ''), { gfm: true, breaks: false }));
+    const wordCount = (text) => (String(text ?? '').match(/[\p{L}\p{N}]+/gu) || []).length;
+    const randomId = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    function toast(message, isError = false) {
+      const el = $('toast');
+      el.textContent = message;
+      el.className = isError ? 'error' : '';
+      el.style.display = 'block';
+      clearTimeout(el._t);
+      el._t = setTimeout(() => (el.style.display = 'none'), 4000);
+    }
+
+    async function api(path, options = {}) {
+      const headers = options.headers || {};
+      const token = $('auth-token').value.trim();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(path, { ...options, headers });
+      const body = res.status === 204 ? null : await res.json().catch(() => null);
+      if (!res.ok) {
+        const detail = body && body.detail ? (typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)) : res.statusText;
+        throw new Error(`${res.status} — ${detail}`);
+      }
+      return body;
+    }
+
+    // ---------- autenticação ----------
+    async function login() {
+      try {
+        const form = new URLSearchParams({ username: $('email').value.trim(), password: $('password').value });
+        const data = await api('/auth/token', { method: 'POST', body: form });
+        $('auth-token').value = data.access_token;
+        toast('Autenticado.');
+        await loadTypifications();
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function loadTypifications() {
+      try {
+        const data = await api('/typification?limit=500');
+        const options = data.typifications.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+        $('typification').innerHTML = options || '<option value="">Nenhuma tipificação cadastrada</option>';
+      } catch (err) { toast(err.message, true); }
+    }
+
+    // ---------- envio ----------
+    async function sendDocument() {
+      const file = $('file').files[0];
+      const typificationId = $('typification').value;
+      if (!file) { toast('Selecione um PDF.', true); return; }
+      if (!typificationId) { toast('Escolha uma tipificação.', true); return; }
+
+      const suffix = randomId();
+      const docPayload = {
+        name: `Demo pareceres ${suffix} — ${file.name}`,
+        identifier: `DEMO-PARECER-${Date.now().toString(36).toUpperCase()}-${suffix}`,
+        description: 'Documento criado pela demo de pareceres da avaliação.',
+        typification_ids: [typificationId],
+      };
+
+      $('send-btn').disabled = true;
+      try {
+        const doc = await api('/doc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(docPayload),
+        });
+        $('doc-id').value = doc.id;
+
+        const form = new FormData();
+        form.append('file', file);
+        await api(`/doc/${doc.id}/release`, { method: 'POST', body: form });
+        toast('Documento enviado. Processando...');
+        renderStatus(doc.name, 'QUEUED');
+        poll(doc.id);
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        $('send-btn').disabled = false;
+      }
+    }
+
+    async function openDocument(docId) {
+      if (!docId) { toast('Informe o ID do documento.', true); return; }
+      clearTimeout(pollTimer);
+      await poll(docId);
+    }
+
+    async function poll(docId) {
+      clearTimeout(pollTimer);
+      try {
+        const doc = await api(`/doc/${docId}`);
+        const status = doc.processing_status;
+        if (status === 'QUEUED' || status === 'PROCESSING') {
+          renderStatus(doc.name, status);
+          pollTimer = setTimeout(() => poll(docId), 4000);
+          return;
+        }
+        const data = await api(`/doc/${docId}/release`);
+        const release = data.releases[0];
+        if (!release) { renderStatus(doc.name, status, 'O documento não tem releases.'); return; }
+        render(doc.name, status, release);
+      } catch (err) { toast(err.message, true); }
+    }
+
+    // ---------- renderização ----------
+    function header(name, status, extra = '') {
+      return `<div class="header">
+          <h2>${esc(name)}</h2>
+          ${badge('st-' + status, STATUS_LABEL[status] || status)} ${extra}
+        </div>`;
+    }
+
+    function renderStatus(name, status, message) {
+      let html = header(name, status);
+      if (status === 'QUEUED' || status === 'PROCESSING') {
+        html += '<div class="box" style="margin-top:16px">Processando: extração, recuperação de trechos, avaliação de cada critério e síntese. Esta página atualiza sozinha.</div>';
+      }
+      if (status === 'FAILED') html += '<div class="error-box"><b>Falha no processamento.</b> Consulte a demo de observabilidade do pipeline para detalhes.</div>';
+      if (message) html += `<div class="error-box">${esc(message)}</div>`;
+      $('main').innerHTML = html;
+    }
+
+    function render(name, status, release) {
+      const branches = release.check_tree.flatMap((t) => t.taxonomies.flatMap((x) => x.branches));
+      const feedbackWords = branches.map((b) => wordCount(b.evaluation && b.evaluation.feedback));
+      const avg = feedbackWords.length ? Math.round(feedbackWords.reduce((a, b) => a + b, 0) / feedbackWords.length) : 0;
+      const fulfilled = branches.filter((b) => b.evaluation && b.evaluation.fulfilled).length;
+
+      let html = header(name, status, `<span class="hint">versão ${esc(release.version)} · ${new Date(release.created_at).toLocaleString('pt-BR')}</span>`);
+      html += `<div class="stats">
+          ${badge('score', branches.length + ' critérios')}
+          ${badge('ok', fulfilled + ' atendidos')}
+          ${badge('nok', (branches.length - fulfilled) + ' não atendidos')}
+          ${badge('words', 'síntese: ' + wordCount(release.description) + ' palavras')}
+          ${badge('words', 'parecer médio: ' + avg + ' palavras')}
+        </div>`;
+      if (status === 'FAILED') html += '<div class="error-box"><b>O último processamento falhou.</b> Exibindo a release mais recente disponível.</div>';
+
+      html += '<div class="group-title">Síntese executiva</div>';
+      html += release.description
+        ? `<div class="card synthesis">${mdBlock(release.description)}</div>`
+        : '<div class="box">Síntese ainda não gerada.</div>';
+
+      release.check_tree.forEach((typ) => {
+        html += `<div class="typ-title">${esc(typ.name)}</div>`;
+        typ.taxonomies.forEach((tax) => {
+          html += `<div class="group-title">${esc(tax.title)}</div>`;
+          html += tax.branches.map(branchCard).join('');
+        });
+      });
+      if (!branches.length) html += '<div class="box" style="margin-top:16px">Nenhum critério avaliado nesta release.</div>';
+      $('main').innerHTML = html;
+    }
+
+    function mdBlock(text) {
+      return `<div class="md">${md(text)}</div>
+        <details><summary>Ver Markdown bruto (${wordCount(text)} palavras)</summary><pre class="raw">${esc(text)}</pre></details>`;
+    }
+
+    function branchCard(branch) {
+      const ev = branch.evaluation || {};
+      return `<div class="card ${ev.fulfilled ? 'fulfilled' : 'unfulfilled'}">
+          <div class="card-top">
+            <div>
+              <div class="card-title">${esc(branch.title)}</div>
+              <div class="card-desc">${esc(branch.description)}</div>
+            </div>
+            <div style="flex-shrink:0">
+              ${badge('score', `nota ${ev.score ?? '—'}/10`)}
+              ${badge(ev.fulfilled ? 'ok' : 'nok', ev.fulfilled ? 'atende' : 'não atende')}
+            </div>
+          </div>
+          ${ev.feedback ? mdBlock(ev.feedback) : '<div class="hint">Sem parecer.</div>'}
+        </div>`;
+    }
+
+    // ---------- modo exemplo (sem API) ----------
+    function loadExample() {
+      clearTimeout(pollTimer);
+      const branch = (title, description, score, fulfilled, feedback) => ({ title, description, evaluation: { score, fulfilled, feedback } });
+      const release = {
+        version: '1.0.0',
+        created_at: new Date().toISOString(),
+        description: [
+          'O documento atende à maior parte dos critérios, com lacunas pontuais em garantias e sanções.',
+          '',
+          '# Pontos atendidos',
+          '- Prazos de execução e entrega bem definidos.',
+          '- Critério de julgamento explícito.',
+          '',
+          '# Pontos a aprimorar',
+          '- Garantia contratual sem modalidade definida; indique as modalidades aceitas.',
+          '- Sanções sem gradação; relacione cada sanção à infração correspondente.',
+          '',
+          '# Orientação final',
+          '- Priorize a revisão da cláusula de garantia antes da publicação.',
+        ].join('\n'),
+        check_tree: [{
+          name: 'Edital de Licitação (exemplo)',
+          taxonomies: [{
+            title: 'Condições de execução',
+            branches: [
+              branch('Prazo de entrega', 'Verificar se o prazo de entrega está definido.', 9, true,
+                '**Situação:** Atende\n\n**Evidências**\n- Prazo de entrega de 30 dias definido no item 5.2.\n- Início da contagem a partir da ordem de serviço.'),
+              branch('Garantia contratual', 'Verificar se a garantia e suas modalidades estão definidas.', 3, false,
+                '- **Atende:** percentual de garantia de 5% informado.\n- **Não atende:** modalidade de garantia ausente; indique as modalidades aceitas.\n- **Parcial:** prazo de apresentação citado sem data-limite; defina o prazo.'),
+            ],
+          }, {
+            title: 'Penalidades',
+            branches: [
+              branch('Sanções administrativas', 'Verificar se as sanções estão previstas e graduadas.', 5, false,
+                '| Aspecto | Situação | Observação |\n|---|---|---|\n| Previsão de sanções | Atende | Item 12 lista advertência e multa |\n| Gradação | Não atende | Relacione cada sanção à infração |'),
+              branch('Critério de julgamento', 'Verificar se o critério de julgamento está explícito.', 10, true,
+                'Atende: o edital define o julgamento por menor preço global.\n\n- Critério declarado no item 7.1.\n- Forma de desempate descrita no item 7.4.'),
+            ],
+          }],
+        }],
+      };
+      render('regulamento-exemplo.pdf', 'IDLE', release);
+      toast('Modo exemplo: um parecer em cada estilo, sem chamar a API.');
+    }
+
+    if ($('auth-token').value) loadTypifications();
+    if (location.hash === '#exemplo') loadExample();
+  </script>
+</body>
+</html>

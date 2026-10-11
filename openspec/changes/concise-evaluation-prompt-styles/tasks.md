@@ -48,7 +48,7 @@
 
 ## 6. Demo de validação
 
-- [ ] 6.1 Criar `lumina/static/demos/evaluation_feedback/` com autenticação, envio de PDF com
+- [x] 6.1 Criar `lumina/static/demos/evaluation_feedback/` com autenticação, envio de PDF com
       escolha de tipificação (nome e identificador do documento gerados aleatoriamente),
       acompanhamento do processamento e renderização em Markdown da síntese e dos pareceres
-- [ ] 6.2 Adicionar o card da demo em `lumina/static/demos/index.html`
+- [x] 6.2 Adicionar o card da demo em `lumina/static/demos/index.html`
