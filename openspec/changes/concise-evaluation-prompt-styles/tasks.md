@@ -40,5 +40,5 @@
 
 ## 5. Documentação
 
-- [ ] 5.1 Atualizar `docs/ia-plataforma.md` (seção 4: regras de avaliação, schema e síntese)
+- [x] 5.1 Atualizar `docs/ia-plataforma.md` (seção 4: regras de avaliação, schema e síntese)
       com o formato curto, a política de sugestões e os estilos sorteados

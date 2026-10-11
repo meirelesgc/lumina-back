@@ -194,12 +194,27 @@ O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com bas
 ### Diretrizes Inegociáveis da Avaliação:
 * **Fato sobre Opinião**: O modelo considera exclusivamente o que está escrito nos trechos fornecidos. Se a exigência não constar nos blocos recuperados, ela não é considerada atendida.
 * **Citação Obrigatória de Chunks**: Cada afirmação deve obrigatoriamente referenciar o `chunk_id` de origem. É expressamente vedado inventar identificadores.
-* **Parecer Orientativo**: O campo `feedback` deve sintetizar eventuais carências e instruir objetivamente o analista sobre como adequar a redação.
+* **Parecer Objetivo**: O campo `feedback` é curto e em Markdown (no máximo 4 itens, até 25 palavras por item), sem parágrafos longos, listas numeradas, saudação ou autoapresentação.
+* **Sugestões Apenas em Lacunas**: Critério atendido integralmente não recebe sugestão. Critério parcial ou não atendido recebe no máximo uma ação curta por lacuna identificada.
+
+### Estilos de Resposta do Parecer
+O prompt é composto por uma base fixa (barema, regras, citações e formato JSON) e por um bloco de estilo (`EVALUATION_STYLES` em `lumina/prompts.py`). Em `evaluate_criteria_batch`, cada critério recebe um estilo sorteado de forma independente, antes do laço de retentativas, de modo que uma nova tentativa mantém o mesmo estilo. O estilo sorteado não é persistido.
+
+| Estilo | Formato |
+| :--- | :--- |
+| `verdict_lists` | Linha de situação, seguida das listas de evidências e de lacunas |
+| `checklist` | Uma linha por aspecto, marcada com ✅, ⚠️ ou ❌ |
+| `table` | Tabela `Aspecto \| Situação \| Observação`, com até 4 linhas |
+| `summary_bullets` | Frase de veredito de até 25 palavras e até 3 tópicos |
+
+A função `select_evaluation_style` é o ponto de troca previsto para substituir o sorteio por uma seleção orientada (por exemplo, pelo tipo de pergunta).
+
+As chamadas de avaliação e de síntese usam uma cópia do modelo com `verbosity="low"` (`with_low_verbosity`), sem alterar a instância compartilhada com o chat.
 
 ### Schema Pydantic de Saída (`DocumentReleaseFeedback`):
 ```python
 class DocumentReleaseFeedback(BaseModel):
-    feedback: str = Field(description='Parecer técnico detalhado.')
+    feedback: str = Field(description='Parecer curto em Markdown, no formato indicado.')
     fulfilled: bool = Field(description='True se atende integralmente; False caso contrário.')
     score: int = Field(ge=0, le=10, description='Nota final atribuída (0 a 10).')
     citations: list[Citation] = Field(description='Lista de IDs e trechos dos chunks citados.')
@@ -213,9 +228,9 @@ Para cada citação retornada, o backend cruza o `chunk_id` com os metadados de 
 
 ### Síntese Executiva da Release (Persona OiacIA):
 Ao final da avaliação de todos os ramos:
-1. O sistema seleciona os **2 critérios com maiores notas** e os **2 critérios com menores notas**.
-2. Envia para o prompt `DESCRIPTION` com a persona *OiacIA*.
-3. Produz um parecer estruturado: Saudação, `# Pontos atendidos`, `# Pontos a aprimorar` e `# Orientação final`.
+1. O sistema seleciona os **2 critérios com maiores notas** e os **2 critérios com menores notas**, apresentando o parecer de cada um como bloco indentado.
+2. Envia para o prompt `DESCRIPTION`, com um estilo sorteado de `SYNTHESIS_STYLES` (`bullets`, `checklist` ou `summary_bullets`).
+3. Produz uma síntese curta: uma frase de abertura, seguida das seções `# Pontos atendidos`, `# Pontos a aprimorar` e `# Orientação final` em listas de até 3 itens. Os títulos são fixos em todos os estilos, pois `partition_synthesis_text` e o frontend dependem deles.
 4. Grava o texto resultante na coluna `description` da tabela `DocumentRelease`.
 
 ---
