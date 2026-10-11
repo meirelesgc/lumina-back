@@ -103,7 +103,7 @@ O modelo padrão é `gpt-5-mini` (`lumina/core/llm.py`), compartilhado com o cha
 
 - **[Risco] O frontend exibe Markdown cru até ser adequado**: asteriscos, `|` de tabela e `- `
   aparecem literalmente; linhas iniciadas por número viram títulos no renderizador da síntese.
-  - *Mitigação*: os estilos evitam listas numeradas; a lista de adequações abaixo é entregue à
+  - *Mitigação*: os estilos evitam listas numeradas; o guia `frontend-guide.md` é entregue à
     equipe de frontend.
 - **[Risco] Formatos variados dificultam comparação entre critérios de uma mesma release**:
   - *Mitigação*: aceito deliberadamente nesta fase para observar a preferência da gestão; a
@@ -115,21 +115,6 @@ O modelo padrão é `gpt-5-mini` (`lumina/core/llm.py`), compartilhado com o cha
 
 ## Mudanças necessárias no frontend (`lumina-front`)
 
-A cargo da equipe de frontend; nada disso é implementado neste repositório.
-
-1. **Parecer por critério** (`evaluation.feedback`): renderizar como Markdown com suporte a GFM
-   (listas, negrito, tabelas) em `app/components/ResultadoAnaliseTipificacao.tsx` (hoje
-   `<p className="whitespace-pre-wrap">`) e em `app/components/OiacIaChat.tsx` (hoje
-   `<p className="whitespace-pre-wrap text-justify indent-6">`). Remover `text-justify` e
-   `indent-6` nesse bloco, que deformam listas e tabelas.
-2. **Síntese executiva** (`release.description`): em `ConteudoMensagem`
-   (`OiacIaChat.tsx`), manter o destaque colorido dos títulos `Pontos atendidos`,
-   `Pontos a aprimorar` e `Orientação final` (`tituloResumoAnalise`) e renderizar o conteúdo
-   entre títulos como Markdown, em vez de um `<p>` por linha. Deixar de tratar linhas
-   `^\d+\.\s` como título (`linhaTituloTopico`) dentro do conteúdo renderizado como Markdown.
-   Também em `ResultadoAnaliseTipificacao.tsx`, onde `release.description` é exibido como texto
-   puro.
-3. **Tabelas**: garantir estilo e rolagem horizontal em telas estreitas (estilo `table` do
-   parecer, até 3 colunas e 4 linhas).
-4. **Segurança**: renderizar Markdown sem HTML bruto (por exemplo, `react-markdown` sem
-   `rehype-raw`), já que o conteúdo vem do modelo.
+A cargo da equipe de frontend; nada disso é implementado neste repositório. O que muda para o
+frontend (campos afetados, endpoints, Markdown a suportar e formatos de exemplo) está descrito em
+`frontend-guide.md`, documento destinado a ser compartilhado com essa equipe.

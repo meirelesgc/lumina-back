@@ -54,6 +54,6 @@ importante" fornecer insights de melhoria e exige o parecer em "um único parág
   `str`, agora com conteúdo em Markdown.
 - **Frontend (`lumina-front`)**: hoje exibe esses campos como texto puro ou por um renderizador
   linha a linha que não interpreta Markdown. A adequação fica a cargo da equipe de frontend, a
-  partir da lista de mudanças em `design.md`; este repositório não altera o frontend.
+  partir do guia `frontend-guide.md`; este repositório não altera o frontend.
 - **Testes**: novos testes de composição de prompt e sorteio de estilo; os testes de
   `partition_synthesis_text` continuam válidos, pois os títulos das seções não mudam.
