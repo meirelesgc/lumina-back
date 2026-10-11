@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from typing import Any
 
@@ -6,12 +7,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lumina import prompts as PROMPTS
 from lumina.core.dependencies import Model
 from lumina.models import DocumentRelease
+from lumina.services.ai.stages.evaluation import with_low_verbosity
+
+
+def select_synthesis_style() -> str:
+    """
+    Sorteia o bloco de estilo de resposta da síntese executiva.
+    """
+    return random.choice(list(PROMPTS.SYNTHESIS_STYLES.values()))
+
+
+def format_synthesis_branch(branch: dict) -> str:
+    """
+    Formata um critério para o prompt da síntese, com o parecer em Markdown
+    indentado como bloco sob o critério.
+    """
+    feedback = str(branch.get('feedback') or '').strip()
+    indented = '\n'.join(f'  {line}' for line in feedback.splitlines())
+    return (
+        f'- Critério: {branch.get("requirement")} '
+        f'(nota {branch.get("score")}/10)\n'
+        f'  Parecer:\n{indented}'
+    )
 
 
 def generate_synthesis_prompt(simplified_args: list[dict]) -> str:
     """
     Gera o prompt para a síntese executiva OiacIA comparando os 2 critérios de
-    maior nota com os 2 critérios de menor nota.
+    maior nota com os 2 critérios de menor nota, com estilo sorteado.
     """
     sorted_data = sorted(
         simplified_args,
@@ -21,18 +44,15 @@ def generate_synthesis_prompt(simplified_args: list[dict]) -> str:
     highest_score_branches = sorted_data[:2]
     lowest_score_branches = sorted_data[-2:]
     highest_text = '\n'.join([
-        f'- {x.get("requirement")}: {x.get("score")}/10 '
-        f'(Feedback: {x.get("feedback")})'
-        for x in highest_score_branches
+        format_synthesis_branch(x) for x in highest_score_branches
     ])
     lowest_text = '\n'.join([
-        f'- {x.get("requirement")}: {x.get("score")}/10 '
-        f'(Feedback: {x.get("feedback")})'
-        for x in lowest_score_branches
+        format_synthesis_branch(x) for x in lowest_score_branches
     ])
     return PROMPTS.DESCRIPTION.format(
         top_text=highest_text,
         bottom_text=lowest_text,
+        style_instructions=select_synthesis_style(),
     )
 
 
@@ -113,7 +133,7 @@ async def record_synthesis_stage(
         lowest_ids = [str(x.get('id') or '') for x in sorted_data[-2:]]
 
         prompt = generate_synthesis_prompt(simplified_args)
-        desc_response = model.invoke(prompt)
+        desc_response = with_low_verbosity(model).invoke(prompt)
         desc_text = desc_response.content.strip()
         db_release.description = desc_text
         await session.commit()

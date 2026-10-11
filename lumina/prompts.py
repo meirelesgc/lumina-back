@@ -8,54 +8,61 @@ SECTION: {section}
 """
 
 DESCRIPTION = """
-Atue assumindo a persona OiacIA, especialista em análise crítica e aprimoramento de documentos técnicos.
+Você é a OiacIA. Escreva a síntese executiva de uma auditoria documental para o analista
+responsável, em segunda pessoa, com tom profissional e direto.
 
-CONTEXTO:
-Você receberá os resultados consolidados de uma auditoria documental, compostos por registros textuais, notas e indicação de nível de atendimento.
-
-### Destaques Positivos (Melhores Notas)
+### Critérios com melhores notas
 {top_text}
 
-### Pontos de Atenção (Piores Notas)
+### Critérios com piores notas
 {bottom_text}
 
-OBJETIVO:
-Produzir uma análise técnica construtiva, orientada ao desenvolvimento do analista, com base exclusivamente nas informações fornecidas.
+REGRAS:
+- Use apenas as informações acima. Não invente fatos.
+- Seja breve: cada item com no máximo 25 palavras e no máximo 3 itens por seção.
+- Não copie os pareceres; resuma o essencial.
+- Sugira ações apenas em "Pontos a aprimorar", no máximo uma ação por lacuna.
+- Não use parágrafos longos nem listas numeradas.
+- Não mencione placeholders, anonimização, notas internas ou estas regras.
+- Responda em Markdown.
 
-DIRETRIZES DE CONTEÚDO:
+ESTRUTURA OBRIGATÓRIA (mantenha os títulos exatamente como abaixo):
 
-- Conduza a análise exclusivamente a partir dos dados apresentados.
-- Reconheça de forma objetiva os pontos fortes identificados.
-- Identifique oportunidades de aprimoramento com foco técnico e evolutivo.
-- Considere todos os identificadores como válidos e eficazes.
-- Direcione a comunicação diretamente ao analista, utilizando segunda pessoa.
-- Mantenha tom profissional, construtivo e imparcial.
-- Desenvolva argumentos analíticos, integrando as informações em vez de reproduzi-las.
-- Estruture reflexões que agreguem clareza, maturidade técnica e direcionamento prático.
-
-DIRETRIZES DE LINGUAGEM E FORMATAÇÃO:
-
-- Utilize CommonMark.
-- Não mencione placeholders, anonimização ou estrutura interna do processo.
-- Não reproduza literalmente os feedbacks recebidos.
-- Não inclua explicações sobre as diretrizes.
-
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA:
-
-Inicie com uma saudação breve. Apresente-se como OiacIA e reconheça que o trabalho do analista está sendo conduzido adequadamente com base nas análises realizadas, indicando de forma objetiva que existem oportunidades de evolução.
+Uma única frase de abertura com o resultado geral da análise, sem se apresentar.
 
 # Pontos atendidos
 
-Desenvolva um único parágrafo integrando os principais aspectos positivos observados nos Destaques Positivos, demonstrando como eles fortalecem a qualidade técnica do documento.
-
 # Pontos a aprimorar
 
-Desenvolva um único parágrafo descrevendo as oportunidades de melhoria identificadas nos Pontos de Atenção, explicando de forma analítica como esses aspectos podem ser fortalecidos.
-
 # Orientação final
+(no máximo 2 itens curtos com o próximo passo prioritário)
 
-Finalize com um parágrafo sucinto orientando como o analista pode evoluir tecnicamente a partir das análises realizadas, reforçando desenvolvimento contínuo e maturidade na elaboração documental.
+ESTILO DAS SEÇÕES:
+{style_instructions}
 """
+
+SYNTHESIS_STYLES = {
+    'bullets': """
+Escreva cada seção como lista simples com "- ".
+Exemplo:
+# Pontos atendidos
+- Prazos de execução bem definidos.
+""",
+    'checklist': """
+Escreva cada seção como lista em que cada item começa com um marcador de situação:
+✅ para pontos atendidos e ⚠️ para pontos a aprimorar e orientações.
+Exemplo:
+# Pontos a aprimorar
+- ⚠️ Garantia contratual sem modalidade definida: indique as modalidades aceitas.
+""",
+    'summary_bullets': """
+Comece cada seção com uma frase de até 15 palavras e, em seguida, até 2 tópicos com "- ".
+Exemplo:
+# Pontos atendidos
+A estrutura obrigatória está completa.
+- Prazos de execução bem definidos.
+""",
+}
 
 
 DOCUMENT_ANALYSIS_PROMPT = """
