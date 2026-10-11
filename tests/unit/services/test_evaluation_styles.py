@@ -68,8 +68,11 @@ async def test_evaluate_criteria_batch_draws_style_per_criterion(monkeypatch):
 
     assert result[0]['style_instructions'] == styles[0]
     assert result[1]['style_instructions'] == styles[1]
-    assert styles[0] in result[0]['prompt']
-    assert styles[1] in result[1]['prompt']
+    for item, style in zip(result, styles):
+        prompt = PROMPTS.DOCUMENT_ANALYSIS_PROMPT.format(
+            **item, format_instructions=''
+        )
+        assert style in prompt
 
 
 @pytest.mark.asyncio

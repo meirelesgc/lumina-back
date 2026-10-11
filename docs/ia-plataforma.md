@@ -234,6 +234,8 @@ class DocumentReleaseFeedback(BaseModel):
 ### Execução em Lote (`chain.abatch`):
 Todos os critérios da árvore são avaliados em paralelo através de chamadas em lote (`await chain.abatch(eval_args)`), com retentativas automáticas em caso de instabilidade de rede.
 
+Quando a saída de um critério não respeita o schema JSON, apenas esse critério recebe nota 0 e `fulfilled = false`, com o erro no parecer; os demais critérios do lote seguem normalmente.
+
 ### Resolução de Coordenadas Visuais (`resolve_citations`):
 Para cada citação retornada, o backend cruza o `chunk_id` com os metadados de chunk armazenados e extrai os retângulos `rects: [{x1, y1, x2, y2}]` e a página, salvando no campo `references` do modelo `AppliedBranch`.
 
@@ -274,59 +276,3 @@ Atua como assistente contínuo sobre o arquivo:
 1. **Cache de Texto Longo**: Extrai até 80.000 caracteres via `PyMuPDFLoader` na primeira requisição e grava em `ChatConversation.context_text`.
 2. **Histórico Estendido**: Mantém as últimas 10 mensagens no contexto.
 3. **Persona OiacIA**: Responde dúvidas conceituais e sínteses do documento completo de forma direta e concisa.
-
----
-
-## 6. Observabilidade de Execução do Pipeline e Diagnóstico (Spec 002)
-
-Para garantir melhoria contínua, transparência e diagnóstico veloz de gargalos de IA sem sobrecarregar o banco relacional PostgreSQL, o Lumina dispõe de um subsistema desacoplado de telemetria e rastreamento de execuções.
-
-### 6.1 Identidade 1:1 e Armazenamento JSONL Desacoplado
-- **Identidade Unificada**: Cada ciclo de processamento disparado (`POST /doc/{doc_id}/release`) assume rigorosamente `run_id == release_id`. Isso viabiliza a localização instantânea da auditoria informando o próprio ID da release.
-- **Persistência Append-Only**: Em vez de tabelas relacionais transitórias pesadas, os eventos atômicos são registrados em arquivos estruturados JSON Lines (`lumina/storage/pipeline_runs/{run_id}.jsonl`), com um índice otimizado em `index.jsonl`.
-- **Baixo Overhead**: O registro assíncrono consome menos de 2% do tempo total do pipeline, mantendo alta vazão.
-
-### 6.2 Dinamismo Total de Etapas
-O motor `RunLogger` e os schemas Pydantic consolidam o ciclo de vida a partir dos eventos gravados:
-1. Qualquer etapa adicional inserida no pipeline (ex: `extraction`, `sections`, `anonymization`, `embeddings`, `evaluation`, `synthesis`) é registrada por ganchos (`start_stage`, `complete_stage`, `fail_stage`).
-2. A API e a interface web iteram dinamicamente sobre as etapas retornadas, renderizando métricas de duração e status sem modificação de schemas ou de código front-end.
-
-### 6.3 Diagnóstico Granular de Critérios Paralelos
-Durante o lote de inferência (`chain.abatch`):
-- O evento `CRITERION_EVALUATED` é disparado individualmente para cada critério da árvore normativa.
-- São capturados o tempo de inferência individual, nota atribuída, contagem de citações com coordenadas e eventuais falhas parciais.
-- Isso permite ao operador identificar prontamente critérios problemáticos ou que demandam maior latência.
-
-### 6.4 Salvaguarda de Dados Pessoais (LGPD)
-- O motor de persistência executa filtragem ativa via `sanitize_pii` e `sanitize_dict` em todas as mensagens de erro, metadados e payloads.
-- Padrões de CPF, CNPJ, telefones e e-mails são automaticamente mascarados (`[CPF_MASKED]`, `[EMAIL_MASKED]`, `[PHONE_MASKED]`, `[CNPJ_MASKED]`).
-- Identificadores de sistema (UUIDs como `document_id` e `run_id`) são protegidos contra substituição acidental.
-
-### 6.5 Controle de Acesso Administrativo e Demonstração Interativa
-- **RBAC Estrito**: Os endpoints REST (`GET /processing-runs`, `GET /processing-runs/{id}`, `GET /processing-runs/{id}/events`) são restritos a usuários com `role = admin` via dependência `AdminUser`. Requisições de não-administradores são rejeitadas com `403 Forbidden`.
-- **Demonstração Nativa**: Conforme o Princípio VII da Constituição do projeto, a interface visual de validação pode ser acessada e exercitada diretamente no navegador em:
-  ```
-  http://localhost:8000/demos/pipeline_observability/
-  ```
-
-### 6.6 Observabilidade Aprofundada das Macroetapas do Pipeline
-Para permitir diagnóstico completo e melhoria contínua sem depender de prints de terminal, cada execução consolida as etapas do ciclo de vida:
-
-1. **Extração Estruturada e Layout (`extraction`)**: Registra a tipologia de extração aplicada (PyMuPDF4LLM), total de páginas processadas, chunks gerados, tamanho médio dos blocos e contadores de sanitização (remoção de `\x00` e normalização de espaços).
-2. **Mapeamento de Seções e Papéis (`sections`)**: Registra as seções identificadas na árvore estruturada (`section_name`, `role`, `level`), os papéis semânticos atribuídos e a taxa de sucesso no mapeamento.
-3. **Anonimização LGPD via Presidio (`anonymization`)**: Captura o quantitativo de entidades sensíveis identificadas e substituídas tanto no texto quanto nos metadados (`section_title` e `section_path`), assegurando total ausência de dados pessoais (PII) nos logs estruturados.
-4. **Recuperação Semântica Ponderada (Retriever)**: Registra a string da query executada com triplicação do nome da seção para ancoragem de contexto e os `chunk_id` retornados na busca vetorial direta (`MAX_CHUNKS = 5`).
-5. **Avaliação Estruturada de Critérios (`evaluation`)**: Para cada critério avaliado concorrentemente no lote, registra a tríade completa:
-   * *Entrada*: Query executada, chunks recuperados e cópia integral do prompt montado (`DOCUMENT_ANALYSIS_PROMPT` em modo debug);
-   * *Estado Interno*: Modelo de LLM, contadores de tokens (prompt e completude), duração individual em ms e isolamento de falhas de schema (`schema_validation_error`);
-   * *Saída*: Parecer técnico, flag `fulfilled`, nota `score` (0 a 10), lista de citações válidas e identificação de eventuais citações alucinadas pelo modelo;
-   * *Isolamento de Falha de Schema*: Caso uma saída de LLM não respeite o contrato JSON Pydantic, o critério específico é registrado com status `failed`, preservando a saída bruta para inspeção e permitindo que os demais critérios do lote continuem a execução normalmente.
-6. **Resolução de Coordenadas e Citações (`citations`)**: Monitora a integridade referencial cruzando os `chunk_id` citados pelo modelo contra os metadados reais, quantificando citações resolvidas em retângulos físicos (`resolved_boxes_count`) e detectando alucinações de IDs inexistentes (`hallucinated_citations_count`).
-7. **Síntese Executiva OiacIA (`synthesis`)**: Registra a seleção dos extremos de nota (2 critérios com maiores notas e 2 com menores notas) enviados no prompt e particiona a síntese em 4 blocos textuais (`greeting`, `fulfilled_points`, `improvement_points`, `final_guidance`).
-
-### 6.7 Política de Retenção e Rotação Automática de Logs
-Para prevenir esgotamento de espaço em disco em ambientes de longa duração:
-- **Limite por Quantidade**: Mantém no máximo as **30 execuções mais recentes** no diretório `lumina/storage/pipeline_runs/`.
-- **Limite Temporal**: Remove automaticamente arquivos de execuções gerados há mais de **7 dias**.
-- **Sincronização Atômica**: Ao expurgar um arquivo `{run_id}.jsonl`, a rotina `purge_old_runs` atualiza atomicamente o índice `index.jsonl`, mantendo total consistência entre a listagem de auditoria e os arquivos em disco.
-

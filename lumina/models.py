@@ -1662,7 +1662,6 @@ class TreeSuggestionSession(AuditMixin):
     error_message: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, default=None
     )
-    run_id: Mapped[Optional[UUID]] = mapped_column(nullable=True, default=None)
     generation_model: Mapped[Optional[str]] = mapped_column(
         nullable=True, default=None
     )

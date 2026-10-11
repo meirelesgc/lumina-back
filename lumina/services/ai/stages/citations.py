@@ -1,6 +1,4 @@
-from datetime import datetime
 from typing import Any, Dict, List
-from uuid import UUID
 
 from lumina.schemas.ai import Citation
 
@@ -89,56 +87,3 @@ def process_citations(
 
     resolved_refs = resolve_citations(valid_objs, chunks)
     return provided, hallucinated, resolved_refs
-
-
-def audit_citations(simplified_args: list[dict]) -> dict:
-    """
-    Consolida métricas de citações fornecidas, alucinadas e caixas resolvidas
-    para a auditoria de release.
-    """
-    all_cited: list[str] = []
-    total_hallucinated = 0
-    total_boxes = 0
-    for item in simplified_args:
-        for cid in item.get('citations_provided', []):
-            all_cited.append(cid)
-        total_hallucinated += len(item.get('citations_hallucinated', []))
-        for ref in item.get('references', []):
-            total_boxes += len(ref.get('rects', []))
-
-    return {
-        'chunks_cited': sorted(list(set(all_cited))),
-        'hallucinated_citations_count': total_hallucinated,
-        'resolved_boxes_count': total_boxes,
-    }
-
-
-async def record_citations_stage(
-    run_logger: Any,
-    release_id: UUID,
-    simplified_args: list[dict],
-) -> None:
-    """
-    Registra a macroetapa de citações no RunLogger.
-    """
-    t_cit = datetime.now()
-    await run_logger.start_stage(run_id=release_id, stage='citations')
-    try:
-        cit_data = audit_citations(simplified_args)
-        d_cit = int((datetime.now() - t_cit).total_seconds() * 1000)
-        await run_logger.complete_stage(
-            run_id=release_id,
-            stage='citations',
-            duration_ms=d_cit,
-            item_count=len(cit_data['chunks_cited']),
-            data=cit_data,
-        )
-    except Exception as e:
-        d_cit = int((datetime.now() - t_cit).total_seconds() * 1000)
-        await run_logger.fail_stage(
-            run_id=release_id,
-            stage='citations',
-            error=str(e),
-            duration_ms=d_cit,
-        )
-        raise

@@ -27,9 +27,6 @@ acima.
 | `POST` | `/doc/{doc_id}/release/from-file` | Idem ao anterior |
 | WebSocket | `/ws/{subscriber_id}`, evento `doc.release.update` | `payload` é um `DocumentReleasePublic`, com os mesmos campos |
 
-Também expõe o parecer, apenas para administradores: `GET /processing-runs/{run_id}`
-(telemetria do pipeline).
-
 **Não foram alterados:** o chat com o documento (`POST /doc/{doc_id}/message/ai`) e o assistente
 (`POST /doc/{doc_id}/assistant/chat`). As respostas deles continuam como antes.
 

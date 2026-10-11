@@ -1,9 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from collections import Counter
-from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
-from uuid import UUID
 
 from langchain_core.documents import Document
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -14,7 +12,6 @@ from lumina.services.ai.stages.section_models import (
     Section,
     SectionRole,
 )
-from lumina.services.run_logger import get_run_logger
 
 DEFAULT_SECTION_TITLE: str = 'NÃO ENCONTRADA'
 
@@ -660,54 +657,6 @@ def build_sections_tree_from_markdown(
     flat_sections = flatten_sections(tree)
     classify_section_roles(flat_sections)
     return tree
-
-
-async def assign_sections_with_telemetry(
-    chunks: List[Document],
-    model: Optional[BaseChatModel] = None,
-    run_id: Optional[UUID] = None,
-) -> List[Document]:
-    """
-    Compatibilidade de pipeline/telemetria para o estágio de seções.
-    """
-    run_logger = get_run_logger()
-    t_sec = datetime.now()
-    if run_id:
-        await run_logger.start_stage(run_id=run_id, stage='sections')
-
-    sections_meta: Dict[str, Any] = {
-        'input_window_text': '',
-        'sections_detected': [],
-        'mapping_success_rate': 1.0,
-        'default_assigned': None,
-    }
-
-    seen_titles = set()
-    for chunk in chunks:
-        title = chunk.metadata.get('section_title', DEFAULT_SECTION_TITLE)
-        role = chunk.metadata.get('section_role', 'unknown')
-        conf = chunk.metadata.get('role_confidence', 'default')
-        lvl = chunk.metadata.get('section_level', 1)
-        if title not in seen_titles:
-            sections_meta['sections_detected'].append({
-                'section_name': title,
-                'role': role,
-                'role_confidence': conf,
-                'level': lvl,
-            })
-            seen_titles.add(title)
-
-    if run_id:
-        d_sec = int((datetime.now() - t_sec).total_seconds() * 1000)
-        await run_logger.complete_stage(
-            run_id=run_id,
-            stage='sections',
-            duration_ms=d_sec,
-            item_count=len(sections_meta['sections_detected']),
-            data=sections_meta,
-        )
-
-    return chunks
 
 
 # Stubs legados para compatibilidade reversa estrita

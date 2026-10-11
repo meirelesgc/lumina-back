@@ -1,6 +1,5 @@
 # ruff: noqa: PLR2004
 from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 
 import fitz
 import pytest
@@ -9,7 +8,6 @@ from langchain_core.documents import Document
 from lumina.services.ai.pipeline import run_document_ingestion
 from lumina.services.ai.stages.sections import (
     assign_sections_to_chunks,
-    assign_sections_with_telemetry,
     detect_sections_with_model,
     normalize_with_mapping,
 )
@@ -55,21 +53,6 @@ def test_stubs_compatibility():
     norm, mapping = normalize_with_mapping('Texto')
     assert norm == 'texto'
     assert len(mapping) == EXPECTED_STUB_STR_LEN
-
-
-@pytest.mark.asyncio
-async def test_sections_telemetry_wrappers():
-    """
-    Testa se os wrappers assincronos com telemetria executam sem erros.
-    """
-    chunks = [
-        Document(
-            page_content='PDF Chunk',
-            metadata={'section_title': 'Introdução', 'section_role': 'intro'},
-        )
-    ]
-    res_pdf = await assign_sections_with_telemetry(chunks, run_id=uuid4())
-    assert res_pdf[0].metadata['section_title'] == 'Introdução'
 
 
 @pytest.mark.asyncio

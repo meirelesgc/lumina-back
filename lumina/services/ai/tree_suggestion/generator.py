@@ -6,8 +6,6 @@ nós sugeridos já validados (evidência localizada e duplicatas sinalizadas).
 
 import asyncio
 import logging
-import time
-from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from uuid import UUID
 
@@ -50,7 +48,6 @@ from lumina.services.ai.tree_suggestion.text import (
     normalize,
     normalize_title,
 )
-from lumina.services.run_logger import get_run_logger
 
 logger = logging.getLogger(__name__)
 SETTINGS = Settings()
@@ -64,32 +61,6 @@ SIMILAR_TITLE_NOTE = 'Título equivalente a um item já existente na árvore.'
 
 class TreeSuggestionGenerationError(Exception):
     """Falha irrecuperável na geração (mensagem exibível ao usuário)."""
-
-
-@asynccontextmanager
-async def _stage(run_id: Optional[UUID], name: str, stats: Dict[str, Any]):
-    run_logger = get_run_logger()
-    started = time.monotonic()
-    if run_id:
-        await run_logger.start_stage(run_id=run_id, stage=name)
-    try:
-        yield
-    except Exception as exc:
-        if run_id:
-            await run_logger.fail_stage(
-                run_id=run_id,
-                stage=name,
-                error=str(exc),
-                duration_ms=int((time.monotonic() - started) * 1000),
-            )
-        raise
-    if run_id:
-        await run_logger.complete_stage(
-            run_id=run_id,
-            stage=name,
-            duration_ms=int((time.monotonic() - started) * 1000),
-            data=dict(stats.get(name, {})),
-        )
 
 
 def _model_name(model: BaseChatModel) -> str:
@@ -498,7 +469,6 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
     existing: ExistingTree,
     model: Optional[BaseChatModel] = None,
     fast_model: Optional[BaseChatModel] = None,
-    run_id: Optional[UUID] = None,
     source_names: Sequence[Tuple[UUID, str]] = (),
 ) -> GenerationResult:
     """
@@ -510,58 +480,52 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
     fast_model = fast_model or get_fast_model()
     stats: Dict[str, Dict[str, Any]] = {}
 
-    async with _stage(run_id, 'extraction', stats):
-        full_text, page_map, sections = await asyncio.to_thread(
-            _extract, pdf_path
+    full_text, page_map, sections = await asyncio.to_thread(_extract, pdf_path)
+    if not full_text.strip():
+        raise TreeSuggestionGenerationError(
+            'O PDF não contém texto selecionável.'
         )
-        if not full_text.strip():
-            raise TreeSuggestionGenerationError(
-                'O PDF não contém texto selecionável.'
-            )
-        units = build_text_units(full_text, sections)
-        batches = build_batches(
-            full_text, units, SETTINGS.TREE_SUGGESTION_BATCH_CHARS
-        )
-        stats['extraction'] = {
-            'pages': len(page_map),
-            'sections': len(units),
-            'batches': len(batches),
-        }
+    units = build_text_units(full_text, sections)
+    batches = build_batches(
+        full_text, units, SETTINGS.TREE_SUGGESTION_BATCH_CHARS
+    )
+    stats['extraction'] = {
+        'pages': len(page_map),
+        'sections': len(units),
+        'batches': len(batches),
+    }
 
-    async with _stage(run_id, 'scope', stats):
-        scope, types = await _run_scope(
-            fast_model, full_text, sections, mode, existing
-        )
-        stats['scope'] = {'document_types': [t.name for t in types]}
+    scope, types = await _run_scope(
+        fast_model, full_text, sections, mode, existing
+    )
+    stats['scope'] = {'document_types': [t.name for t in types]}
 
-    async with _stage(run_id, 'rules', stats):
-        candidates, failed = await _run_rules(
-            model, batches, types, SETTINGS.TREE_SUGGESTION_MAX_CONCURRENCY
-        )
-        formatting = [c for c in candidates if c[0].rule_type == 'formatting']
-        candidates = [c for c in candidates if c[0].rule_type != 'formatting']
-        stats['rules'] = {
-            'candidates': len(candidates) + len(formatting),
-            'content': len(candidates),
-            'formatting': len(formatting),
-            'failed': failed,
-        }
+    candidates, failed = await _run_rules(
+        model, batches, types, SETTINGS.TREE_SUGGESTION_MAX_CONCURRENCY
+    )
+    formatting = [c for c in candidates if c[0].rule_type == 'formatting']
+    candidates = [c for c in candidates if c[0].rule_type != 'formatting']
+    stats['rules'] = {
+        'candidates': len(candidates) + len(formatting),
+        'content': len(candidates),
+        'formatting': len(formatting),
+        'failed': failed,
+    }
 
-    async with _stage(run_id, 'evidence', stats):
-        locator = EvidenceLocator(
-            full_text, page_map, SETTINGS.TREE_SUGGESTION_EVIDENCE_MIN_SCORE
-        )
-        by_type, matches = await asyncio.to_thread(
-            _validate_evidence, candidates, locator, types
-        )
-        excluded_rules = await asyncio.to_thread(
-            _collect_excluded, formatting, locator
-        )
-        stats['evidence'] = {
-            'accepted': len(matches),
-            'dropped': len(candidates) - len(matches),
-            'excluded': len(excluded_rules),
-        }
+    locator = EvidenceLocator(
+        full_text, page_map, SETTINGS.TREE_SUGGESTION_EVIDENCE_MIN_SCORE
+    )
+    by_type, matches = await asyncio.to_thread(
+        _validate_evidence, candidates, locator, types
+    )
+    excluded_rules = await asyncio.to_thread(
+        _collect_excluded, formatting, locator
+    )
+    stats['evidence'] = {
+        'accepted': len(matches),
+        'dropped': len(candidates) - len(matches),
+        'excluded': len(excluded_rules),
+    }
 
     rules = {cid: rule for group in by_type.values() for cid, rule in group}
     existing_text, aliases = _existing_aliases(existing)
@@ -576,18 +540,17 @@ async def generate_tree_suggestions(  # noqa: PLR0913, PLR0914, PLR0917
     _flag_similar(source_node, source_names)
     builder.nodes.append(source_node)
 
-    async with _stage(run_id, 'consolidation', stats):
-        for doc_type in types:
-            group = by_type.get(doc_type.name)
-            if not group:
-                continue
-            consolidated = await _run_consolidation(
-                model, doc_type.name, group, existing_text
-            )
-            _append_type_nodes(
-                builder, doc_type, group, consolidated, mode, existing
-            )
-        stats['consolidation'] = {'items': len(builder.nodes)}
+    for doc_type in types:
+        group = by_type.get(doc_type.name)
+        if not group:
+            continue
+        consolidated = await _run_consolidation(
+            model, doc_type.name, group, existing_text
+        )
+        _append_type_nodes(
+            builder, doc_type, group, consolidated, mode, existing
+        )
+    stats['consolidation'] = {'items': len(builder.nodes)}
 
     return GenerationResult(
         page_count=len(page_map),

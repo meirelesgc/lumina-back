@@ -1,8 +1,6 @@
 import logging
 import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
-from uuid import UUID
+from typing import Any, Dict, List, Tuple
 
 import fitz
 import pymupdf4llm
@@ -15,7 +13,6 @@ from lumina.services.ai.stages.positioning import enrich_chunks_with_line_rects
 from lumina.services.ai.stages.sections import (
     build_sections_tree_from_markdown,
 )
-from lumina.services.run_logger import get_run_logger
 
 logger = logging.getLogger(__name__)
 SETTINGS = Settings()
@@ -135,61 +132,3 @@ def extract_pdf_chunks(
         return enriched_chunks, pages_count, null_bytes, ws_ops
     finally:
         doc.close()
-
-
-async def extract_pdf_with_telemetry(
-    full_path: str,
-    source_name: str,
-    run_id: Optional[UUID] = None,
-) -> Tuple[List[Document], int]:
-    """
-    Executa a extracao com registro detalhado no RunLogger mantendo todas
-    as chaves de telemetria legadas.
-    """
-    run_logger = get_run_logger()
-    t_start = datetime.now()
-    if run_id:
-        await run_logger.start_stage(run_id=run_id, stage='extraction')
-
-    try:
-        raw_chunks, pages_count, null_bytes, ws_ops = extract_pdf_chunks(
-            full_path, source_name
-        )
-        chunks_count = len(raw_chunks)
-        avg_sz = (
-            round(
-                sum(len(c.page_content) for c in raw_chunks) / chunks_count,
-                1,
-            )
-            if chunks_count
-            else 0.0
-        )
-        if run_id:
-            d_ms = int((datetime.now() - t_start).total_seconds() * 1000)
-            await run_logger.complete_stage(
-                run_id=run_id,
-                stage='extraction',
-                duration_ms=d_ms,
-                item_count=chunks_count,
-                data={
-                    'pages_count': pages_count,
-                    'chunks_count': chunks_count,
-                    'avg_chunk_size': avg_sz,
-                    'extractor_type': 'pymupdf4llm',
-                    'sanitization_ops_count': {
-                        'null_bytes_removed': null_bytes,
-                        'whitespace_normalized': ws_ops,
-                    },
-                },
-            )
-        return raw_chunks, pages_count
-    except Exception as e:
-        if run_id:
-            d_ms = int((datetime.now() - t_start).total_seconds() * 1000)
-            await run_logger.fail_stage(
-                run_id=run_id,
-                stage='extraction',
-                error=str(e),
-                duration_ms=d_ms,
-            )
-        raise

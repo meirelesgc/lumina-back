@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from uuid import UUID
@@ -30,7 +29,6 @@ from lumina.services import (
     tree_service,
 )
 from lumina.services.ai import stages
-from lumina.services.run_logger import get_run_logger
 
 SETTINGS = Settings()
 
@@ -159,7 +157,6 @@ async def run_document_ingestion(
     file_path: Path | str,
     vstore: VStore,
     model: Model,
-    run_id: Optional[UUID] = None,
 ) -> None:
     """
     Executa a ingestão completa do documento passando pelas etapas de:
@@ -180,21 +177,15 @@ async def run_document_ingestion(
 
     source_name = f'lumina/storage/uploads/{os.path.basename(full_path)}'
 
-    raw_chunks, _ = await stages.extraction.extract_pdf_with_telemetry(
-        full_path, source_name, run_id=run_id
+    raw_chunks, *_ = stages.extraction.extract_pdf_chunks(
+        full_path, source_name
     )
-    formatted_docs = await stages.sections.assign_sections_with_telemetry(
-        raw_chunks, model, run_id=run_id
-    )
-
-    anonymized = await stages.anonymization.anonymize_chunks(
-        formatted_docs, run_id=run_id
-    )
+    anonymized = await stages.anonymization.anonymize_chunks(raw_chunks)
     section_docs = stages.sections.build_section_summary_documents(
         anonymized, source_name
     )
     await stages.indexing.index_chunks_to_vstore(
-        vstore, anonymized + section_docs, run_id=run_id
+        vstore, anonymized + section_docs
     )
 
 
@@ -226,88 +217,53 @@ async def process_release_pipeline(
         raise ValueError(f'DocumentRelease {release_id} not found.')
 
     db_doc = db_release.history.document
-    run_logger = get_run_logger()
 
     # 1. Ingestão e Vetorização
     await ws_update(redis, db_release, 'creating_vectors')
-    await run_document_ingestion(
-        db_release.file_path, vstore, model, run_id=release_id
-    )
+    await run_document_ingestion(db_release.file_path, vstore, model)
 
     # 2. Avaliação da Árvore Normativa
     await ws_update(redis, db_release, 'evaluating')
-    t_eval = datetime.now()
-    await run_logger.start_stage(run_id=release_id, stage='evaluation')
-    try:
-        tree = await tree_service.get_tree_by_release(session, db_release)
-        branch_ids = _collect_branch_ids(tree)
-        active_expansions = (
-            await branch_query_expansion_repo.list_active_grouped(
-                session, branch_ids
-            )
-        )
-        expansions_by_branch = {
-            branch_id: (
-                expansions[0].generation_version,
-                [e.expansion_text for e in expansions],
-            )
-            for branch_id, expansions in active_expansions.items()
-        }
-        active_requirements = (
-            await branch_section_requirement_repo.get_active_grouped(
-                session, branch_ids
-            )
-        )
-        section_requirements_by_branch = {
-            branch_id: {
-                'scope': req.scope,
-                'expected_section': req.expected_section,
-                'generation_version': req.generation_version,
-            }
-            for branch_id, req in active_requirements.items()
-        }
-        simplified_args = await stages.retrieval.retrieve_evaluation_payloads(
-            session,
-            vstore,
-            tree,
-            db_release,
-            expansions_by_branch=expansions_by_branch,
-            section_requirements_by_branch=section_requirements_by_branch,
-        )
-        chain = stages.evaluation.get_evaluation_chain(model)
-        await stages.evaluation.evaluate_criteria_batch(
-            chain, simplified_args, run_id=release_id
-        )
-        await save_applied_snapshot(session, simplified_args, db_release.id)
-        d_eval = int((datetime.now() - t_eval).total_seconds() * 1000)
-        await run_logger.complete_stage(
-            run_id=release_id,
-            stage='evaluation',
-            duration_ms=d_eval,
-            item_count=len(simplified_args),
-        )
-    except Exception as e:
-        d_eval = int((datetime.now() - t_eval).total_seconds() * 1000)
-        await run_logger.fail_stage(
-            run_id=release_id,
-            stage='evaluation',
-            error=str(e),
-            duration_ms=d_eval,
-        )
-        raise
-
-    # 3. Macroetapa: Resolução de Coordenadas e Citações
-    await stages.citations.record_citations_stage(
-        run_logger, release_id, simplified_args
+    tree = await tree_service.get_tree_by_release(session, db_release)
+    branch_ids = _collect_branch_ids(tree)
+    active_expansions = await branch_query_expansion_repo.list_active_grouped(
+        session, branch_ids
     )
-
-    # 4. Macroetapa: Síntese Executiva OiacIA
-    await stages.synthesis.record_synthesis_stage(
-        run_logger,
-        db_release,
-        simplified_args,
-        model,
+    expansions_by_branch = {
+        branch_id: (
+            expansions[0].generation_version,
+            [e.expansion_text for e in expansions],
+        )
+        for branch_id, expansions in active_expansions.items()
+    }
+    active_requirements = (
+        await branch_section_requirement_repo.get_active_grouped(
+            session, branch_ids
+        )
+    )
+    section_requirements_by_branch = {
+        branch_id: {
+            'scope': req.scope,
+            'expected_section': req.expected_section,
+            'generation_version': req.generation_version,
+        }
+        for branch_id, req in active_requirements.items()
+    }
+    simplified_args = await stages.retrieval.retrieve_evaluation_payloads(
         session,
+        vstore,
+        tree,
+        db_release,
+        expansions_by_branch=expansions_by_branch,
+        section_requirements_by_branch=section_requirements_by_branch,
+    )
+    chain = stages.evaluation.get_evaluation_chain(model)
+    await stages.evaluation.evaluate_criteria_batch(chain, simplified_args)
+    await save_applied_snapshot(session, simplified_args, db_release.id)
+
+    # 3. Síntese Executiva OiacIA
+    await stages.synthesis.generate_release_synthesis(
+        db_release, simplified_args, model, session
     )
 
     await ws_update(redis, db_release, 'complete')
@@ -337,20 +293,6 @@ async def run_release_pipeline(
     db_doc.processing_status = DocumentProcessingStatus.PROCESSING
     await session.commit()
 
-    run_logger = get_run_logger()
-    doc_name = (
-        str(db_release.file_path).split('/')[-1]
-        if db_release.file_path
-        else getattr(db_doc, 'title', None)
-    )
-    start_time = datetime.now()
-    await run_logger.start_run(
-        run_id=release_id,
-        document_id=db_doc.id,
-        document_name=doc_name,
-        metadata={'version': getattr(db_release, 'version', '1.0.0')},
-    )
-
     try:
         result = await process_release_pipeline(
             session, release_id, model, vstore, redis
@@ -358,11 +300,6 @@ async def run_release_pipeline(
 
         db_doc.processing_status = DocumentProcessingStatus.IDLE
         await session.commit()
-
-        duration_ms = int((datetime.now() - start_time).total_seconds() * 1000)
-        await run_logger.complete_run(
-            run_id=release_id, duration_ms=duration_ms
-        )
 
         # Envia notificação de conclusão aos editores
         await notification_service.send_release_completed_notification(
@@ -373,10 +310,6 @@ async def run_release_pipeline(
 
     except Exception as e:
         await session.rollback()
-        duration_ms = int((datetime.now() - start_time).total_seconds() * 1000)
-        await run_logger.fail_run(
-            run_id=release_id, error=str(e), duration_ms=duration_ms
-        )
         db_doc.processing_status = DocumentProcessingStatus.FAILED
         release_repo.add_document(session, db_doc)
         await session.commit()

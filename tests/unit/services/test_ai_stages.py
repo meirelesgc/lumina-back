@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
-from lumina.schemas.processing_run import ProcessingStatus
 from lumina.services.ai.stages import retrieval as retrieval_module
 from lumina.services.ai.stages.evaluation import (
     evaluate_criteria_batch as apply_tree,
@@ -20,8 +19,6 @@ from lumina.services.ai.stages.retrieval import (
     retrieve_evaluation_payloads,
     route_candidate_sections,
 )
-from lumina.services.ai.stages.synthesis import partition_synthesis_text
-from lumina.services.run_logger import RunLogger
 
 EXPECTED_SCORE_NINE = 9
 EXPECTED_REFS_COUNT_ONE = 1
@@ -96,44 +93,8 @@ async def test_apply_tree_resolves_citations_into_references():
     ]
 
 
-def test_partition_synthesis_text_full():
-    sample_text = (
-        'Olá, sou OiacIA, assistente de análise técnica.\n\n'
-        '# Pontos atendidos\n'
-        'O documento demonstra boa estrutura e atende aos editais.\n\n'
-        '# Pontos a aprimorar\n'
-        'Falta detalhar metodologia e cronograma financeiro.\n\n'
-        '# Orientação final\n'
-        'Recomenda-se revisão técnica antes da submissão.'
-    )
-    result = partition_synthesis_text(sample_text)
-    assert 'Olá, sou OiacIA' in result['greeting']
-    assert 'boa estrutura' in result['fulfilled_points']
-    assert 'metodologia' in result['improvement_points']
-    assert 'revisão técnica' in result['final_guidance']
-
-
-def test_partition_synthesis_text_empty():
-    result = partition_synthesis_text('')
-    assert not result['greeting']
-    assert not result['fulfilled_points']
-    assert not result['improvement_points']
-    assert not result['final_guidance']
-
-
 @pytest.mark.asyncio
-async def test_apply_tree_isolates_schema_validation_error(
-    tmp_path, monkeypatch
-):
-    logger = RunLogger(base_dir=tmp_path)
-    monkeypatch.setattr(
-        'lumina.services.ai.stages.evaluation.get_run_logger',
-        lambda: logger,
-    )
-    run_id = uuid4()
-    await logger.start_run(run_id=run_id, document_id=uuid4())
-    await logger.start_stage(run_id=run_id, stage='evaluation')
-
+async def test_apply_tree_isolates_schema_validation_error():
     mock_prompt = MagicMock()
     mock_model = MagicMock()
     mock_parser = MagicMock()
@@ -192,7 +153,7 @@ async def test_apply_tree_isolates_schema_validation_error(
         },
     ]
 
-    result = await apply_tree(mock_chain, eval_args, run_id=run_id)
+    result = await apply_tree(mock_chain, eval_args)
 
     assert len(result) == EXPECTED_ITEMS_COUNT_TWO
     ok_item = next(r for r in result if r['id'] == 'branch_ok')
@@ -203,20 +164,6 @@ async def test_apply_tree_isolates_schema_validation_error(
     broken_item = next(r for r in result if r['id'] == 'branch_broken')
     assert broken_item['fulfilled'] is False
     assert 'Erro na validação de schema' in broken_item['feedback']
-
-    await logger.complete_stage(run_id=run_id, stage='evaluation')
-    await logger.complete_run(run_id=run_id)
-
-    detail = await logger.get_run_detail(run_id)
-    assert detail is not None
-    eval_stage = next(s for s in detail.stages if s.name == 'evaluation')
-    assert len(eval_stage.items) == EXPECTED_ITEMS_COUNT_TWO
-
-    failed_rec = next(
-        i for i in eval_stage.items if i['criterion_id'] == 'branch_broken'
-    )
-    assert failed_rec['status'] == ProcessingStatus.FAILED
-    assert 'Invalid JSON schema' in failed_rec['error_message']
 
 
 def test_format_context_formatting():

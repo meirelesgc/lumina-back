@@ -55,7 +55,7 @@ from lumina.services.ai.tree_suggestion import (
     TreeSuggestionGenerationError,
     generate_tree_suggestions,
 )
-from lumina.services.run_logger import get_run_logger, sanitize_pii
+from lumina.utils.pii import sanitize_pii
 
 logger = logging.getLogger(__name__)
 SETTINGS = Settings()
@@ -288,22 +288,12 @@ async def _generate_items(session: AsyncSession, suggestion_id: UUID) -> None:
     ):
         return
 
-    run_logger = get_run_logger()
-    run_id = uuid4()
-    suggestion.run_id = run_id
-    await run_logger.start_run(
-        run_id=run_id,
-        document_id=suggestion.id,
-        document_name=suggestion.original_filename,
-        metadata={'feature': 'tree_suggestion', 'mode': suggestion.mode},
-    )
     try:
         existing = await _load_existing_tree(session, suggestion)
         result = await generate_tree_suggestions(
             _local_path(suggestion.file_path),
             suggestion.mode,
             existing,
-            run_id=run_id,
             source_names=await _source_names(session),
         )
         items = await _build_items(session, suggestion, result)
@@ -314,9 +304,6 @@ async def _generate_items(session: AsyncSession, suggestion_id: UUID) -> None:
         suggestion.excluded_rules = result.excluded_rules
         suggestion.processing_finished_at = _utcnow()
         await session.commit()
-        await run_logger.complete_run(
-            run_id=run_id, metadata={'items': len(items)}
-        )
     except Exception as exc:
         await session.rollback()
         message = (
@@ -326,8 +313,9 @@ async def _generate_items(session: AsyncSession, suggestion_id: UUID) -> None:
         )
         if isinstance(exc, HTTPException):
             message = str(exc.detail)
-        logger.exception('Falha ao gerar sugestões da sessão %s', run_id)
-        await run_logger.fail_run(run_id=run_id, error=str(exc))
+        logger.exception(
+            'Falha ao gerar sugestões da sessão %s', suggestion_id
+        )
         await _mark_failed(session, suggestion_id, message)
 
 

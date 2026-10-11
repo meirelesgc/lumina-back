@@ -17,7 +17,6 @@ from lumina.routers import (
     advisorship,
     auth,
     invitations,
-    processing_runs,
     reports,
     stats,
     system,
@@ -162,4 +161,3 @@ app.include_router(system.router)
 app.include_router(reports.router)
 app.include_router(templates.router)
 app.include_router(abnt.router)
-app.include_router(processing_runs.router)
