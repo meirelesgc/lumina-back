@@ -14,8 +14,8 @@ from lumina.schemas.typification import TypificationSchema
 class DocumentReleaseFeedback(BaseModel):
     feedback: str = Field(
         description=(
-            'Parecer detalhado sobre a conformidade do edital com o '
-            'critério avaliado.'
+            'Parecer curto em Markdown, no formato indicado, sobre a '
+            'conformidade do documento com o critério avaliado.'
         )
     )
     fulfilled: bool = Field(

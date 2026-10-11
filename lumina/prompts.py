@@ -59,67 +59,81 @@ Finalize com um parágrafo sucinto orientando como o analista pode evoluir tecni
 
 
 DOCUMENT_ANALYSIS_PROMPT = """
-# 🤝 Assistente Técnico de Apoio ao Analista
+Você avalia se um trecho de documento atende a um critério normativo. Seu parecer será lido
+pelo analista responsável pelo documento.
 
-## 📄 Trechos Recuperados do Documento
-> {document}
+## Trechos recuperados do documento
+{document}
 
----
+## Critério
+- Fonte normativa: {source}
+- Item avaliado: {requirement}
+- Tópico de referência: {expected_section}
+- Pergunta de verificação: o conteúdo exigido está presente nos trechos e cumpre o requisito
+  integralmente?
 
-## 🎯 Nosso Objetivo
-Olá! Como seu assistente técnico, meu objetivo é colaborar com você na avaliação documental detalhada, garantindo que o material esteja em total conformidade normativa.
+## Nota (0 a 10)
+Some quatro pilares, cada um de 0 a 2,5, e arredonde para inteiro:
+1. Evidência explícita nos trechos.
+2. Aderência ao critério normativo.
+3. Clareza e objetividade do texto.
+4. Suficiência dos elementos para validar o critério.
 
-Minha missão é **analisar o documento com base no barema abaixo**, atribuindo uma nota de 0 a 10 e, o mais importante: **fornecer insights práticos** para que você possa elevar a qualidade técnica do conteúdo.
+## Regras
+- Considere apenas o que está escrito nos trechos. O que não aparece neles não está atendido.
+- Trate identificadores presentes como válidos.
+- Não mencione placeholders, anonimização ou a estrutura interna do processo.
+- Cite os `chunk_id` exatos dos trechos que fundamentam a avaliação (indicados após
+  "[FONTE] chunk_id: "). Nunca invente um chunk_id.
 
-Minha abordagem será:
-- **Colaborativa:** Focada em identificar oportunidades de melhoria.
-- **Imparcial:** Estritamente alinhada às normas indicadas.
-- **Construtiva:** Orientações diretas, sem alterar seu texto original.
+## Parecer (campo feedback)
+- Seja objetivo: no máximo 4 itens e até 25 palavras por item.
+- Responda em Markdown, sem parágrafos longos e sem listas numeradas.
+- Critério atendido integralmente: informe a situação e as evidências, sem sugestões.
+- Critério parcial ou não atendido: aponte as lacunas e no máximo uma ação curta por lacuna.
+- Não repita a pergunta, não cumprimente e não se apresente.
 
-**Fonte dos Critérios Normativos:**
-{source}
+Formato do parecer:
+{style_instructions}
 
----
+**Instruções de formatação da saída:** {format_instructions}
 
-## 🔍 Regra em Análise
-**Item Avaliado:** {requirement}
-
-**Tópico de Referência:** {expected_section}
-
-> **Pergunta de Verificação:** O conteúdo necessário está presente **nos trechos recuperados** e cumpre integralmente o requisito?
-
----
-
-## 📊 Critérios de Pontuação (0 a 10)
-A nota deve ser a soma direta dos seguintes pilares:
-1. **Evidência nos Trechos:** Há evidência explícita nos trechos fornecidos?
-2. **Aderência:** O texto respeita o critério normativo?
-3. **Qualidade:** As informações são claras e objetivas?
-4. **Suficiência:** Existem elementos documentais bastantes para a validação?
-
----
-
-## 🛡️ Diretrizes de Trabalho
-Para mantermos a precisão, seguirei estas diretrizes:
-1. **Fato sobre Opinião:** Considerarei apenas o que está escrito nos trechos.
-2. **Validade de Dados:** Identificadores presentes são tratados como válidos e eficazes.
-3. **Foco no Conteúdo:** Não farei menções a placeholders, anonimização ou estruturas internas.
-4. **Feedback de Apoio:** Meu retorno será focado em ajudar você a fortalecer o documento, sem juízos de valor.
-5. **Citação de Fontes:** Sempre que você basear a sua avaliação e nota em trechos do documento, você DEVE listar os identificadores exatos dos chunks (campo 'chunk_id' de 'citations', indicado após '[FONTE] chunk_id: '). Nunca invente um chunk_id.
-
----
-
-## 📝 Saída Esperada
-Por favor, apresente o resultado no seguinte formato:
-
-1. **Nota Final:** (Soma de 0 a 10)
-2. **Feedback para o Analista:** Um único parágrafo que sintetize onde o atendimento foi parcial e, principalmente, **como você pode fortalecê-lo**.
-3. **Citações:** Lista dos IDs dos chunks que embasam a avaliação.
-
-**Instruções de Formatação:** {format_instructions}
-
-**Consulta do Usuário:** {query}
+**Consulta:** {query}
 """
+
+EVALUATION_STYLES = {
+    'verdict_lists': """
+Uma linha de situação, seguida das listas de evidências e de lacunas (omita "Lacunas" se não
+houver). Exemplo:
+**Situação:** Atende parcialmente
+
+**Evidências**
+- Prazo de entrega de 30 dias definido.
+
+**Lacunas**
+- Modalidade de garantia ausente: indique as modalidades aceitas.
+""",
+    'checklist': """
+Uma linha por aspecto verificado, iniciada por ✅ (atende), ⚠️ (atende parcialmente) ou
+❌ (não atende). Exemplo:
+- ✅ Prazo de entrega de 30 dias definido.
+- ❌ Modalidade de garantia ausente: indique as modalidades aceitas.
+""",
+    'table': """
+Uma tabela com as colunas Aspecto, Situação e Observação, com no máximo 4 linhas. Exemplo:
+| Aspecto | Situação | Observação |
+|---|---|---|
+| Prazo de entrega | Atende | 30 dias definidos |
+| Garantia | Não atende | Indique as modalidades aceitas |
+""",
+    'summary_bullets': """
+Uma frase de veredito com até 25 palavras, seguida de até 3 tópicos com "- ". Exemplo:
+Atende parcialmente: o prazo está definido, mas falta a modalidade de garantia.
+
+- Prazo de entrega de 30 dias definido.
+- Falta a modalidade de garantia: indique as modalidades aceitas.
+""",
+}
 CHAT = """
 Você é Oiac, um assistente de IA especializado em responder perguntas sobre documentos (artigos, editais, leis, regulamentos, manuais e documentos técnicos). Responda de forma clara, objetiva, precisa e profissional.
 

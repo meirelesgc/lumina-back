@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID
@@ -20,6 +21,23 @@ CHAIN_STEPS_COUNT = 3
 MAX_RETRIES = 3
 
 
+def with_low_verbosity(model: Model) -> Model:
+    """
+    Retorna uma cópia do modelo com verbosity='low' quando o modelo suporta
+    o parâmetro, sem alterar a instância compartilhada com outros fluxos.
+    """
+    if 'verbosity' not in getattr(type(model), 'model_fields', {}):
+        return model
+    return model.model_copy(update={'verbosity': 'low'})
+
+
+def select_evaluation_style() -> str:
+    """
+    Sorteia o bloco de estilo de resposta do parecer de um critério.
+    """
+    return random.choice(list(PROMPTS.EVALUATION_STYLES.values()))
+
+
 def get_evaluation_chain(model: Model):
     """
     Cria a chain LangChain com parser para DocumentReleaseFeedback.
@@ -34,10 +52,11 @@ def get_evaluation_chain(model: Model):
             'requirement',
             'expected_section',
             'query',
+            'style_instructions',
         ],
         partial_variables=fmt,
     )
-    return prompt | model | parser
+    return prompt | with_low_verbosity(model) | parser
 
 
 def _extract_raw_output_and_tokens(
@@ -208,6 +227,8 @@ async def evaluate_criteria_batch(
         and isinstance(chain.steps, (list, tuple))
         and len(chain.steps) == CHAIN_STEPS_COUNT
     )
+    for item in eval_args:
+        item['style_instructions'] = select_evaluation_style()
 
     for _ in range(MAX_RETRIES):
         try:
