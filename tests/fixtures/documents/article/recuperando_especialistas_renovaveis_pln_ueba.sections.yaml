@@ -1,0 +1,48 @@
+# Seções esperadas para recuperando_especialistas_renovaveis_pln_ueba.pdf
+# Salvar como recuperando_especialistas_renovaveis_pln_ueba.sections.yaml ao lado do PDF
+# Páginas relativas ao PDF (1 = primeira página, numerada 242 na revista).
+# Conversão: página do PDF = página da revista - 241.
+
+sections:
+  - title: RESUMO
+    page: 1
+    starts_with: 'Objetivo: Este artigo propõe uma solução para a recuperação de informações textuais'
+  - title: 1 INTRODUÇÃO
+    page: 2
+    starts_with: 'A Bahia destaca-se como polo nacional de energias renováveis,'
+  - title: 2 DESENVOLVIMENTO
+    page: 4
+    starts_with: 'Soluções aplicando conceitos taxonômicos são ferramentas úteis para a'
+  - title: 3 APLICAÇÕES CORRELATADAS
+    page: 6
+    starts_with: 'No contexto da recuperação de dados, a taxonomia facetada tem se'
+  - title: 4 O SIMCC – SISTEMA DE MAPEAMENTO DE COMPETÊNCIAS CIENTÍFICAS DA BAHIA
+    page: 8
+    starts_with: 'É uma plataforma de mapeamento de competências em rede para'
+  - title: 5 PROCEDIMENTOS METODOLÓGICOS
+    page: 11
+    starts_with: 'Para a realização do projeto de identificar um conjunto de pesquisadores'
+  - title: 6 ANÁLISE DE RESULTADOS
+    page: 14
+    starts_with: 'Essa seção está estruturada, primeiramente, na apresentação do'
+  - title: 7 EXPERIMENTO – PESQUISADORES DAS UNIVERSIDADES ESTADUAIS DA BAHIA COM COMPETÊNCIAS EM ENERGIAS RENOVÁVEIS
+    page: 17
+    starts_with: 'Para análise da efetividade da solução proposta foi realizado um'
+  - title: 8 CONSIDERAÇÕES FINAIS
+    page: 20
+    starts_with: 'Esta pesquisa apresentou uma solução para RI no contexto das'
+  - title: 9 PERSPECTIVA FUTURA
+    page: 22
+    starts_with: 'Em primeiro plano, almeja-se a expansão da base de dados do SIMCC'
+  - title: AGRADECIMENTOS
+    page: 23
+    starts_with: 'Agradecemos pelo apoio recebido do Conselho Nacional de'
+  - title: REFERÊNCIAS
+    page: 23
+    starts_with: 'AGANETTE, Elisangela; ALVARENGA, Lídia; SOUZA, Renato Rocha.'
+  - title: ABSTRACT
+    page: 26
+    starts_with: 'Objective: This article proposes a solution for retrieving textual information'
+  - title: RESUMEN
+    page: 27
+    starts_with: 'Objetivo: Este artículo propone una solución para recuperar información textual de'

@@ -1,0 +1,86 @@
+# Seções esperadas para smart_tech_microgrids.pdf
+# Salvar como smart_tech_microgrids.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+
+sections:
+  - title: Abstract
+    page: 1
+    starts_with: 'The production of electricity from renewable sources has become a global necessity'
+  - title: 1. Introduction
+    page: 1
+    starts_with: 'Smart technology has become a widespread practice implemented in complex activities.'
+  - title: 2. Materials and Methods
+    page: 2
+    starts_with: 'The methodological approach of the systematic literature review (SLR) was developed'
+    subsections:
+      - title: 2.1. Eligibility Criteria and Data Collection
+        page: 3
+        starts_with: 'The starting point for this milestone was considered to be the year 2015,'
+      - title: 2.2. Automation Tools Used in the Bibliometric Data Collection and Analysis Process
+        page: 3
+        starts_with: 'The automated construction of the results was composed by a set of functions'
+      - title: 2.3. Selection Process
+        page: 4
+        starts_with: 'The eligibility of the articles was carried out using the content available in their'
+      - title: 2.4. Assessment of Study Bias Risk
+        page: 4
+        starts_with: 'The study was developed in two phases.'
+  - title: 3. Results
+    page: 5
+    starts_with: 'A set of technologies was applied with characteristics that enhance electricity production.'
+    subsections:
+      - title: 3.1. Selection of Studies and Flow of the Methodological Process
+        page: 5
+        starts_with: 'The compilation of the data collected from Scopus and Web of Science online databases'
+      - title: 3.2. Bibliometric Analysis of the Eligible Studies
+        page: 6
+        starts_with: 'Bibliometric analysis is considered as the data generated from Scopus and Web of'
+  - title: 4. Discussion
+    page: 6
+    starts_with: 'The study shows that the increased perception of electricity production from renewable'
+    subsections:
+      - title: 4.1. Question 1 (Q1)
+        page: 6
+        starts_with: 'Regarding the smart technologies used in the production of renewable energy for'
+      - title: 4.2. Question 2 (Q2)
+        page: 7
+        starts_with: 'Technologies have been mainly used as agents to make renewable energy production'
+      - title: 4.3. Question 3 (Q3)
+        page: 9
+        starts_with: 'The cutout defined on the RSL eligibility criteria in relation to global scientific'
+      - title: 4.4. Question 4 (Q4)
+        page: 10
+        starts_with: 'The potential risks associated with the use of smart technologies in microgeneration'
+      - title: 4.5. Question 5 (Q5)
+        page: 11
+        starts_with: 'The need for high computational power for large volumes of data represents'
+  - title: 5. Conclusions
+    page: 12
+    starts_with: 'This study aims to contribute to the improvement of solutions that represent the state'
+  - title: Supplementary Materials
+    page: 12
+    starts_with: 'The following supporting information can be downloaded at:'
+  - title: Author Contributions
+    page: 12
+    starts_with: 'Conceptualization, T.A.R.B., H.S. and A.S.N.F.;'
+  - title: Funding
+    page: 12
+    starts_with: 'This research was supported by National Council for Scientific and Technological'
+  - title: Data Availability Statement
+    page: 12
+    starts_with: 'https://github.com/toniarb/STAMP-RES.'
+  - title: Acknowledgments
+    page: 12
+    starts_with: 'This work was supported by national funds through the Fundação para a'
+  - title: Conflicts of Interest
+    page: 13
+    starts_with: 'The authors declare no conflicts of interest.'
+  - title: Abbreviations
+    page: 13
+    starts_with: 'The following abbreviations are used in this manuscript:'
+  - title: References
+    page: 13
+    starts_with: 'Russell, S.J.; Norvig, P.; Davis, E. Artificial Intelligence: A Modern Approach'
+  - title: Disclaimer/Publisher’s Note
+    page: 20
+    starts_with: 'The statements, opinions and data contained in all publications are solely'
