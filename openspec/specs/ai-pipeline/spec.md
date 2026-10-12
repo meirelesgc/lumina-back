@@ -5,23 +5,39 @@ Define a arquitetura modular e os comportamentos esperados para o pipeline de pr
 
 ## Requirements
 
-### Requirement: Extração de Texto e Chunking Geométrico
-O sistema SHALL extrair o conteúdo textual de arquivos PDF mantendo o mapeamento de coordenadas físicas (bounding boxes `rects`) de cada linha, gerando blocos de texto (chunks) com tamanho máximo de 500 caracteres e metadados de página e identificador sequencial.
+### Requirement: Extração de Texto e Chunking por Seção e Página
+O sistema SHALL extrair o texto de arquivos PDF em Markdown, página a página, com um mapa de páginas que registra o deslocamento de cada página no texto completo. O sistema SHALL cortar o texto de cada seção nos limites de página, de modo que cada chunk pertença a uma única página, e SHALL dividir os trechos com mais de 1000 caracteres em chunks de até 1000 caracteres, com sobreposição de 150. Cada chunk SHALL carregar `chunk_id` no formato `chunk_{página}_{índice na página}`, a página `page` (base 0), os deslocamentos `char_start` e `char_end` e os retângulos `rects` das linhas que ocupa no PDF original.
 
 #### Scenario: Extração de documento PDF com coordenadas
 - **WHEN** um documento PDF válido é processado pela etapa de extração
-- **THEN** o sistema emite blocos com `chunk_id`, número de página `page`, texto sanitizado e caixas delimitadoras `rects` correspondentes às linhas no documento original
+- **THEN** o sistema emite chunks com `chunk_id`, `page`, texto sanitizado e os retângulos `rects` das linhas correspondentes no documento original
+
+#### Scenario: Seção que atravessa páginas
+- **WHEN** o texto de uma seção começa em uma página e termina na seguinte
+- **THEN** o sistema gera chunks separados para cada página, e nenhum chunk mistura texto das duas
+
+#### Scenario: Trecho maior que o limite
+- **WHEN** o trecho de uma seção em uma página passa de 1000 caracteres
+- **THEN** o sistema divide o trecho em chunks de até 1000 caracteres, com 150 caracteres de sobreposição entre chunks vizinhos
 
 #### Scenario: Rejeição de formatos não suportados
 - **WHEN** um arquivo com extensão diferente de PDF é fornecido na extração
 - **THEN** o sistema SHALL rejeitar o processamento levantando erro de tipo de arquivo não suportado
 
-### Requirement: Classificação e Vinculação de Macro-seções
-O sistema SHALL atribuir a macro-seção padrão "NÃO ENCONTRADA" a todos os blocos de texto gerados no pipeline de ingestão e carimbar o cabeçalho temático correspondente no conteúdo dos blocos de texto, sem realizar chamadas a modelos de linguagem para detecção de seções.
+### Requirement: Árvore de Seções e Vinculação aos Chunks
+O sistema SHALL montar a árvore de seções do documento a partir dos títulos do Markdown extraído, sem chamadas a modelos de linguagem, e SHALL classificar o papel semântico de cada seção (resumo, introdução, metodologia etc.) por aliases de título e por posição. Cada chunk SHALL carregar o título da seção que o contém em `section_title`, o caminho de títulos em `section_path`, o papel em `section_role` e o prefixo `[título da seção] ` no conteúdo. Para cada seção, o sistema SHALL indexar um resumo (título e trecho inicial) marcado com `record_type=section_summary`, que a busca de chunks exclui.
 
-#### Scenario: Identificação de seções e atribuição aos blocos
-- **WHEN** blocos de texto são processados na etapa de seções
-- **THEN** cada bloco recebe o metadado `section_title` com valor "NÃO ENCONTRADA" e o prefixo `SECTION: NÃO ENCONTRADA\n\n` no conteúdo textual
+#### Scenario: Atribuição de seção aos chunks
+- **WHEN** o sistema gera os chunks de uma seção da árvore
+- **THEN** cada chunk recebe `section_title`, `section_path` e `section_role` da seção e começa com `[título da seção] `
+
+#### Scenario: Classificação de papel por alias
+- **WHEN** o título de uma seção corresponde a um alias conhecido, como "Resumo" ou "Abstract"
+- **THEN** a seção recebe o papel correspondente e `role_confidence` igual a `alias_match`
+
+#### Scenario: Resumos de seção fora da busca de chunks
+- **WHEN** o sistema indexa os chunks de um documento
+- **THEN** o sistema indexa também um resumo por seção com `record_type=section_summary`, e a busca vetorial de chunks não retorna esses resumos
 
 ### Requirement: Anonimização e Proteção de Dados Pessoais
 O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos blocos de texto antes de qualquer operação de vetorização ou envio para provedores de LLM externos, mantendo os dados de reversão isolados exclusivamente nos metadados.
