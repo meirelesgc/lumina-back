@@ -86,6 +86,25 @@ ROLE_ALIASES: Dict[SectionRole, List[str]] = {
 }
 
 
+INLINE_LABEL_PATTERN = re.compile(r'^\*\*(?P<label>[^*]{2,60}?):\*\*\s*\S')
+
+INLINE_SECTION_LABELS = frozenset({
+    'abstract',
+    'resumo',
+    'resumen',
+    'supplementary materials',
+    'author contributions',
+    'funding',
+    'data availability statement',
+    'acknowledgments',
+    'acknowledgements',
+    'conflicts of interest',
+    "disclaimer/publisher's note",
+    'institutional review board statement',
+    'informed consent statement',
+})
+
+
 class SectionInfo(BaseModel):
     section_name: str = Field(description='Nome normalizado da seção.')
     start_text: Optional[str] = Field(
@@ -110,6 +129,31 @@ def strip_markup(text: str) -> str:
     cleaned = re.sub(r'</?[a-zA-Z0-9_-]+[^>]*>', '', cleaned)
     cleaned = re.sub(r'\s+', ' ', cleaned)
     return cleaned.strip()
+
+
+def inline_section_label(line: str) -> Optional[str]:
+    """
+    Devolve o rótulo de `**Rótulo:** texto` quando ele é um nome de seção
+    conhecido (INLINE_SECTION_LABELS); caso contrário, None.
+    """
+    match = INLINE_LABEL_PATTERN.match(line)
+    if not match:
+        return None
+    label = strip_markup(match.group('label'))
+    if label.casefold().replace('’', "'") not in INLINE_SECTION_LABELS:
+        return None
+    return label
+
+
+def content_start_line(heading: Heading) -> int:
+    """
+    Indice (0-based) da primeira linha do texto da secao. Num titulo
+    `inline` o texto comeca na propria linha do titulo; nos demais, na
+    linha seguinte.
+    """
+    if heading.inline:
+        return heading.line_number - 1
+    return heading.line_number
 
 
 def text_between(full_text: str, h1: Heading, h2: Heading) -> str:
@@ -161,9 +205,29 @@ def make_repeated_cleaner(min_occurrences: int = 3) -> HeadingCleaner:
     return cleaner
 
 
+def stands_alone(heading: Heading) -> bool:
+    """
+    Indica se o título abre uma seção própria e não continua o anterior:
+    rótulo inline, numeração própria (`2.1`) ou nome de seção conhecido
+    (`RESUMO`).
+    """
+    if heading.inline:
+        return True
+    title = strip_markup(heading.title)
+    if any(pattern.search(title) for pattern, _ in NUMBERING_PATTERNS):
+        return True
+    alias_title = normalize_title_for_alias(title)
+    return any(
+        re.fullmatch(pattern, alias_title, re.IGNORECASE)
+        for patterns in ROLE_ALIASES.values()
+        for pattern in patterns
+    )
+
+
 def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
     """
     Passo 3 da Pipeline: Funde títulos adjacentes em linhas contínuas.
+    Não funde título inline nem título que abre seção própria.
     """
 
     def cleaner(headings: List[Heading], full_text: str) -> List[Heading]:
@@ -176,8 +240,10 @@ def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
 
         while i < total:
             current = headings[i]
-            while i + 1 < total:
+            while i + 1 < total and not current.inline:
                 nxt = headings[i + 1]
+                if stands_alone(nxt):
+                    break
                 gap = text_between(full_text, current, nxt)
                 if len(gap.strip()) <= max_gap_chars:
                     current.title = f'{current.title} {nxt.title}'.strip()
@@ -200,6 +266,8 @@ def reclassify_numbering_level(
     Passo 4 da Pipeline: Corrige o nível com base na numeração explícita.
     """
     for h in headings:
+        if h.inline:
+            continue
         matched = False
         clean_title = strip_markup(h.title)
         for pattern, level in NUMBERING_PATTERNS:
@@ -227,7 +295,7 @@ def make_orphan_cleaner(min_chars: int = 20) -> HeadingCleaner:
         filtered: List[Heading] = []
 
         for i, h in enumerate(headings):
-            start_line = h.line_number
+            start_line = content_start_line(h)
             end_line = (
                 headings[i + 1].line_number - 1
                 if i + 1 < len(headings)
@@ -303,7 +371,8 @@ def parse_headings_from_markdown(
     content: str, page_map: Optional[List[Dict[str, Any]]] = None
 ) -> List[Heading]:
     """
-    Identifica todos os cabeçalhos ('#') com linha e página associada.
+    Identifica todos os cabeçalhos ('#') com linha e página associada, e
+    os rótulos conhecidos na mesma linha do texto (`**Funding:** ...`).
     """
     headings: List[Heading] = []
     lines = content.splitlines()
@@ -321,6 +390,21 @@ def parse_headings_from_markdown(
                     title=title.strip(),
                     raw=stripped,
                     page=page,
+                )
+            )
+            continue
+
+        label = inline_section_label(stripped)
+        if label:
+            headings.append(
+                Heading(
+                    line_number=line_idx,
+                    level=1,
+                    title=label,
+                    raw=stripped,
+                    page=find_page_for_line(line_idx, page_map),
+                    level_source='inline_label',
+                    inline=True,
                 )
             )
 
@@ -392,7 +476,7 @@ def build_section_tree(  # noqa: PLR0914
     sliced: List[Tuple[Heading, str]] = []
 
     for i, h in enumerate(headings):
-        start_line = h.line_number
+        start_line = content_start_line(h)
         end_line = (
             headings[i + 1].line_number - 1
             if i + 1 < len(headings)
@@ -436,7 +520,7 @@ def build_section_tree(  # noqa: PLR0914
             else total_lines
         )
         char_start, char_end = content_char_range(
-            full_text, line_starts, heading.line_number, end_line
+            full_text, line_starts, content_start_line(heading), end_line
         )
 
         while stack and stack[-1][0] >= heading.level:

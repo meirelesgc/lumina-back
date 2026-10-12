@@ -111,6 +111,55 @@ Compõem este Edital os seguintes anexos com mais de vinte caracteres.
     assert merged[0].line_number == 2
 
 
+def _merge(full_text, *titles, inline_last=False):
+    lines = full_text.splitlines()
+    headings = [
+        Heading(
+            line_number=lines.index(raw) + 1,
+            level=2,
+            title=title,
+            raw=raw,
+        )
+        for title, raw in titles
+    ]
+    headings[-1].inline = inline_last
+    return make_adjacent_merger(max_gap_chars=5)(headings, full_text)
+
+
+def test_adjacent_merger_keeps_numbered_subsection_apart():
+    full_text = '## 2. Desenvolvimento\n\n## 2.1 Agente Etiologico\n'
+    merged = _merge(
+        full_text,
+        ('2. Desenvolvimento', '## 2. Desenvolvimento'),
+        ('2.1 Agente Etiologico', '## 2.1 Agente Etiologico'),
+    )
+    assert [h.title for h in merged] == [
+        '2. Desenvolvimento',
+        '2.1 Agente Etiologico',
+    ]
+
+
+def test_adjacent_merger_keeps_known_section_name_apart():
+    full_text = '### DOI: 10.54751/foco\n\n### RESUMO\n'
+    merged = _merge(
+        full_text,
+        ('DOI: 10.54751/foco', '### DOI: 10.54751/foco'),
+        ('RESUMO', '### RESUMO'),
+    )
+    assert [h.title for h in merged] == ['DOI: 10.54751/foco', 'RESUMO']
+
+
+def test_adjacent_merger_never_merges_inline_label():
+    full_text = '## Abbreviations\n\n**Funding:** This research.\n'
+    merged = _merge(
+        full_text,
+        ('Abbreviations', '## Abbreviations'),
+        ('Funding', '**Funding:** This research.'),
+        inline_last=True,
+    )
+    assert [h.title for h in merged] == ['Abbreviations', 'Funding']
+
+
 def test_reclassify_numbering_level():
     headings = [
         Heading(

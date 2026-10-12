@@ -23,7 +23,7 @@ DOCUMENTS_DIR = Path(__file__).parents[2] / 'fixtures' / 'documents'
 ANSWER_KEYS = sorted(DOCUMENTS_DIR.rglob('*.sections.yaml'))
 ANSWER_KEY_SUFFIX = '.sections.yaml'
 
-MIN_SECTION_IDENTIFICATION_RATE = 0.80
+MIN_SECTION_IDENTIFICATION_RATE = 1.0
 
 CHUNK_PREFIX = re.compile(r'^\[[^\]]*\]\s*')
 HTML_TAG = re.compile(r'<[^>]+>')
@@ -81,20 +81,22 @@ def test_texto_de_cada_secao_anotada_chega_aos_chunks(answer_key):
 
 
 def identified_sections(answer_key: Path) -> tuple[int, int]:
-    """Conta as seções anotadas com título e primeira página corretos."""
-    first_page: dict[int, tuple[str, int]] = {}
+    """
+    Conta as seções anotadas com título e primeira página corretos. Lê o
+    caminho de títulos dos chunks: uma seção sem texto próprio, como
+    "2. Desenvolvimento" logo antes de "2.1", não gera chunk, mas aparece
+    no caminho dos chunks das filhas.
+    """
+    first_page: dict[str, int] = {}
     for chunk in extract(answer_key):
-        meta = chunk.metadata
-        title = normalize(meta['section_title'])
-        page = meta['page'] + 1
-        current = first_page.get(meta['section_index'])
-        if current is None or page < current[1]:
-            first_page[meta['section_index']] = (title, page)
+        page = chunk.metadata['page'] + 1
+        for title in chunk.metadata['section_path'].split(' > '):
+            key = normalize(title)
+            first_page[key] = min(first_page.get(key, page), page)
 
-    found = set(first_page.values())
     sections = expected_sections(answer_key)
     hits = sum(
-        (normalize(section['title']), section['page']) in found
+        first_page.get(normalize(section['title'])) == section['page']
         for section in sections
     )
     return hits, len(sections)

@@ -1,6 +1,7 @@
 # ruff: noqa: PLR2004
 from lumina.services.ai.stages.sections import (
     build_section_tree,
+    build_sections_tree_from_markdown,
     flatten_sections,
     parse_headings_from_markdown,
     tree_to_dict,
@@ -108,3 +109,49 @@ Texto 2
     assert d[0]['title'] == 'Sec 1'
     assert len(d[0]['children']) == 1
     assert d[0]['children'][0]['title'] == 'Sec 1.1'
+
+
+def test_inline_label_becomes_section_with_its_line_text():
+    md = (
+        '# 5. Conclusions\n\n'
+        'Texto da conclusao com mais de vinte caracteres.\n\n'
+        '**Funding:** This research was supported by CNPq.\n\n'
+        '**Conflicts of Interest:** The authors declare no conflicts.\n'
+    )
+    flat = flatten_sections(build_sections_tree_from_markdown(md))
+
+    assert [s.title for s in flat] == [
+        '5. Conclusions',
+        'Funding',
+        'Conflicts of Interest',
+    ]
+    assert 'This research was supported by CNPq.' in flat[1].content
+    assert 'This research' not in flat[0].content
+
+
+def test_structured_abstract_labels_stay_inside_abstract():
+    md = (
+        '# RESUMO\n\n'
+        '**Objetivo** : Este artigo propoe uma solucao de busca.\n\n'
+        '**Metodologia** : A pesquisa segue uma abordagem experimental.\n\n'
+        '# 1 INTRODUÇÃO\n\n'
+        'Texto da introducao com mais de vinte caracteres.\n'
+    )
+    flat = flatten_sections(build_sections_tree_from_markdown(md))
+
+    assert [s.title for s in flat] == ['RESUMO', '1 INTRODUÇÃO']
+    assert 'abordagem experimental' in flat[0].content
+
+
+def test_inline_label_char_range_starts_at_its_own_line():
+    md = (
+        '# Conclusions\n\n'
+        'Texto da conclusao.\n\n'
+        '**Funding:** This research was supported by CNPq.'
+    )
+    tree = build_section_tree(parse_headings_from_markdown(md), md)
+    funding = tree[1]
+
+    assert funding.char_start == md.index('**Funding:**')
+    assert md[funding.char_start : funding.char_end] == funding.content
+    assert funding.content.startswith('**Funding:** This research')

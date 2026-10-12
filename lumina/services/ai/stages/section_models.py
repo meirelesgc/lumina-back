@@ -27,6 +27,9 @@ class Heading:
     raw: str
     page: Optional[int] = None
     level_source: str = 'font'
+    # Rótulo na mesma linha do texto (`**Funding:** ...`): o texto da
+    # seção começa na própria linha do título.
+    inline: bool = False
 
 
 @dataclass
