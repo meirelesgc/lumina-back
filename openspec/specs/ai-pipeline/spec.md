@@ -102,7 +102,7 @@ O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos bl
 - **THEN** as ocorrências são substituídas por marcadores indexados e o mapa de reversão é armazenado apenas no metadado `presidio_mapping`
 
 ### Requirement: Avaliação Estruturada de Critérios com Resolução de Citações
-O sistema SHALL avaliar concorrentemente critérios normativos utilizando trechos recuperados do documento com expansão de margem ($\pm 2$), retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas.
+O sistema SHALL avaliar concorrentemente critérios normativos utilizando trechos recuperados do documento expandidos com os chunks vizinhos da mesma seção e página ($\pm 1$), retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas.
 
 #### Scenario: Avaliação de critério normativo com evidência no documento
 - **WHEN** um critério normativo é avaliado contra trechos recuperados

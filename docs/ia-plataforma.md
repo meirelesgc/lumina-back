@@ -154,7 +154,8 @@ Antes de qualquer vetorização ou envio para a OpenAI, o `PresidioAnonymizer` i
 ### Embeddings & PGVector
 * **Modelo**: OpenAI `text-embedding-3-small` (1536 dimensões).
 * **Armazenamento**: Extensão `pgvector` no PostgreSQL 17 (tabela `langchain_pg_embedding`).
-* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role` e `presidio_mapping`.
+* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role`, `section_index` (posição da seção na árvore achatada), `chunk_index_in_section` (posição do chunk dentro da seção naquela página) e `presidio_mapping`.
+* **Resumos de Seção**: A ingestão grava na mesma coleção um registro por seção, com `record_type = section_summary`. O texto do resumo é o título da seção seguido dos primeiros 500 caracteres do primeiro chunk dela (`build_section_summary_documents`). Nenhum LLM participa. A recuperação usa esses registros só no roteamento por seção e os exclui das buscas de chunks.
 * **Métrica**: Distância por cosseno (`<=>`).
 
 ---
@@ -187,14 +188,14 @@ Implementada em `lumina/services/ai/stages/retrieval.py` (`retrieve_criteria_pay
    """
    ```
    Se o critério tiver **expansões de consulta** ativas (paráfrases geradas por LLM e persistidas por critério), cada expansão gera uma query adicional no mesmo formato.
-2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, a seção esperada é buscada entre os resumos de seção indexados (`record_type` de resumo). As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
+2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, o sistema busca a seção esperada (`expected_section`) entre os resumos de seção indexados (veja "Resumos de Seção" em Embeddings & PGVector). Os escopos `ENTIRE_DOCUMENT` e `UNKNOWN` não ativam o roteamento. As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
 3. **Busca híbrida**:
    * *Densa*: uma busca vetorial no PGVector por query (original + expansões), executadas em paralelo;
    * *Léxica*: full-text search do PostgreSQL (`plainto_tsquery('portuguese', ...)` ranqueado por `ts_rank`) sobre `{branch_title}: {branch_description}`. Não aplica o roteamento por seção.
 
    Todas as buscas são filtradas pelo arquivo do documento (`source`) e excluem os resumos de seção. As listas são fundidas por **Reciprocal Rank Fusion** (`RRF_K = 60`), com deduplicação por `chunk_id`, mantendo os **5 melhores** (`MAX_CHUNKS = 5`).
 4. **Reranking (não implementado)**: com `CROSS_ENCODER_RERANKING_ENABLED=true`, cada busca traz 25 candidatos (`RERANK_CANDIDATE_K`) para reordenação por cross-encoder. Hoje `rerank_chunks` retorna `None` e a flag vem desligada, então vale a ordem do RRF.
-5. **Expansão de vizinhos**: cada chunk selecionado é mesclado com os vizinhos da mesma seção e página (`chunk_index_in_section ± 1`), removendo o texto duplicado pelo overlap do splitter. Se a seção tiver até 4 chunks, ela entra inteira. Janelas idênticas são deduplicadas, e os retângulos (`rects`) de todos os chunks mesclados são preservados para as citações.
+5. **Expansão de vizinhos**: cada chunk selecionado é mesclado com os vizinhos da mesma seção e página (`chunk_index_in_section ± 1`), removendo o texto duplicado pelo overlap do splitter. Se a seção tiver até 4 chunks naquela página, todos eles entram. A expansão não atravessa a quebra de página: `chunk_index_in_section` recomeça em cada página, e a busca por vizinhos filtra por seção e página. Janelas idênticas são deduplicadas, e os retângulos (`rects`) de todos os chunks mesclados são preservados para as citações.
 6. **Formatação**: os blocos são ordenados por posição no documento e entregues à LLM agrupados por `## CONTEXTO DA SEÇÃO: {título}`, cada um identificado por `[FONTE] chunk_id: {id}`.
 
 Critérios sem nenhuma evidência recuperada não são enviados para avaliação.
