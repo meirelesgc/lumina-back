@@ -1,5 +1,18 @@
 schema: spec-driven
 
+context: |
+  Lumina: API FastAPI com PostgreSQL e pgvector que avalia documentos
+  acadêmicos (artigos, revisões sistemáticas, anteprojetos, relatórios
+  técnicos) contra árvores de critérios, com IA.
+  Escreva os artefatos em português do Brasil e revise o texto com a skill
+  stop-slop (sem travessões).
+  Planeje os testes com a skill testing-methodology: tarefas de teste antes
+  das de implementação, cada uma dizendo que o teste falha antes da mudança.
+  Mudanças na ingestão (extração, seções, chunks) usam o acervo anotado de
+  tests/fixtures/documents/ como critério de aceite.
+  Pontos que a mudança não resolve viram issues pelo modelo
+  .github/ISSUE_TEMPLATE/demanda.md.
+
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.

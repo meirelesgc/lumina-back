@@ -44,6 +44,16 @@ Em `tests/conftest.py`:
   caminho relativo a essa pasta e não copiam os arquivos. O gabarito
   `<nome>.sections.yaml` fica ao lado do PDF. Siga a seção "Extração
   determinística" de [05-ia.md](05-ia.md) para as tolerâncias.
+- `tests/unit/services/test_ingestion_sections.py` encontra os gabaritos
+  sozinho. Documento novo no acervo não pede teste novo: rode o arquivo e
+  decida pelo resultado, como descreve `tests/fixtures/documents/README.md`.
+  O piso `MIN_SECTION_IDENTIFICATION_RATE` fica no próprio teste.
+- Para comparar com o comportamento anterior a uma correção, rode o mesmo
+  teste num `git worktree` do commit anterior. O teste de hoje mede o código
+  de ontem sem que ninguém precise ter escrito o teste antes.
+- Com `DEBUG_INGESTION_AUDIT=True` no `.env`, os testes de ingestão gravam a
+  auditoria em `lumina/storage/ingestion_audit/` (fora do git). Para medir
+  tempo, rode com `DEBUG_INGESTION_AUDIT=False`.
 - Erros das rotas seguem o formato do FastAPI, `{"detail": ...}`.
 - Mudanças de comportamento passam pelo OpenSpec. Os testes previstos vão em
   `tasks.md` da mudança, com o caminho do arquivo de teste.
@@ -59,5 +69,5 @@ poetry run task test-ai
 ```
 
 ```bash
-poetry run pytest tests/unit/services/test_chunking.py
+poetry run pytest tests/unit/services/test_ingestion_sections.py -s
 ```

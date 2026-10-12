@@ -1,6 +1,6 @@
 ---
 name: testing-methodology
-description: Metodologia para planejar, escrever e revisar testes a partir de jornadas de usuário. Use ao criar, alterar, revisar ou planejar testes (inclusive nas tarefas do Spec Kit), em qualquer stack. Primeiro descreve o comportamento esperado do usuário, depois monta o teste sobre esse caminho e completa com testes focados guiados por risco.
+description: Metodologia para planejar, escrever e revisar testes a partir de jornadas de usuário. Use ao criar, alterar, revisar ou planejar testes (inclusive nas tarefas do OpenSpec), em qualquer stack. Primeiro descreve o comportamento esperado do usuário, depois monta o teste sobre esse caminho e completa com testes focados guiados por risco.
 ---
 
 # Metodologia de testes orientada a jornadas
@@ -55,13 +55,18 @@ os erros e os limites que não cabem na jornada.
   falhas críticas, com tolerância zero, de métricas de qualidade com piso.
   Veja a seção 4 de [`references/05-ia.md`](references/05-ia.md).
 
-## No Spec Kit
+## No OpenSpec
 
-- Cada história de usuário da `spec.md` gera ao menos uma jornada. A
-  descrição da jornada pode ser derivada dos cenários de aceitação.
-- Em `tasks.md`, a tarefa da jornada vem antes das tarefas de implementação
-  da história, seguida das tarefas dos testes focados. Cada tarefa indica um
-  resultado verificável e o caminho do arquivo de teste.
+- Cada requisito da delta spec (`specs/<capacidade>/spec.md`) gera ao menos
+  um teste. Os cenários WHEN/THEN viram os passos e as verificações.
+- O `design.md` descreve a jornada em prosa e justifica a camada escolhida
+  quando o teste não passa pela interface pública.
+- Em `tasks.md`, as tarefas de teste vêm antes das tarefas de implementação.
+  Cada uma indica o caminho do arquivo de teste e pede que o teste falhe
+  antes da mudança. Testes que protegem um comportamento que já funciona
+  (guardas) passam desde o início, e a tarefa diz isso.
+- A última tarefa roda a suíte completa e registra no próprio `tasks.md` o
+  resultado que de fato rodou.
 
 ## Referências
 
