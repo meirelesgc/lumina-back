@@ -81,9 +81,14 @@ Identifica as divisões estruturais do documento a partir de cabeçalhos Markdow
 Antes de consolidar as seções, os títulos brutos passam por cinco etapas de higienização sequencial:
 1. **Limpeza de Marcação**: Remove formatações Markdown residuais em títulos (negritos, itálicos, links e sublinhados).
 2. **Supressão de Repetições**: Descarta cabeçalhos repetitivos comuns em documentos formais que aparecem no topo de várias páginas (ex: número de processo, timbres institucionais ou paginações).
-3. **Fusão de Títulos Adjacentes**: Une títulos contíguos de mesmo nível na mesma página que foram fragmentados em quebras de linha visuais.
+3. **Fusão de Títulos Adjacentes**: Une títulos contíguos que foram fragmentados em quebras de linha visuais. A fusão não junta um título que abre seção própria: título com numeração (`2.1`), nome de seção conhecido (`RESUMO`, casado por inteiro com os aliases de papel) ou rótulo na mesma linha do texto.
 4. **Reclassificação por Numeração**: Corrige a hierarquia estrutural com base em padrões numéricos explícitos (ex: `1.` é classificado como Nível 1, `1.1.` como Nível 2, `1.1.1.` como Nível 3).
 5. **Filtragem de Órfãos**: Descarta cabeçalhos declarados sem nenhum conteúdo textual associado antes do próximo título.
+
+#### Rótulos de Seção na Mesma Linha do Texto
+Artigos de várias editoras escrevem seções curtas como um rótulo em negrito seguido do texto, sem título próprio: `**Funding:** This research was supported by...`. O extrator não marca essas linhas como título. A leitura de títulos reconhece o rótulo quando ele pertence a uma lista de nomes conhecidos (`INLINE_SECTION_LABELS` em `sections.py`: Abstract, Funding, Author Contributions, Conflicts of Interest, entre outros). O texto dessa seção começa na própria linha do rótulo, e o rótulo entra com nível 1.
+
+A lista é fechada de propósito. Rótulos de resumo estruturado, como `**Objetivo** :` e `**Metodologia** :`, continuam dentro do resumo. Quando um documento anotado mostrar um rótulo que falta, acrescente-o à lista na mesma mudança.
 
 #### Árvore Hierárquica & Breadcrumbs
 Os cabeçalhos válidos são organizados em uma árvore de seções pais e filhas. Cada nó calcula seu caminho hierárquico contextual (*breadcrumb*), como por exemplo:
@@ -113,13 +118,15 @@ Cada seção é classificada com uma função semântica estrutural, orientando 
 ---
 
 ### Estágio 3 — Fatiamento Monopágina & Contextualização
-Nesta etapa, o conteúdo de cada seção é fragmentado em blocos indexáveis (*chunks*):
+Nesta etapa, o conteúdo de cada seção é fragmentado em blocos indexáveis (*chunks*). O fatiamento percorre a árvore inteira em ordem de leitura: cada subseção gera os próprios chunks, com o próprio título em `section_title` e o caminho completo em `section_path`. `section_index` conta as seções da árvore achatada.
 * **Fatiamento Estritamente Monopágina**:
   Se uma seção estende-se por múltiplas páginas, ela é seccionada exatamente nas fronteiras de página registradas no `page_map`. Isso garante que cada chunk pertença exclusivamente a uma única página física (`page: int`), eliminando ambiguidades no visualizador.
 * **Identificadores Estáveis**:
   Cada fragmento recebe um ID determinístico no formato `chunk_{page}_{idx}` (ex: `chunk_0_0`, `chunk_0_1`).
 * **Injeção de Prefixo Contextual**:
   O conteúdo textual do chunk recebe um carimbo temático no formato `[{Nome da Seção}]` no início do texto. Esse prefixo informa ao modelo de embeddings o contexto estrutural ao qual o fragmento pertence, melhorando a precisão da busca vetorial (RAG).
+
+A validação da árvore de seções e do fatiamento usa um acervo de PDFs anotados. Veja [Validação da ingestão sobre acervo anotado](arquitetura-engenharia.md#validacao-da-ingestao-sobre-acervo-anotado).
 
 ---
 

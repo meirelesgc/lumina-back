@@ -12,6 +12,8 @@
 #   page:        page where the heading appears (1 = first page of the PDF).
 #   starts_with: first words of the section body, copied from the PDF.
 #                Used to check that the text reached a chunk.
+#                Wrap it in single quotes when it contains ': '.
+#                Type hyphenated line breaks as whole words.
 #   subsections: same fields, one level down. Omit when there are none.
 
 sections:

@@ -56,7 +56,7 @@ flowchart TD
 
 ## 2. Metodologia de Testes Orientados a Risco
 
-A confiabilidade da aplicação é assegurada por uma suíte de testes orientada a **risco e comportamento**, detalhada na skill `.agents/skills/fastapi-testing-methodology/SKILL.md`.
+A confiabilidade da aplicação é assegurada por uma suíte de testes orientada a **risco e comportamento**, detalhada na skill `.agents/skills/testing-methodology/SKILL.md`.
 
 ```mermaid
 graph TD
@@ -95,6 +95,30 @@ Para impedir que a esteira de CI/CD fique lenta, cara ou suscetível a oscilaç�
 | **3. AI Evaluation** | Executa inferências reais contra modelos externos utilizando datasets de teste padronizados (*golden datasets*). Decorados com `@pytest.mark.ai`. | Sim | `poetry run task test-ai` (Sob demanda local) |
 
 * **Guardrail de Cobertura**: Mínimo de 80% de cobertura geral do código.
+
+### Validação da Ingestão sobre Acervo Anotado
+A ingestão (extração do PDF, árvore de seções e fatiamento) não chama modelo, então os testes dela rodam na suíte padrão. Ela depende de heurísticas sobre PDFs reais, e o time mede essas heurísticas contra um acervo anotado à mão.
+
+**Acervo.** `tests/fixtures/documents/<tipo>/` guarda cada PDF uma única vez, separado por tipo de documento (`article`, `systematic_review`, `research_proposal`, `technical_report`). Ao lado de cada PDF fica o gabarito `<nome>.sections.yaml`, com título, página e primeiras palavras de cada seção e subseção. O gabarito descreve o documento, e qualquer teste pode reaproveitá-lo.
+
+**Teste.** `tests/unit/services/test_ingestion_sections.py` encontra os gabaritos sozinho e faz duas verificações:
+
+| Verificação | Classe | Tolerância |
+| :--- | :--- | :--- |
+| As primeiras palavras de cada seção anotada aparecem no texto dos chunks | Crítica: texto fora dos chunks nunca é recuperado | Zero falhas, por documento |
+| A seção aparece no caminho de títulos dos chunks com o título e a página anotados | Métrica da heurística | Piso sobre o acervo inteiro (`MIN_SECTION_IDENTIFICATION_RATE`), com placar impresso por documento |
+
+**Fluxo para um documento novo:**
+
+1. Coloque o PDF em `tests/fixtures/documents/<tipo>/` e escreva o gabarito a partir de `section_template.yaml`. Use aspas simples nos trechos que contêm `: `.
+2. Rode `poetry run pytest tests/unit/services/test_ingestion_sections.py -s`. Não é preciso escrever teste novo.
+3. Leia o resultado:
+    * Teste crítico vermelho: há um defeito na ingestão. Esse teste vermelho é o teste de antes de uma mudança no OpenSpec.
+    * Métrica abaixo do piso: decida entre melhorar a heurística, numa mudança no OpenSpec, e baixar o piso com a justificativa registrada na mudança.
+    * Tudo verde: o documento passa a proteger a ingestão contra regressões.
+4. Para saber como o documento se comportava antes de uma correção, rode o mesmo teste num `git worktree` do commit anterior.
+
+**Piso.** O piso é o placar medido depois da última mudança, arredondado para baixo, e só sobe. Quem melhora a heurística sobe o piso no mesmo commit. O valor vigente fica no próprio teste. A regra completa está na seção "Extração determinística" de `.agents/skills/testing-methodology/references/05-ia.md`.
 
 ---
 

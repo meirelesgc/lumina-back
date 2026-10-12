@@ -25,3 +25,21 @@ systematic_review/
 
 Start from `section_template.yaml`. The file describes the document, so any
 test can reuse it.
+
+## Adding a document
+
+1. Add the PDF and its `<name>.sections.yaml` to the folder of its type.
+2. Run `poetry run pytest tests/unit/services/test_ingestion_sections.py -s`.
+   The test finds every answer key on its own; no new test code is needed.
+3. Read the result:
+   - **Text check fails:** the ingestion loses text. Open an OpenSpec change
+     with this failing test as its acceptance criterion.
+   - **Section score below the floor:** improve the heading detection in an
+     OpenSpec change, or lower `MIN_SECTION_IDENTIFICATION_RATE` with the
+     reason recorded in the change.
+   - **All green:** the document now guards the ingestion against
+     regressions.
+
+The floor only goes up: whoever improves the heuristic raises it in the same
+commit. See "Validação da Ingestão sobre Acervo Anotado" in
+`docs/arquitetura-engenharia.md`.
