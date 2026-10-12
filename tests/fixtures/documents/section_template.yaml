@@ -1,0 +1,32 @@
+# Expected sections for one PDF.
+#
+# Save as <name>.sections.yaml next to <name>.pdf. Example:
+#   systematic_review/dengue_no_brasil.pdf
+#   systematic_review/dengue_no_brasil.sections.yaml
+#
+# List every section and subsection the engine must index, in reading
+# order, including abstract and references when the document has them.
+#
+# Fields:
+#   title:       heading as it appears in the PDF.
+#   page:        page where the heading appears (1 = first page of the PDF).
+#   starts_with: first words of the section body, copied from the PDF.
+#                Used to check that the text reached a chunk.
+#   subsections: same fields, one level down. Omit when there are none.
+
+sections:
+  - title: Resumo
+    page: 1
+    starts_with: <first words of the abstract>
+  - title: 1. Introdução
+    page: 2
+    starts_with: <first words of the introduction>
+  - title: 2. Desenvolvimento
+    page: 3
+    subsections:
+      - title: 2.1 Agente Etiológico e Vetor da Doença
+        page: 3
+        starts_with: <first words of 2.1>
+      - title: 2.2 Ligação do Vírus na Célula
+        page: 5
+        starts_with: <first words of 2.2>

@@ -96,6 +96,67 @@ def test_create_chunks_from_sections_metadata_and_chunk_ids():
     assert docs[1].metadata['chunk_index'] == 1
 
 
+def _section(md, title, level, body, breadcrumb):
+    line_number = md[: md.index(f'# {title}')].count('\n') + 1
+    return Section(
+        heading=Heading(
+            line_number=line_number,
+            level=level,
+            title=title,
+            raw=f'# {title}',
+            page=0,
+        ),
+        breadcrumb=breadcrumb,
+        content=body,
+        char_start=md.index(body),
+        char_end=md.index(body) + len(body),
+    )
+
+
+def test_create_chunks_from_sections_includes_subsections():
+    md = (
+        '# 2. Desenvolvimento\n\n'
+        'Visao geral.\n\n'
+        '# 2.1 Vetor\n\n'
+        'O mosquito transmite.\n\n'
+        '# 2.2 Diagnostico\n\n'
+        'Exame clinico.'
+    )
+    page_map = [{'page': 0, 'char_start': 0, 'char_count': len(md)}]
+    parent = _section(
+        md, '2. Desenvolvimento', 1, 'Visao geral.', ['2. Desenvolvimento']
+    )
+    parent.children = [
+        _section(
+            md,
+            '2.1 Vetor',
+            2,
+            'O mosquito transmite.',
+            ['2. Desenvolvimento', '2.1 Vetor'],
+        ),
+        _section(
+            md,
+            '2.2 Diagnostico',
+            2,
+            'Exame clinico.',
+            ['2. Desenvolvimento', '2.2 Diagnostico'],
+        ),
+    ]
+
+    docs = create_chunks_from_sections([parent], page_map, md, 'doc.pdf')
+
+    assert [d.page_content for d in docs] == [
+        '[2. Desenvolvimento] Visao geral.',
+        '[2.1 Vetor] O mosquito transmite.',
+        '[2.2 Diagnostico] Exame clinico.',
+    ]
+    assert docs[2].metadata['section_title'] == '2.2 Diagnostico'
+    assert docs[2].metadata['section_path'] == (
+        '2. Desenvolvimento > 2.2 Diagnostico'
+    )
+    assert [d.metadata['section_index'] for d in docs] == [0, 1, 2]
+
+
 def test_clean_whitespace():
     docs = [
         Document(page_content='Texto 1\n\n\n\n\nTexto 2'),

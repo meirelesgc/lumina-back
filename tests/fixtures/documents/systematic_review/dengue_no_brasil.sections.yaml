@@ -1,0 +1,50 @@
+# Seções esperadas para dengue_no_brasil.pdf
+# Salvar como dengue_no_brasil.sections.yaml ao lado de dengue_no_brasil.pdf
+# Páginas conferidas contra o PDF (1 = primeira página).
+
+sections:
+  - title: Resumo
+    page: 1
+    starts_with: A dengue é uma arbovirose que anualmente acomete milhares de pessoas no mundo,
+  - title: Abstract
+    page: 2
+    starts_with: Dengue is an arbovirus that annually affects thousands of people in the world,
+  - title: Resumen
+    page: 2
+    starts_with: El dengue es un arbovirus que afecta cada año a miles de personas en todo el mundo,
+  - title: 1. Introdução
+    page: 2
+    starts_with: A dengue é uma arbovirose causada pelo vírus da dengue (DENV),
+  - title: 2. Desenvolvimento
+    page: 4
+    subsections:
+      - title: 2.1 Agente Etiológico e Vetor da Doença
+        page: 4
+        starts_with: A dengue é uma doença infecciosa causada por um Arbovírus que
+      - title: 2.2 Ligação do Vírus na Célula
+        page: 6
+        starts_with: A dengue possui um ciclo biológico heterogênico que apresenta um
+      - title: 2.3 Dengue no Brasil – Histórico e Epidemiologia
+        page: 8
+        starts_with: Os primeiros relatos de dengue no país ocorreram no início do século XX,
+      - title: 2.4 Manifestações Clínicas
+        page: 12
+        starts_with: A dengue pode ter apresentações clínicas muito variável, abrangendo
+      - title: 2.5 Diagnóstico e Tratamento
+        page: 14
+        starts_with: O diagnóstico da dengue é feito pelos médicos com base na presença de
+      - title: 2.6 Medidas de Controle da Doença
+        page: 17
+        starts_with: A melhor forma de se evitar a dengue é controlando a proliferação do
+      - title: 2.7 Desenvolvimento da Vacina para a Dengue
+        page: 19
+        starts_with: Existem várias vacinas contra a dengue em desenvolvimento, que são
+  - title: 3. Resultados e Discussão
+    page: 20
+    starts_with: Por meio de pesquisa bibliográfica analisamos que a dengue, doença
+  - title: 4. Considerações Finais
+    page: 21
+    starts_with: Em países tropicais como o Brasil, onde as condições climáticas
+  - title: REFERÊNCIAS
+    page: 22
+    starts_with: ARREDONDO, G. Four-year safety follow-up of the tetravalent dengue

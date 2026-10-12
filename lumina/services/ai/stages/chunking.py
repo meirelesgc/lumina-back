@@ -10,6 +10,7 @@ from lumina.services.ai.stages.contextualization import (
     generate_chunk_context,
 )
 from lumina.services.ai.stages.section_models import Section
+from lumina.services.ai.stages.sections import flatten_sections
 
 SETTINGS = Settings()
 
@@ -132,6 +133,8 @@ def create_chunks_from_sections(  # noqa: PLR0914
 ) -> List[Document]:
     """
     Converte as secoes em Documents do LangChain fatiados por pagina.
+    Percorre a arvore inteira em ordem de leitura: cada subsecao gera os
+    proprios chunks e `section_index` conta as secoes da arvore achatada.
     Garante page: int (0-based) e metadados aditivos ricos.
     """
     if splitter is None:
@@ -140,7 +143,7 @@ def create_chunks_from_sections(  # noqa: PLR0914
     docs_by_page: Dict[int, List[Document]] = {}
     all_docs: List[Document] = []
 
-    for sec_idx, sec in enumerate(sections):
+    for sec_idx, sec in enumerate(flatten_sections(sections)):
         page_slices = slice_section_by_pages(sec, page_map, full_markdown)
         section_title = sec.title
         breadcrumb_str = ' > '.join(sec.breadcrumb)
