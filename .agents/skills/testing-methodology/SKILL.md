@@ -51,6 +51,9 @@ os erros e os limites que não cabem na jornada.
   (`test_triagem_pede_revisao_e_proponente_reenvia`).
 - Serviços externos (e-mail, IA, armazenamento) usam substitutos
   determinísticos. Veja [`references/05-ia.md`](references/05-ia.md) para IA.
+- Extração determinística sobre um acervo real (PDF, seções, chunks) separa
+  falhas críticas, com tolerância zero, de métricas de qualidade com piso.
+  Veja a seção 4 de [`references/05-ia.md`](references/05-ia.md).
 
 ## No Spec Kit
 
@@ -67,4 +70,4 @@ os erros e os limites que não cabem na jornada.
 3. [Critérios de parada](references/03-criterios-de-parada.md)
 4. [Armadilhas comuns](references/04-armadilhas.md)
 5. [Testes de sistemas com IA](references/05-ia.md)
-6. [Aplicação neste repositório (pi\*VMA)](references/06-projeto-pivma.md)
+6. [Aplicação neste repositório (Lumina)](references/06-projeto-lumina.md)

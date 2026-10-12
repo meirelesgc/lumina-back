@@ -1,4 +1,4 @@
-# Aplicação neste repositório (pi\*VMA)
+# Aplicação neste repositório (Lumina)
 
 Como a metodologia se traduz na suíte atual. Confira o código antes de usar:
 nomes de fixtures e helpers podem mudar.
@@ -7,62 +7,57 @@ nomes de fixtures e helpers podem mudar.
 
 | Camada | Diretório |
 |---|---|
-| Jornada | `tests/integration/journeys/etapa_<n>_<nome>/` |
-| Contrato da interface | `tests/api/routers/` |
-| Integração com banco | `tests/integration/database/` |
-| Migrações | `tests/integration/migrations/` |
-| Provisionamento | `tests/integration/bootstrap/` |
-| Pré-avaliação por IA (fake) | `tests/integration/ai/` |
-| Notificações | `tests/integration/notifications/` e `tests/unit/notifications/` |
-| Unitário | `tests/unit/` |
+| Contrato das rotas | `tests/api/routers/`, `tests/api/check_tree/` e `tests/routers/` (mais antigo) |
+| Caracterização de fluxos | `tests/api/characterization/` |
+| Integração com banco | `tests/integration/repositories/`, `tests/integration/check_tree/` |
+| Unitário, incluindo os estágios do pipeline de IA | `tests/unit/`, `tests/unit/services/` |
+| Avaliação de qualidade da IA (chamadas reais) | `tests/ai/evaluation/` |
+| Acervo de PDFs com gabarito de seções | `tests/fixtures/documents/` |
+| Factories | `tests/factories/` |
 
-As jornadas são agrupadas pela etapa do processo em que o usuário está, não
-pela rota.
+O Lumina ainda não tem testes de jornada. Combine o diretório com o time na
+primeira mudança que criar um.
 
 ## Infraestrutura
 
-- PostgreSQL com pgvector sobe uma vez por sessão via Testcontainers
-  (`tests/conftest.py`). Cada teste roda em transação com savepoint e
-  rollback.
+Em `tests/conftest.py`:
+
+- PostgreSQL 16 sobe uma vez por sessão via Testcontainers. Cada teste roda
+  em transação com savepoint e rollback (`session`).
 - `client` é o `TestClient` com a sessão do teste injetada.
-- A pré-avaliação em segundo plano fica desligada por fixture `autouse`. Para
-  observar o resultado, chame a execução explicitamente
-  (`pre_evaluation_service._execute`), como em
-  `etapa_1_submissao_triagem/test_return_review_via_ai.py`.
-- `fake_provider` injeta o provedor de IA determinístico.
-- Factories ficam em `tests/factories/`.
-
-## Helpers das jornadas
-
-Em `tests/integration/journeys/conftest.py`:
-
-| Helper | Ação do usuário |
-|---|---|
-| `bootstrap_fresh_deploy(session, monkeypatch)` | Ambiente novo: perfis, permissões, templates e administrador inicial |
-| `journey_client` | Cliente com `Origin` confiável, como o navegador |
-| `sign_up(client, username)` | Cadastro público |
-| `log_in(client, identifier, password=PASSWORD)` | Login por cookie, limpando a sessão anterior |
-| `log_out(client)` | Saída |
-| `process_tasks(client, process_id)` | Tarefas visíveis ao usuário logado, por atividade |
-
-Para conceder perfis globais, entre como administrador
-(`ADMIN_EMAIL`, `ADMIN_PASSWORD`) e use a rota pública de RBAC, como faria
-a pessoa responsável.
+- `user` e `other_user` criam usuários com a senha em `clean_password`.
+  `token` faz login por `POST /auth/token`. As rotas autenticadas recebem
+  `headers={'Authorization': f'Bearer {token}'}`.
+- `mock_fast_model_for_tests` (`autouse`) troca o modelo rápido por um mock
+  com resposta fixa, a menos que a suíte rode com `--run-ai`.
+- `isolate_background_task_db_writes` (`autouse`) dá uma sessão nula às
+  tarefas em segundo plano de `branch_analyzer`, `query_expansion_service` e
+  `tree_suggestion_service`. Para observar o efeito delas, chame a função
+  diretamente no teste.
+- `mock_db_time` fixa `created_at` e `updated_at` de um modelo.
 
 ## Convenções
 
-- A descrição da jornada vai na docstring do módulo, com a spec e a história
-  de origem (ex.: "Spec 030, US4").
-- Acompanhe pendências por `GET /tasks`, como o frontend: um ator só age
-  quando aparece uma tarefa `READY` para ele.
-- Rotas mutáveis exigem `Origin` confiável. Use `journey_client`.
-- Erros seguem `{"detail": {"code", "message"}}`. Nos testes focados,
-  verifique o `code`, não a mensagem.
-- Listagens respondem em `data` com `pagination`.
+- Testes que chamam modelos reais levam `@pytest.mark.ai`. A suíte padrão os
+  pula.
+- Testes de ingestão leem os PDFs de `tests/fixtures/documents/` pelo
+  caminho relativo a essa pasta e não copiam os arquivos. O gabarito
+  `<nome>.sections.yaml` fica ao lado do PDF. Siga a seção "Extração
+  determinística" de [05-ia.md](05-ia.md) para as tolerâncias.
+- Erros das rotas seguem o formato do FastAPI, `{"detail": ...}`.
+- Mudanças de comportamento passam pelo OpenSpec. Os testes previstos vão em
+  `tasks.md` da mudança, com o caminho do arquivo de teste.
 
 ## Comandos
 
 ```bash
-poetry run pytest tests/integration/journeys
-poetry run pytest tests/api/routers/test_<dominio>.py
+poetry run task test
+```
+
+```bash
+poetry run task test-ai
+```
+
+```bash
+poetry run pytest tests/unit/services/test_chunking.py
 ```

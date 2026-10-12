@@ -3,8 +3,8 @@
 <Descrição da jornada em prosa, a partir de templates/jornada.md: atores,
 estado inicial, passos com o que cada ator espera ver e o desfecho.>
 
-Exemplo genérico. Adapte os helpers e as rotas à aplicação; no pi*VMA, veja
-references/06-projeto-pivma.md.
+Exemplo genérico. Adapte os helpers e as rotas à aplicação; no Lumina, veja
+references/06-projeto-lumina.md.
 """
 
 from http import HTTPStatus
