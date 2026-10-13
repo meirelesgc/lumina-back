@@ -1,0 +1,30 @@
+# Seções esperadas para estrategias_teste_software_llm_judge_hitl.pdf
+# Salvar como estrategias_teste_software_llm_judge_hitl.sections.yaml ao lado do PDF
+# Páginas relativas ao PDF (1 = primeira página, a capa; 2 = folha de rosto).
+
+sections:
+  - title: 1. Introdução
+    page: 3
+    starts_with: 'A utilização de sistemas de inteligência artificial (IA) baseados em modelos de'
+  - title: 2. Problema de pesquisa
+    page: 3
+    starts_with: 'A avaliação de sistemas de inteligência artificial especializados apresenta desafios'
+  - title: 3. Objetivos
+    page: 4
+    starts_with: 'Propor e avaliar uma estratégia para avaliação de sistemas de inteligência artificial'
+    subsections:
+      - title: 3.1. Objetivo geral
+        page: 4
+        starts_with: 'Propor e avaliar uma estratégia para avaliação de sistemas de inteligência artificial'
+      - title: 3.2. Objetivos específicos
+        page: 4
+        starts_with: '1. Realizar uma revisão da literatura sobre avaliação de sistemas de inteligência artificial'
+  - title: 4. Justificativa
+    page: 4
+    starts_with: 'A utilização de sistemas de inteligência artificial em atividades que envolvem análise'
+  - title: 5. Metodologia
+    page: 5
+    starts_with: 'A pesquisa terá caráter aplicado e exploratório, sendo desenvolvida a partir de um'
+  - title: Referências
+    page: 6
+    starts_with: 'FERREIRA, Bruno Carlos Luís; SILVA, Catarina; OLIVEIRA, Hugo Gonçalo. Towards automated'
