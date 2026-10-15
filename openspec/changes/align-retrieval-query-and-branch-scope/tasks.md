@@ -1,6 +1,6 @@
 ## 1. Medição antes da mudança
 
-- [ ] 1.1 Copiar para o worktree, sem adicionar ao git, os arquivos do teste de linha de base que estão só no working tree do mantenedor: `tests/conftest.py` (imagem `pgvector/pgvector:pg16`), `tests/ai/evaluation/retrieval/conftest.py`, `tests/ai/evaluation/retrieval/test_retrieval_baseline.py`, `tests/fixtures/documents/corpus.py` e `tests/fixtures/documents/research_proposal/estrategias_teste_software_llm_judge_hitl.retrieval.yaml`. Rodar `poetry run pytest tests/ai/evaluation/retrieval --run-ai -s` no código de `origin/main` (worktree separado) e registrar abaixo as frases encontradas e o contexto médio. O teste falha por falta de `baseline.yaml`; o que importa é o placar impresso.
+- [x] 1.1 Copiar para o worktree, sem adicionar ao git, os arquivos do teste de linha de base que estão só no working tree do mantenedor: `tests/conftest.py` (imagem `pgvector/pgvector:pg16`), `tests/ai/evaluation/retrieval/conftest.py`, `tests/ai/evaluation/retrieval/test_retrieval_baseline.py`, `tests/fixtures/documents/corpus.py` e `tests/fixtures/documents/research_proposal/estrategias_teste_software_llm_judge_hitl.retrieval.yaml`. Rodar `poetry run pytest tests/ai/evaluation/retrieval --run-ai -s` no código de `origin/main` (worktree separado) e registrar abaixo as frases encontradas e o contexto médio. O teste falha por falta de `baseline.yaml`; o que importa é o placar impresso.
 - [x] 1.2 Rodar o classificador de escopo atual sobre os ramos do gabarito do anteprojeto e três ramos de revisão sistemática citados nas issues, com o modelo rápido real, e registrar abaixo escopo e seção esperada de cada ramo.
 
 ## 2. Testes (antes da implementação)
@@ -20,14 +20,14 @@
 
 ## 4. Medição depois da mudança
 
-- [ ] 4.1 Rodar de novo `poetry run pytest tests/ai/evaluation/retrieval --run-ai -s` e registrar abaixo o placar e o contexto médio. Se o documento encontrar menos frases que na tarefa 1.1, parar e levar o resultado ao mantenedor antes de seguir.
+- [x] 4.1 Rodar de novo `poetry run pytest tests/ai/evaluation/retrieval --run-ai -s` e registrar abaixo o placar e o contexto médio. Se o documento encontrar menos frases que na tarefa 1.1, parar e levar o resultado ao mantenedor antes de seguir.
 - [x] 4.2 Rodar o classificador novo sobre os mesmos ramos da tarefa 1.2 e registrar abaixo escopo e seção esperada de cada ramo, ao lado do resultado antigo.
-- [ ] 4.3 Remover do worktree os arquivos copiados na tarefa 1.1 e restaurar `tests/conftest.py`. Verificar com `git status` que nenhum deles entra no commit.
+- [x] 4.3 Remover do worktree os arquivos copiados na tarefa 1.1 e restaurar `tests/conftest.py`. Verificar com `git status` que nenhum deles entra no commit.
 
 ## 5. Verificação e entrega
 
-- [ ] 5.1 Rodar `poetry run task test`, `poetry run ruff check` e `poetry run ruff format --check`. Registrar abaixo o resultado que de fato rodou.
-- [ ] 5.2 Commitar os artefatos do OpenSpec (`docs(openspec): ...`) separados do código e dos testes (`feat(retrieval): ...`), abrir o PR citando as issues #15 e #17 e incluir no PR o passo pós-merge `poetry run task enrich-branches --force`.
+- [x] 5.1 Rodar `poetry run task test`, `poetry run ruff check` e `poetry run ruff format --check`. Registrar abaixo o resultado que de fato rodou.
+- [x] 5.2 Commitar os artefatos do OpenSpec (`docs(openspec): ...`) separados do código e dos testes (`feat(retrieval): ...`), abrir o PR citando as issues #15 e #17 e incluir no PR o passo pós-merge `poetry run task enrich-branches --force`.
 
 ## Registro
 
@@ -65,10 +65,19 @@ Prompt acadêmico:
 
 ### Tarefas 1.1 e 4.1: recuperação sobre o acervo
 
-Pendente: o Docker não estava disponível no WSL durante a implementação, e o teste sobe o banco por Testcontainers.
+`poetry run pytest tests/ai/evaluation/retrieval --run-ai -s`, duas execuções de cada lado. "Antes" rodou num worktree de `origin/main` (70a7ea3); "depois", nesta branch. O teste falhou nas quatro execuções só por falta de `baseline.yaml`, como previsto.
+
+| Código | Frases encontradas | Contexto médio (caracteres) |
+|---|---|---|
+| Antes (consulta com `SECTION: <taxonomia>` x3) | 3/13 e 3/13 | 4664 e 4664 |
+| Depois (consulta = texto do ramo) | 4/13 e 4/13 | 5195 e 4997 |
+
+Ganhos: as duas frases de "Trabalhos relacionados" e "Dessa forma, uma única estratégia..." de "Lacunas". Perdas: as duas frases da página 4 de "Lacunas" ("Ao mesmo tempo, conjuntos de avaliação..." e "Sem um conjunto de casos de referência..."). As duas execuções mantiveram "Questão principal de pesquisa". O contexto médio subiu cerca de 8% e variou entre as execuções "depois", sem mudar o placar.
+
+O gabarito congela expansões e escopo, então esta medição cobre só a mudança da consulta (#15).
 
 ### Tarefa 5.1: verificação
 
-- `ruff check` e `ruff format --check` nos 7 arquivos alterados: sem apontamentos.
-- `test_ai_stages.py`, `test_branch_analyzer.py` e `test_query_expansion_service.py` rodaram com um `conftest.py` temporário, fora do git, que desliga a criação do banco: 36 passaram. `test_persist_branch_expansions_versions_and_deactivates` precisa do banco e não rodou.
-- `poetry run task test`: pendente, depende do Docker.
+- `pytest -q` (a mesma seleção de `poetry run task test`, sem cobertura), com o container `postgres:16` da `main`: 348 passaram, 12 avisos de depreciação que já existiam.
+- `ruff check` e `ruff format --check` nos 7 arquivos Python alterados: sem apontamentos. No repositório inteiro, `ruff check` aponta 253 erros, o mesmo número de `origin/main`.
+- Os arquivos copiados na tarefa 1.1 e o `conftest.py` temporário foram removidos; `git status` limpo antes do commit.
