@@ -35,7 +35,9 @@ O prompt de expansão passa a pedir formulações afirmativas, no estilo do text
 
 ### Prompt de escopo com exemplos acadêmicos
 
-O prompt troca "editais e instrumentos convocatórios" por "documentos acadêmicos e técnicos (artigos, revisões sistemáticas, anteprojetos, relatórios técnicos)". `SPECIFIC_SECTION` ganha exemplos como Resumo, Introdução, Metodologia, Resultados, Discussão, Conclusão e Referências, e a instrução de devolver em `expected_section` o título que essa seção costuma ter no tipo de documento informado na tipificação. `ENTIRE_DOCUMENT` ganha exemplos acadêmicos: clareza da redação, coerência entre objetivos e conclusões, padronização de citações ao longo do texto. O schema `BranchSectionRequirement` não muda.
+O prompt troca "editais e instrumentos convocatórios" por "documentos acadêmicos e técnicos (artigos, revisões sistemáticas, anteprojetos, relatórios técnicos)" e lista as seções típicas de cada um desses tipos. `SPECIFIC_SECTION` vale só quando uma única seção do tipo informado na tipificação concentra o conteúdo, e `expected_section` recebe o título dessa seção como está na lista. `ENTIRE_DOCUMENT` ganha exemplos acadêmicos (clareza da redação, coerência entre objetivos e conclusões, padronização de citações) e passa a cobrir o conteúdo que pode aparecer em mais de uma seção, como revisão da literatura e lacunas. O schema `BranchSectionRequirement` não muda.
+
+A lista por tipo e a regra "na dúvida, documento inteiro" vieram da primeira medição do classificador (registro em `tasks.md`). Sem a lista, o modelo sugeria seções que o tipo de documento não tem, como "Discussão" em anteprojeto. Sem a regra, ele escolhia `SPECIFIC_SECTION` para todos os ramos. Com seção esperada, a busca fica restrita a ela, então uma seção errada esconde a evidência, e a busca global só perde precisão.
 
 ### `ENTIRE_DOCUMENT` = busca global, explícita
 
@@ -53,6 +55,7 @@ A qualidade da recuperação é medida com o teste de linha de base do working t
 
 - [Ramos curtos perdem contexto sem o título da taxonomia, por exemplo "Clareza" sob "Metodologia"] → as expansões e a descrição do ramo seguem na busca; a medição antes e depois mostra se algum ramo do acervo piorou.
 - [Expansões e análises antigas, geradas com os prompts de edital, continuam ativas] → o mantenedor roda `poetry run task enrich-branches --force` depois do merge. As versões novas entram com `generation_version` maior e as avaliações antigas mantêm a versão registrada.
+- [O classificador novo devolve títulos de seção que existem no documento, como "Problema de Pesquisa", em vez de nomes inventados, como "Contextualização do Problema". Antes, esses nomes raramente passavam do limiar de 0,25 do roteamento e a busca caía no documento inteiro. Agora o roteamento pode restringir a busca a uma seção errada] → a regra "na dúvida, documento inteiro" reduz o risco. O teste de linha de base congela o escopo do gabarito e não mede esse efeito; a medição com o escopo gerado pelo classificador fica para uma issue.
 - [Acervo de medição com um único documento anotado] → o resultado indica tendência, não prova melhora geral. A recomendação de anotar mais documentos fica no README do acervo, na outra change.
 
 ## Migration Plan
