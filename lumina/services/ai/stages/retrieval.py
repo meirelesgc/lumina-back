@@ -6,7 +6,6 @@ from uuid import UUID
 from langchain_core.documents import Document
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina import prompts as PROMPTS
 from lumina.core.dependencies import VStore
 from lumina.core.settings import Settings
 from lumina.models import DocumentRelease, Typification
@@ -300,13 +299,10 @@ async def retrieve_criteria_payload(  # noqa: PLR0913, PLR0917, PLR0914
     taxonomy_title = (taxonomy.get('title') or '').strip()
     b_title = (branch.get('title') or '').strip()
     b_desc = (branch.get('description') or '').strip()
-    query_text = f'{b_title}: {b_desc}'
-    query = PROMPTS.QUERY.format(section=taxonomy_title, query=query_text)
-
-    queries = [query] + [
-        PROMPTS.QUERY.format(section=taxonomy_title, query=expansion_text)
-        for expansion_text in (expansions or [])
-    ]
+    query_text = (
+        f'{b_title}: {b_desc}' if b_title and b_desc else (b_title or b_desc)
+    )
+    queries = [query_text, *(expansions or [])]
 
     # 0. Roteamento por seção (Fase 2)
     chunk_filter = base_filter
@@ -391,16 +387,12 @@ async def retrieve_criteria_payload(  # noqa: PLR0913, PLR0917, PLR0914
         'id': branch.get('id'),
         'document': formatted_doc,
         'source': source_names,
-        'requirement': (
-            f'{b_title}: {b_desc}'
-            if b_title and b_desc
-            else (b_title or b_desc)
-        ),
+        'requirement': query_text,
         'expected_section': taxonomy_title,
         'query': f"Analise o item '{b_title}' na seção '{taxonomy_title}'.",
         'presidio_mapping': full_mapping,
         '_chunks': evidence_chunks,
-        'retriever_query': query,
+        'retriever_query': query_text,
         'retrieved_chunks': retrieved_chunk_ids,
     }
 

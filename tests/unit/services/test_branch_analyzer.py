@@ -140,3 +140,38 @@ async def test_run_branch_section_analysis_background_handles_error():
     # analyze_branch_section_requirement faz fallback para UNKNOWN, sem quebrar
     assert result is not None
     assert result.scope == SectionRequirementScope.UNKNOWN
+
+
+@pytest.mark.asyncio
+async def test_analyze_branch_prompt_uses_academic_context():
+    mock_llm = MagicMock()
+    mock_structured = MagicMock()
+    mock_structured.ainvoke = AsyncMock(
+        return_value=BranchSectionRequirement(
+            scope=SectionRequirementScope.SPECIFIC_SECTION,
+            expected_section='Introdução',
+        )
+    )
+    mock_llm.with_structured_output.return_value = mock_structured
+
+    context = BranchNormativeContext(
+        branch_title='Existência de justificativa da revisão',
+        branch_description=(
+            'O manuscrito apresenta uma justificativa clara para a '
+            'realização da Revisão Sistemática?'
+        ),
+        taxonomy_title='Fundamentação da Revisão',
+        typification_name='Revisão Sistemática',
+    )
+
+    await analyze_branch_section_requirement(context=context, model=mock_llm)
+
+    prompt = mock_structured.ainvoke.call_args.args[0]
+    assert 'Revisão Sistemática' in prompt
+    assert 'Fundamentação da Revisão' in prompt
+    assert 'Existência de justificativa da revisão' in prompt
+    assert 'Introdução' in prompt
+    assert 'Metodologia' in prompt
+    assert 'Habilitação Jurídica' not in prompt
+    assert 'Termo de Referência' not in prompt
+    assert 'edita' not in prompt.lower()

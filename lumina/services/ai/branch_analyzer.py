@@ -33,28 +33,42 @@ class BranchNormativeContext:
 
 
 BRANCH_ANALYSIS_PROMPT = (
-    'Você é um especialista em análise de conformidade de editais e '
-    'instrumentos convocatórios.\n\n'
-    'Analise a estrutura normativa fornecida (Tipificação, Taxonomia e '
-    'Ramo) e determine se o cumprimento desta regra exige a busca em uma '
-    'SEÇÃO ESPECÍFICA do documento, se deve analisar o DOCUMENTO INTEIRO, '
-    'ou se NÃO FOI POSSÍVEL IDENTIFICAR.\n\n'
-    '### Estrutura Normativa em Análise:\n'
+    'Você analisa critérios de avaliação de documentos acadêmicos e '
+    'técnicos: artigos, revisões sistemáticas, anteprojetos e relatórios '
+    'técnicos.\n\n'
+    'Analise a estrutura do critério (Tipificação, Taxonomia e Ramo) e '
+    'determine se a verificação exige a busca em uma SEÇÃO ESPECÍFICA do '
+    'documento, se deve analisar o DOCUMENTO INTEIRO, ou se NÃO FOI '
+    'POSSÍVEL IDENTIFICAR.\n\n'
+    '### Estrutura do Critério em Análise:\n'
     '- **Tipificação Documental:** {typification_name}\n'
     '- **Taxonomia / Grupo:** {taxonomy_title} ({taxonomy_description})\n'
-    '- **Ramo / Regra Específica:** {branch_title}\n'
+    '- **Ramo / Critério Específico:** {branch_title}\n'
     '  **Descrição:** {branch_description}\n\n'
     '### Diretrizes de Avaliação:\n'
-    "1. Retorne 'SPECIFIC_SECTION' se a regra tratar de itens que possuem "
-    'seção formal própria e típica em documentos convocatórios (ex: '
-    "'Habilitação Jurídica', 'Qualificação Técnica', 'Termo de Referência', "
-    "'Proposta de Preços', 'Sanções Administrativas'). Neste caso, forneça "
-    "em 'expected_section' o nome normalizado sugerido da seção.\n"
-    "2. Retorne 'ENTIRE_DOCUMENT' se a regra for transversal, formal ou "
-    'principiológica, devendo ser observada ao longo de todo o arquivo '
-    '(ex: clareza e precisão da redação geral, ausência de rasuras, '
-    'conformidade com a ABNT, assinaturas eletrônicas válidas em todo o '
-    'texto, cláusulas de integridade e anticorrupção gerais).\n'
+    'Use a tipificação para decidir quais seções o documento costuma ter. '
+    'Os títulos da taxonomia e do ramo nomeiam o critério e em geral não '
+    'aparecem no documento. Seções típicas por tipo de documento:\n'
+    '- Anteprojeto: Introdução, Problema de Pesquisa, Objetivos, '
+    'Justificativa, Metodologia, Cronograma, Referências.\n'
+    '- Revisão sistemática: Resumo, Introdução, Métodos, Resultados, '
+    'Discussão, Conclusão, Referências.\n'
+    '- Artigo: Resumo, Introdução, Trabalhos Relacionados, Metodologia, '
+    'Resultados, Discussão, Conclusão, Referências.\n'
+    '- Relatório técnico: Resumo, Introdução, Desenvolvimento, Resultados, '
+    'Conclusão, Referências.\n\n'
+    "1. Retorne 'SPECIFIC_SECTION' só se uma única seção do tipo de "
+    'documento informado concentra o conteúdo exigido (ex: objetivo geral '
+    'em Objetivos, procedimentos de coleta em Metodologia). Neste caso, '
+    "forneça em 'expected_section' o título dessa seção, como listado "
+    'acima. A busca fica restrita a essa seção: uma seção errada esconde a '
+    'evidência.\n'
+    "2. Retorne 'ENTIRE_DOCUMENT' se o critério for transversal e deva ser "
+    'observado ao longo de todo o texto (ex: clareza e objetividade da '
+    'redação, coerência entre objetivos e conclusões, padronização das '
+    'citações) ou se o conteúdo puder aparecer em mais de uma seção (ex: '
+    'revisão da literatura e lacunas, que podem estar na Introdução, na '
+    'Justificativa ou no Problema de Pesquisa).\n'
     "3. Retorne 'UNKNOWN' se a descrição for excessivamente vaga, "
     'incompleta ou inconclusiva para determinar a localização.\n'
 )

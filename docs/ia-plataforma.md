@@ -178,20 +178,11 @@ POST /doc/{doc_id}/release
 ### Recuperação de Evidências por Critério
 Implementada em `lumina/services/ai/stages/retrieval.py` (`retrieve_criteria_payload`). Para cada critério (`Branch`) da árvore:
 
-1. **Montagem da query**: o título da seção (taxonomia) é triplicado para ancorar a similaridade semântica:
-   ```python
-   QUERY = """
-   SECTION: {section}
-   SECTION: {section}
-   SECTION: {section}
-   --- {branch_title}: {branch_description}
-   """
-   ```
-   Se o critério tiver **expansões de consulta** ativas (paráfrases geradas por LLM e persistidas por critério), cada expansão gera uma query adicional no mesmo formato.
-2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, o sistema busca a seção esperada (`expected_section`) entre os resumos de seção indexados (veja "Resumos de Seção" em Embeddings & PGVector). Os escopos `ENTIRE_DOCUMENT` e `UNKNOWN` não ativam o roteamento. As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
+1. **Montagem da query**: a query é `{branch_title}: {branch_description}`, ou só o campo preenchido quando o outro está vazio. O título da taxonomia fica de fora: ele não aparece no documento, e os chunks levam o título real da seção. Se o critério tiver **expansões de consulta** ativas (formulações geradas por LLM e persistidas por critério, escritas como o trecho que atenderia ao critério), cada expansão vira uma query adicional, com o próprio texto.
+2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, o sistema busca a seção esperada (`expected_section`) entre os resumos de seção indexados (veja "Resumos de Seção" em Embeddings & PGVector). Com `ENTIRE_DOCUMENT` (critério transversal, como clareza da redação), `UNKNOWN` ou sem análise ativa, a busca cobre o documento inteiro, sem roteamento. As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
 3. **Busca híbrida**:
    * *Densa*: uma busca vetorial no PGVector por query (original + expansões), executadas em paralelo;
-   * *Léxica*: full-text search do PostgreSQL (`plainto_tsquery('portuguese', ...)` ranqueado por `ts_rank`) sobre `{branch_title}: {branch_description}`. Não aplica o roteamento por seção.
+   * *Léxica*: full-text search do PostgreSQL (`plainto_tsquery('portuguese', ...)` ranqueado por `ts_rank`) sobre a mesma query do critério, sem as expansões. Não aplica o roteamento por seção.
 
    Todas as buscas são filtradas pelo arquivo do documento (`source`) e excluem os resumos de seção. As listas são fundidas por **Reciprocal Rank Fusion** (`RRF_K = 60`), com deduplicação por `chunk_id`, mantendo os **5 melhores** (`MAX_CHUNKS = 5`).
 4. **Reranking (não implementado)**: com `CROSS_ENCODER_RERANKING_ENABLED=true`, cada busca traz 25 candidatos (`RERANK_CANDIDATE_K`) para reordenação por cross-encoder. Hoje `rerank_chunks` retorna `None` e a flag vem desligada, então vale a ordem do RRF.

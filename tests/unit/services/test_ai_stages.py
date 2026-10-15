@@ -598,3 +598,149 @@ async def test_retrieve_criteria_payload_reranking_flag_elevates_k(
     call_kwargs = mock_vstore.asimilarity_search.call_args.kwargs
     assert call_kwargs['k'] == retrieval_module.RERANK_CANDIDATE_K
     assert payload['retrieved_chunks'] == ['chunk_reranked']
+
+
+def _spy_lexical_search(monkeypatch) -> AsyncMock:
+    spy = AsyncMock(return_value=[])
+    monkeypatch.setattr(
+        retrieval_module.vector_store_sql, 'lexical_search', spy
+    )
+    return spy
+
+
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_queries_branch_text_without_taxonomy(
+    monkeypatch,
+):
+    lexical_spy = _spy_lexical_search(monkeypatch)
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+
+    payload = await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Fundamentação da Revisão', 'sources': []},
+        branch={
+            'id': str(uuid4()),
+            'title': 'Existência de justificativa da revisão',
+            'description': 'O manuscrito apresenta uma justificativa clara?',
+        },
+        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
+        expansions=['A revisão justifica-se pela ausência de estudos.'],
+    )
+
+    branch_query = (
+        'Existência de justificativa da revisão: '
+        'O manuscrito apresenta uma justificativa clara?'
+    )
+    dense_queries = [
+        call.args[0] for call in mock_vstore.asimilarity_search.call_args_list
+    ]
+    assert dense_queries == [
+        branch_query,
+        'A revisão justifica-se pela ausência de estudos.',
+    ]
+    assert lexical_spy.call_args.args[1] == branch_query
+    assert payload['retriever_query'] == branch_query
+
+
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_branch_without_description(
+    monkeypatch,
+):
+    lexical_spy = _spy_lexical_search(monkeypatch)
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+
+    await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Metodologia', 'sources': []},
+        branch={'id': str(uuid4()), 'title': 'Critérios de inclusão'},
+        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
+    )
+
+    assert mock_vstore.asimilarity_search.call_args.args[0] == (
+        'Critérios de inclusão'
+    )
+    assert lexical_spy.call_args.args[1] == 'Critérios de inclusão'
+
+
+@pytest.mark.parametrize(
+    'section_requirement',
+    [
+        {'scope': 'ENTIRE_DOCUMENT', 'expected_section': None},
+        {'scope': 'UNKNOWN', 'expected_section': None},
+        None,
+    ],
+    ids=['entire_document', 'unknown', 'sem_analise'],
+)
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_searches_whole_document(
+    section_requirement,
+):
+    base_filter = {
+        'source': 'lumina/storage/uploads/doc.pdf',
+        'record_type': {'$exists': False},
+    }
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+    mock_vstore.asimilarity_search_with_score = AsyncMock(return_value=[])
+
+    await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Redação', 'sources': []},
+        branch={
+            'id': str(uuid4()),
+            'title': 'Clareza da redação',
+            'description': 'O texto é claro ao longo do documento.',
+        },
+        base_filter=base_filter,
+        section_requirement=section_requirement,
+    )
+
+    mock_vstore.asimilarity_search_with_score.assert_not_called()
+    assert mock_vstore.asimilarity_search.call_args.kwargs['filter'] == (
+        base_filter
+    )
+
+
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_routes_specific_section():
+    base_filter = {
+        'source': 'lumina/storage/uploads/doc.pdf',
+        'record_type': {'$exists': False},
+    }
+    section_doc = Document(
+        page_content='Introdução\nA dengue é...',
+        metadata={'section_title': '1. Introdução'},
+    )
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+    mock_vstore.asimilarity_search_with_score = AsyncMock(
+        return_value=[(section_doc, 0.1)]
+    )
+
+    await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Fundamentação da Revisão', 'sources': []},
+        branch={
+            'id': str(uuid4()),
+            'title': 'Existência de justificativa da revisão',
+            'description': 'O manuscrito apresenta uma justificativa clara?',
+        },
+        base_filter=base_filter,
+        section_requirement={
+            'scope': 'SPECIFIC_SECTION',
+            'expected_section': 'Introdução',
+        },
+    )
+
+    routing_call = mock_vstore.asimilarity_search_with_score.call_args
+    assert routing_call.args[0] == 'Introdução'
+    assert mock_vstore.asimilarity_search.call_args.kwargs['filter'] == {
+        **base_filter,
+        'section_title': {'$in': ['1. Introdução']},
+    }

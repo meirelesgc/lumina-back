@@ -1,12 +1,5 @@
 # flake8: noqa: E501
 
-QUERY = """
-SECTION: {section}
-SECTION: {section}
-SECTION: {section}
---- {query}
-"""
-
 DESCRIPTION = """
 Você é a OiacIA. Escreva a síntese executiva de uma auditoria documental para o analista
 responsável, em segunda pessoa, com tom profissional e direto.

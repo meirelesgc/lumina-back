@@ -20,24 +20,31 @@ MAX_EXPANSIONS = 4
 
 EXPANSION_PROMPT = (
     'Você é um especialista em recuperação de informação (RAG) para '
-    'documentos de conformidade normativa.\n\n'
-    'A partir do critério normativo abaixo, gere de 2 a 4 formulações '
+    'documentos acadêmicos e técnicos: artigos, revisões sistemáticas, '
+    'anteprojetos e relatórios técnicos.\n\n'
+    'A partir do critério de avaliação abaixo, gere de 2 a 4 formulações '
     'alternativas de consulta para busca vetorial, capazes de recuperar '
     'trechos relevantes que a formulação original poderia não capturar.\n\n'
     '### Critério em Análise:\n'
     '- **Tipificação Documental:** {typification_name}\n'
     '- **Taxonomia / Grupo:** {taxonomy_title} ({taxonomy_description})\n'
-    '- **Ramo / Regra:** {branch_title}\n'
+    '- **Ramo / Critério:** {branch_title}\n'
     '  **Descrição:** {branch_description}\n\n'
     '### Diretrizes:\n'
-    "1. Gere reformulações semânticas (tipo 'paraphrase'): mesma intenção, "
+    '1. Escreva todas as formulações, de qualquer tipo, como o trecho do '
+    'documento que atenderia ao critério: frase afirmativa, no vocabulário '
+    'e no estilo do texto desse tipo de documento. Não escreva perguntas, '
+    'não cite a seção nem o documento e não use palavras de enunciado do '
+    "critério, como 'o manuscrito apresenta', 'o autor descreve' ou 'o "
+    "documento contém'.\n"
+    "2. Gere reformulações semânticas (tipo 'paraphrase'): mesma intenção, "
     'vocabulário e estrutura diferentes.\n'
-    '2. Quando o critério envolver múltiplos aspectos, gere sub-perguntas '
-    "(tipo 'sub_question') que decompõem a verificação em partes menores.\n"
-    '3. Se houver uma dica clara de seção do documento onde a informação '
-    "costuma aparecer, gere uma formulação do tipo 'section_hint' apontando "
-    'para esse contexto.\n'
-    '4. Não repita a formulação original nem gere variações redundantes '
+    '3. Quando o critério envolver múltiplos aspectos, gere formulações '
+    "(tipo 'sub_question') que cobrem cada aspecto em separado.\n"
+    '4. Se a informação costuma aparecer em uma seção conhecida do '
+    "documento, gere uma formulação do tipo 'section_hint' no estilo do "
+    'texto dessa seção.\n'
+    '5. Não repita a formulação original nem gere variações redundantes '
     'entre si.\n'
 )
 

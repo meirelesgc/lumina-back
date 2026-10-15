@@ -160,3 +160,31 @@ async def test_run_branch_query_expansion_background_handles_error():
         context=BranchNormativeContext(branch_title='Branch Teste'),
         model=mock_llm,
     )
+
+
+@pytest.mark.asyncio
+async def test_generate_query_expansions_prompt_asks_for_passages():
+    mock_llm = _mock_llm_returning(QueryExpansionList(expansions=[]))
+
+    await generate_query_expansions(
+        context=BranchNormativeContext(
+            branch_title='Existência de justificativa da revisão',
+            branch_description='O manuscrito apresenta uma justificativa?',
+            taxonomy_title='Fundamentação da Revisão',
+            typification_name='Revisão Sistemática',
+        ),
+        model=mock_llm,
+    )
+
+    prompt = mock_llm.with_structured_output.return_value.ainvoke.call_args
+    prompt = prompt.args[0]
+    for document_type in (
+        'artigos',
+        'revisões sistemáticas',
+        'anteprojetos',
+        'relatórios técnicos',
+    ):
+        assert document_type in prompt
+    assert 'afirmativa' in prompt
+    assert 'o manuscrito apresenta' in prompt.lower()
+    assert 'conformidade normativa' not in prompt
