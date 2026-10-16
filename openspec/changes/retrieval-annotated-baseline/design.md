@@ -51,12 +51,14 @@ tree:
               expected_section: <texto>
             expansions: [<consulta>, ...] # opcional
             evidence:                     # [] = o documento não atende o ramo
-              - section: <título como em <nome>.sections.yaml>
+              - section: <título como em <nome>.sections.yaml> # opcional
                 page: <página, 1 = primeira>
                 contains: '<trecho do PDF, até ~150 caracteres, numa página>'
 ```
 
 O teste monta cada ramo como o dicionário que `retrieve_criteria_payload` recebe (`title`, `description`) e a taxonomia com `title`. `expansions` e `section_requirement` vão nos parâmetros de mesmo nome. A tipificação só organiza o arquivo.
+
+`section` é opcional. O anotador o omite quando o trecho fica fora de qualquer seção do `<nome>.sections.yaml`, como a capa e a folha de rosto, que não têm título no PDF. Anotar o rótulo que a ingestão gera para essas páginas compararia o motor com ele mesmo.
 
 O limite de cerca de 150 caracteres vem da sobreposição de 150 caracteres do splitter: um trecho desse tamanho dentro de uma página cabe inteiro em algum chunk. Um trecho que serve a dois ramos aparece nos dois.
 
@@ -71,8 +73,8 @@ Alternativas: só a seção esperada (modelo A) não separa dois ramos da mesma 
 `tests/unit/services/test_retrieval_answer_keys.py`, na suíte padrão, parametrizado por gabarito. Tolerância zero, porque um gabarito errado distorce todas as métricas:
 
 - `id` único no arquivo, `scope` válido e `evidence` presente, mesmo vazio.
-- Cada `section` existe em `<nome>.sections.yaml`, entre seções e subseções.
-- Cada `contains` aparece, normalizado, em algum chunk anonimizado (`extract_pdf_chunks` seguido de `anonymize_chunks`) cujo `section_path` contém a seção e cuja página é a anotada. Quando o trecho não aparece ali, a mensagem diz onde ele aparece no documento, se aparecer, para o anotador corrigir a seção ou a página. O teste usa o texto anonimizado porque a recuperação só vê esse texto: um trecho com nome próprio que o Presidio troca precisa ser substituído.
+- Cada `section` informada existe em `<nome>.sections.yaml`, entre seções e subseções.
+- Cada `contains` aparece, normalizado, em algum chunk anonimizado (`extract_pdf_chunks` seguido de `anonymize_chunks`) da página anotada e, quando a evidência tem `section`, cujo `section_path` contém a seção. Quando o trecho não aparece ali, a mensagem diz onde ele aparece no documento, se aparecer, para o anotador corrigir a seção ou a página. O teste usa o texto anonimizado porque a recuperação só vê esse texto: um trecho com nome próprio que o Presidio troca precisa ser substituído.
 
 ### Teste de avaliação da recuperação
 
@@ -89,13 +91,13 @@ Alternativas: só a seção esperada (modelo A) não separa dois ramos da mesma 
 | Métrica | Acerto | Denominador |
 | :--- | :--- | :--- |
 | Recall de trechos | o `contains` aparece no texto de algum bloco do ramo | trechos anotados |
-| Acerto de seção e página | algum bloco do ramo tem a seção no `section_path` e a página anotada | trechos anotados |
+| Acerto de seção e página | algum bloco do ramo tem a página anotada e, quando a evidência tem `section`, a seção no `section_path` | trechos anotados |
 | Precisão entre ramos | o bloco contém um trecho do próprio ramo | blocos que contêm trecho de algum ramo do mesmo documento |
-| Acerto do roteamento | algum candidato é a seção de um trecho do ramo; `None` conta como erro | ramos com `scope: SPECIFIC_SECTION` |
+| Acerto do roteamento | algum candidato é a seção de um trecho do ramo; `None` conta como erro | ramos com `scope: SPECIFIC_SECTION` e ao menos um trecho com `section` |
 
 O acerto de seção e página separa dois defeitos: a recuperação chegou ao lugar certo e cortou o trecho, ou foi para outro lugar. A precisão entre ramos mostra quando um ramo recebe a evidência de outro.
 
-O teste imprime, por documento e por ramo: trechos e seções acertados, a posição do primeiro bloco com trecho do ramo, os candidatos do roteamento e a contagem de blocos do próprio ramo, de outro ramo e sem anotação. Para os ramos com `evidence: []`, imprime as seções dos blocos devolvidos e os candidatos.
+O teste imprime, por documento e por ramo: trechos e seções acertados, a posição do primeiro bloco com trecho do ramo, os candidatos do roteamento e a contagem de blocos do próprio ramo, de outro ramo e sem anotação. Para os ramos com `evidence: []`, imprime as seções dos blocos devolvidos e os candidatos. Para um ramo com `SPECIFIC_SECTION` sem nenhum trecho com `section`, imprime os candidatos sem contar o ramo no roteamento.
 
 **Pisos.** Quatro constantes no módulo: `MIN_EVIDENCE_RECALL`, `MIN_SECTION_PAGE_HIT_RATE`, `MIN_BRANCH_PRECISION` e `MIN_ROUTING_HIT_RATE`. Na implementação, depois da anotação, o teste roda três vezes e cada piso recebe o menor valor medido, arredondado para baixo na segunda casa decimal. Os pisos só sobem. Quando uma métrica não tem casos (nenhum ramo com `SPECIFIC_SECTION`, por exemplo), o teste informa "sem casos" e não verifica aquele piso.
 
