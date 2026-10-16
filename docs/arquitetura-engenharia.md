@@ -120,6 +120,29 @@ A ingestão (extração do PDF, árvore de seções e fatiamento) não chama mod
 
 **Piso.** O piso é o placar medido depois da última mudança, arredondado para baixo, e só sobe. Quem melhora a heurística sobe o piso no mesmo commit. O valor vigente fica no próprio teste. A regra completa está na seção "Extração determinística" de `.agents/skills/testing-methodology/references/05-ia.md`.
 
+### Validação da Recuperação sobre Acervo Anotado
+A recuperação de evidências decide quais trechos chegam ao avaliador de cada critério. O time mede o comportamento atual contra o mesmo acervo, com um segundo gabarito por documento.
+
+**Gabarito.** `<nome>.retrieval.yaml` fica ao lado do PDF e do `<nome>.sections.yaml`. Ele guarda a árvore de critérios (tipificação, taxonomia e ramo) e, em cada ramo, os trechos que a recuperação precisa devolver: página, um trecho de até cerca de 150 caracteres copiado do PDF e, quando o trecho pertence a uma seção anotada, a seção. Expansões de consulta e requisito de seção entram como campos opcionais do ramo. O modelo comentado fica em `tests/fixtures/documents/retrieval_template.yaml`. A leitura dos dois gabaritos fica em `tests/fixtures/answer_keys.py`.
+
+**Testes.**
+
+| Teste | Onde roda | Verifica | Tolerância |
+| :--- | :--- | :--- | :--- |
+| `tests/unit/services/test_retrieval_answer_keys.py` | Suíte padrão, sem IA | Cada trecho está no texto anonimizado da página e da seção anotadas, e cada seção existe no `.sections.yaml` | Zero falhas, por documento |
+| `tests/ai/evaluation/retrieval/test_retrieval_baseline.py` | `poetry run task test-ai` (embeddings reais e pgvector) | Nenhuma evidência vem de outro documento | Zero falhas, por documento |
+| O mesmo arquivo | O mesmo | Recall de trechos, acerto de seção e página, precisão entre ramos e acerto do roteamento por seção | Piso por métrica sobre o acervo inteiro, com placar impresso por ramo |
+
+O teste de avaliação ingere os PDFs anotados por `run_document_ingestion` e chama `retrieve_criteria_payload` para cada ramo, como `/release` faz. A precisão entre ramos conta os blocos devolvidos que contêm trecho do próprio ramo, entre os blocos que contêm trecho de algum ramo do documento. Ela cai quando um ramo recebe a evidência de um vizinho.
+
+**Fluxo para um gabarito novo:**
+
+1. Escreva `<nome>.retrieval.yaml` a partir de `retrieval_template.yaml`.
+2. Rode `poetry run pytest tests/unit/services/test_retrieval_answer_keys.py`. Se falhar, a mensagem mostra onde o trecho aparece no documento: corrija a página ou a seção, ou troque um trecho que a anonimização alterou.
+3. Rode `poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai` e leia o placar. Uma métrica abaixo do piso pede a mesma decisão da ingestão: melhorar a recuperação numa mudança do OpenSpec ou baixar o piso com a justificativa registrada.
+
+**Pisos.** Os quatro pisos (`MIN_EVIDENCE_RECALL`, `MIN_SECTION_PAGE_HIT_RATE`, `MIN_BRANCH_PRECISION`, `MIN_ROUTING_HIT_RATE`) ficam no teste de avaliação. Cada um recebe o menor valor de três execuções, arredondado para baixo na segunda casa decimal, e só sobe.
+
 ---
 
 ## 3. Segurança e Privacidade por Padrão

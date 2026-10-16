@@ -12,7 +12,7 @@ nomes de fixtures e helpers podem mudar.
 | Integração com banco | `tests/integration/repositories/`, `tests/integration/check_tree/` |
 | Unitário, incluindo os estágios do pipeline de IA | `tests/unit/`, `tests/unit/services/` |
 | Avaliação de qualidade da IA (chamadas reais) | `tests/ai/evaluation/` |
-| Acervo de PDFs com gabarito de seções | `tests/fixtures/documents/` |
+| Acervo de PDFs com gabarito de seções e de recuperação | `tests/fixtures/documents/` (leitura em `tests/fixtures/answer_keys.py`) |
 | Factories | `tests/factories/` |
 
 O Lumina ainda não tem testes de jornada. Combine o diretório com o time na
@@ -22,7 +22,7 @@ primeira mudança que criar um.
 
 Em `tests/conftest.py`:
 
-- PostgreSQL 16 sobe uma vez por sessão via Testcontainers. Cada teste roda
+- PostgreSQL 16 com pgvector sobe uma vez por sessão via Testcontainers. Cada teste roda
   em transação com savepoint e rollback (`session`).
 - `client` é o `TestClient` com a sessão do teste injetada.
 - `user` e `other_user` criam usuários com a senha em `clean_password`.
@@ -48,6 +48,12 @@ Em `tests/conftest.py`:
   sozinho. Documento novo no acervo não pede teste novo: rode o arquivo e
   decida pelo resultado, como descreve `tests/fixtures/documents/README.md`.
   O piso `MIN_SECTION_IDENTIFICATION_RATE` fica no próprio teste.
+- O gabarito `<nome>.retrieval.yaml` guarda a árvore de critérios e os trechos
+  esperados por ramo. `tests/unit/services/test_retrieval_answer_keys.py`
+  confere o gabarito sem IA. `tests/ai/evaluation/retrieval/test_retrieval_baseline.py`
+  mede a recuperação com embeddings reais e tem quatro pisos no próprio teste.
+- O container de teste usa a imagem `pgvector/pgvector:pg16`, que tem a
+  extensão `vector` para o `PGVector` do teste de recuperação.
 - Para comparar com o comportamento anterior a uma correção, rode o mesmo
   teste num `git worktree` do commit anterior. O teste de hoje mede o código
   de ontem sem que ninguém precise ter escrito o teste antes.
@@ -70,4 +76,8 @@ poetry run task test-ai
 
 ```bash
 poetry run pytest tests/unit/services/test_ingestion_sections.py -s
+```
+
+```bash
+poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai
 ```

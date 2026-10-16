@@ -63,5 +63,18 @@ section, that section exactly as the `.sections.yaml` names it. Pick excerpts th
 section, and leave personal names out: the retrieval only sees the
 anonymized text.
 
-The tests that read these files are planned in the OpenSpec change
-`retrieval-annotated-baseline`.
+Check the file without spending tokens:
+
+```
+poetry run pytest tests/unit/services/test_retrieval_answer_keys.py
+```
+
+Then measure the retrieval against it with real embeddings:
+
+```
+poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai
+```
+
+The second test prints the score per branch and fails below the floors kept
+in the test. See "Validação da Recuperação sobre Acervo Anotado" in
+`docs/arquitetura-engenharia.md`.
