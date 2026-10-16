@@ -43,3 +43,25 @@ test can reuse it.
 The floor only goes up: whoever improves the heuristic raises it in the same
 commit. See "Validação da Ingestão sobre Acervo Anotado" in
 `docs/arquitetura-engenharia.md`.
+
+## Expected retrieval
+
+Next to a PDF that has its `<name>.sections.yaml`, a `<name>.retrieval.yaml`
+file holds a check tree and, for each branch, the passages the retrieval must
+return for it:
+
+```
+research_proposal/
+├── estrategias_teste_software_llm_judge_hitl.pdf
+├── estrategias_teste_software_llm_judge_hitl.sections.yaml
+└── estrategias_teste_software_llm_judge_hitl.retrieval.yaml
+```
+
+Start from `retrieval_template.yaml`. Each passage names its section exactly
+as the `.sections.yaml` does, the page, and a short excerpt copied from the
+PDF. Pick excerpts that tell a branch apart from its neighbours in the same
+section, and leave personal names out: the retrieval only sees the
+anonymized text.
+
+The tests that read these files are planned in the OpenSpec change
+`retrieval-annotated-baseline`.

@@ -1,0 +1,73 @@
+# Expected retrieval for one PDF.
+#
+# Save as <name>.retrieval.yaml next to <name>.pdf and <name>.sections.yaml.
+# Example:
+#   research_proposal/estrategias_teste_software_llm_judge_hitl.pdf
+#   research_proposal/estrategias_teste_software_llm_judge_hitl.sections.yaml
+#   research_proposal/estrategias_teste_software_llm_judge_hitl.retrieval.yaml
+#
+# The file holds the check tree to evaluate and, for each branch, the
+# passages the retrieval must return for it.
+#
+# Fields:
+#   tree:                 typifications > taxonomies > branches, as in Lumina.
+#   typification:         typification name. Only organizes the file.
+#   taxonomies[].title:   taxonomy title. Goes into the search query.
+#   branches[].id:        short slug, unique in the file. Names the branch
+#                         in the report.
+#   title, description:   branch title and description, as written in the
+#                         check tree. Both go into the search query.
+#   section_requirement:  optional. Where the branch expects its evidence.
+#     scope:              SPECIFIC_SECTION, ENTIRE_DOCUMENT or UNKNOWN.
+#                         SPECIFIC_SECTION turns on section routing.
+#     expected_section:   text the routing searches for, e.g. Metodologia.
+#   expansions:           optional. Alternative phrasings of the branch,
+#                         searched together with the original query.
+#   evidence:             passages the retrieval must return for the branch.
+#                         Write [] when the document does not meet the branch.
+#     section:            most specific section title of the passage, exactly
+#                         as in <name>.sections.yaml (a subsection when there
+#                         is one).
+#     page:               page of the passage (1 = first page of the PDF).
+#     contains:           passage copied from the PDF, within one page and up
+#                         to about 150 characters. Pick words that belong to
+#                         this branch and not to its neighbours.
+#                         Wrap it in single quotes when it contains ': '.
+#                         Type hyphenated line breaks as whole words.
+#                         Avoid personal names: anonymization replaces them.
+#
+# A passage that serves two branches goes in both. List every passage a
+# reviewer would need to judge the branch, not only the first one.
+
+tree:
+  - typification: <typification name>
+    taxonomies:
+      - title: <taxonomy title>
+        branches:
+          - id: <branch-slug>
+            title: <branch title>
+            description: <branch description>
+            evidence:
+              - section: <section title>
+                page: <page>
+                contains: '<passage from the PDF>'
+              - section: <another section title>
+                page: <page>
+                contains: '<another passage>'
+          - id: <neighbour-branch-slug>
+            title: <branch title>
+            description: <branch description>
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: <section the branch expects>
+            expansions:
+              - <alternative phrasing>
+              - <alternative phrasing>
+            evidence:
+              - section: <section title>
+                page: <page>
+                contains: '<passage from the PDF>'
+          - id: <branch-the-document-does-not-meet>
+            title: <branch title>
+            description: <branch description>
+            evidence: []
