@@ -102,7 +102,7 @@ O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos bl
 - **THEN** as ocorrências são substituídas por marcadores indexados e o mapa de reversão é armazenado apenas no metadado `presidio_mapping`
 
 ### Requirement: Avaliação Estruturada de Critérios com Resolução de Citações
-O sistema SHALL avaliar concorrentemente critérios normativos utilizando trechos recuperados do documento expandidos com os chunks vizinhos da mesma seção e página ($\pm 1$), retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas.
+O sistema SHALL avaliar concorrentemente critérios normativos utilizando trechos recuperados do documento expandidos com os chunks vizinhos da mesma seção e página ($\pm 1$), retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas. O parecer SHALL ser curto, em Markdown estruturado (listas ou tabela, sem parágrafos longos), seguindo um estilo de resposta sorteado de forma independente para cada critério, e SHALL conter sugestões de melhoria apenas para lacunas identificadas, limitadas a uma ação por lacuna.
 
 #### Scenario: Avaliação de critério normativo com evidência no documento
 - **WHEN** um critério normativo é avaliado contra trechos recuperados
@@ -112,12 +112,32 @@ O sistema SHALL avaliar concorrentemente critérios normativos utilizando trecho
 - **WHEN** o modelo de linguagem cita um identificador de bloco inexistente nos trechos fornecidos
 - **THEN** o sistema sinaliza a citação como alucinação e registra a métrica na telemetria de auditoria
 
+#### Scenario: Estilo de resposta sorteado por critério
+- **WHEN** os critérios de uma release são enviados para avaliação
+- **THEN** cada critério recebe, de forma independente, um estilo de resposta sorteado entre os estilos de parecer disponíveis (Veredito + listas, Checklist, Tabela, Resumo + tópicos), mantendo inalterados o barema, as regras de citação e o formato JSON de saída
+
+#### Scenario: Estilo mantido nas retentativas
+- **WHEN** a avaliação em lote de uma release é repetida por falha transitória
+- **THEN** cada critério é reavaliado com o mesmo estilo sorteado na primeira tentativa
+
+#### Scenario: Critério integralmente atendido
+- **WHEN** o modelo conclui que o critério é atendido integralmente
+- **THEN** o parecer apresenta apenas a situação e as evidências, sem sugestões de melhoria
+
+#### Scenario: Critério parcialmente atendido ou não atendido
+- **WHEN** o modelo identifica lacunas no atendimento do critério
+- **THEN** o parecer lista as lacunas e propõe no máximo uma ação curta por lacuna
+
 ### Requirement: Síntese Executiva Consolidada
-O sistema SHALL sintetizar os resultados gerais da avaliação com base nos critérios de maior e menor pontuação, particionando o texto em seções de saudação, pontos atendidos, pontos a aprimorar e orientação final.
+O sistema SHALL sintetizar os resultados gerais da avaliação com base nos critérios de maior e menor pontuação, particionando o texto em seções de saudação, pontos atendidos, pontos a aprimorar e orientação final. A saudação SHALL ter uma única frase, as seções SHALL ser escritas em listas curtas em Markdown seguindo um estilo sorteado por síntese, e os títulos `# Pontos atendidos`, `# Pontos a aprimorar` e `# Orientação final` SHALL ser mantidos literalmente.
 
 #### Scenario: Geração da síntese executiva
 - **WHEN** a avaliação de todos os critérios da árvore é finalizada
 - **THEN** o sistema gera a síntese executiva estruturada e a salva no resumo da release
+
+#### Scenario: Particionamento preservado em qualquer estilo
+- **WHEN** a síntese é gerada com qualquer um dos estilos de síntese disponíveis
+- **THEN** o texto contém os três títulos de seção fixos e o particionamento em saudação, pontos atendidos, pontos a aprimorar e orientação final continua funcionando
 
 ### Requirement: Auditoria e Exportação Estruturada de Ingestão de Documentos
 O sistema SHALL persistir em disco os artefatos intermediários de processamento e o arquivo PDF anotado com as seções e fragmentos textuais (chunks) delimitados, organizados em diretórios específicos, exclusivamente quando a flag `DEBUG_INGESTION_AUDIT` estiver configurada como verdadeira nas configurações da aplicação.
