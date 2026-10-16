@@ -123,7 +123,9 @@ def client(session):
 
 @pytest.fixture(scope='session')
 def engine():
-    with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+    with PostgresContainer(
+        'pgvector/pgvector:pg16', driver='psycopg'
+    ) as postgres:
         _engine = create_async_engine(postgres.get_connection_url())
         yield _engine
 
