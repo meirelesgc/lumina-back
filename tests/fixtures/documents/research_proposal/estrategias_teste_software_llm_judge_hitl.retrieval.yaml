@@ -1,0 +1,157 @@
+# Expected retrieval for estrategias_teste_software_llm_judge_hitl.pdf
+# Page 1 = capa, page 2 = folha de rosto, page 3 = start of "1. Introdução".
+# Section titles follow the headings of the PDF. Adjust them if
+# <name>.sections.yaml uses other names.
+
+tree:
+  - typification: Validação de Ante-Projeto
+    taxonomies:
+      - title: Título
+        branches:
+          - id: titulo-claro-e-objetivo
+            title: Título
+            description: >-
+              O título deve representar, de forma clara e objetiva, o tema central da pesquisa.
+              Recomenda-se evitar títulos excessivamente amplos, genéricos ou que não indiquem
+              o objeto investigado.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Capa
+            evidence:
+              - page: 1
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa: integração entre LLM-as-a-Judge e Human-in-the-Loop'
+              - page: 2
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa'
+
+      - title: Introdução
+        branches:
+          - id: introducao-contextualizacao
+            title: Introdução
+            description: >-
+              Apresentar o tema do trabalho e contextualizá-lo no campo científico, tecnológico,
+              profissional ou social em que está inserido. A introdução deve permitir que o leitor
+              compreenda o assunto, sua delimitação e sua relação com as áreas de conhecimento
+              envolvidas. Apresentar o tema e delimitar o objeto de estudo; explicar o contexto no
+              qual a pesquisa será desenvolvida; indicar as áreas de conhecimento relacionadas ao
+              tema; utilizar autores e trabalhos de referência para fundamentar a contextualização;
+              apresentar conceitos essenciais para a compreensão do estudo; demonstrar como o
+              contexto apresentado conduz ao problema de pesquisa. Escrever com frases curtas.
+              Todas as definições de conceitos e afirmações devem estar referenciadas. Escrever
+              com precisão científica e sem juízo de valor. Ao final da introdução, deve estar
+              clara a situação que motivou a investigação e a necessidade de aprofundamento do tema.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introdução
+            evidence:
+              - section: 1. Introdução
+                page: 3
+                contains: 'A utilização de sistemas de inteligência artificial (IA) baseados em modelos de linguagem tem se ampliado em atividades que envolvem análise,'
+              - section: 1. Introdução
+                page: 3
+                contains: 'estratégias de avaliação baseadas em LLM-as-a-Judge têm sido investigadas como uma alternativa para avaliar aspectos semânticos'
+              - section: 1. Introdução
+                page: 3
+                contains: 'identificaram diferenças entre avaliações realizadas por LLMs e especialistas em tarefas de conhecimento especializado'
+              - section: 1. Introdução
+                page: 3
+                contains: 'destacam a importância de conjuntos de avaliação que representem adequadamente as características das aplicações avaliadas'
+              - section: 1. Introdução
+                page: 3
+                contains: 'Diante desse cenário, esta pesquisa propõe investigar uma estratégia de avaliação para sistemas de IA especializados'
+              - section: 1. Introdução
+                page: 3
+                contains: 'Como estudo de caso, será considerado um sistema de análise documental baseado em inteligência artificial'
+              - section: 1. Introdução
+                page: 3
+                contains: 'O trabalho está inserido nas áreas de Inteligência Artificial, Processamento de Linguagem Natural e Engenharia de Software'
+
+      - title: Metodologia
+        branches:
+          - id: metodologia-percurso
+            title: Metodologia
+            description: >-
+              Escrever detalhadamente a Metodologia que será usada para execução do Trabalho.
+              Em outras palavras, dizer como os objetivos geral e específicos serão atingidos,
+              que ações serão executadas, que testes serão realizados, que indicadores serão
+              usados, etc. Deve ser descrito o percurso metodológico.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 5. Metodologia
+            evidence:
+              - section: 5. Metodologia
+                page: 5
+                contains: 'A pesquisa terá caráter aplicado e exploratório, sendo desenvolvida a partir de um estudo de caso'
+              - section: 5. Metodologia
+                page: 5
+                contains: 'Inicialmente, será realizada uma revisão da literatura sobre avaliação de sistemas de inteligência artificial especializados'
+              - section: 5. Metodologia
+                page: 5
+                contains: 'será construído um conjunto de casos de referência, ou golden dataset,'
+              - section: 5. Metodologia
+                page: 5
+                contains: 'Esses resultados serão definidos e validados com a participação de especialistas do domínio'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Posteriormente, os casos de referência serão utilizados para avaliar os resultados produzidos pelo sistema.'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Para resultados textuais ou que dependam de interpretação semântica, será utilizada a abordagem LLM-as-a-Judge.'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'os resultados serão analisados por meio de indicadores adequados aos diferentes tipos de saída avaliados'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Também será investigado se a estratégia permite identificar alterações nos resultados produzidos pelo sistema'
+
+      - title: Objetivo
+        branches:
+          - id: objetivo-geral
+            title: Objetivo geral
+            description: >-
+              Apresentar, de forma clara e abrangente, o principal resultado que se pretende
+              alcançar ao final do trabalho. O objetivo geral deverá estar diretamente relacionado
+              ao problema e à questão principal da pesquisa. O objetivo geral deve indicar o que
+              será realizado, sobre qual objeto ou contexto e com qual finalidade principal. Não
+              utilizar dois ou mais verbos na definição no início da frase do objetivo. Exemplo:
+              Desenvolver [produto, modelo, método, sistema ou abordagem] para [finalidade],
+              considerando o contexto de [ambiente ou público].
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3.1. Objetivo geral
+            evidence:
+              - section: 3.1. Objetivo geral
+                page: 4
+                contains: 'Propor e avaliar uma estratégia para avaliação de sistemas de inteligência artificial especializados, combinando casos de referência validados'
+              - section: 2. Problema de pesquisa
+                page: 4
+                contains: 'Como uma estratégia baseada em casos de referência validados por especialistas, combinada a avaliações determinísticas e LLM-as-a-Judge'
+
+          - id: objetivos-especificos
+            title: Objetivos específicos
+            description: >-
+              Apresentar os resultados intermediários necessários para alcançar o objetivo geral.
+              Os objetivos específicos devem ser claros, verificáveis e compatíveis com o tempo
+              e os recursos disponíveis. Podem contemplar ações como realizar uma revisão da
+              literatura; caracterizar o contexto ou o público investigado; levantar e analisar
+              requisitos; definir critérios, indicadores ou categorias de análise; modelar ou
+              desenvolver uma solução; implementar um protótipo; executar testes ou avaliações;
+              analisar e discutir os resultados; validar a solução proposta.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3.2. Objetivos específicos
+            evidence:
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Realizar uma revisão da literatura sobre avaliação de sistemas de inteligência artificial especializados e utilização de LLM-as-a-Judge'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Caracterizar o sistema de inteligência artificial utilizado como estudo de caso e os principais tipos de resultados produzidos'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Construir um conjunto de casos de referência com resultados esperados definidos e validados por especialistas'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Aplicar uma estratégia de avaliação combinando métodos determinísticos e LLM-as-a-Judge aos resultados produzidos pelo sistema'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Analisar os resultados obtidos, considerando a concordância com as referências dos especialistas'
