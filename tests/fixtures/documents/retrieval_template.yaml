@@ -25,9 +25,11 @@
 #                         searched together with the original query.
 #   evidence:             passages the retrieval must return for the branch.
 #                         Write [] when the document does not meet the branch.
-#     section:            most specific section title of the passage, exactly
-#                         as in <name>.sections.yaml (a subsection when there
-#                         is one).
+#     section:            optional. Most specific section title of the
+#                         passage, exactly as in <name>.sections.yaml (a
+#                         subsection when there is one). Omit it when the
+#                         passage sits outside every annotated section, such
+#                         as the cover or the title page.
 #     page:               page of the passage (1 = first page of the PDF).
 #     contains:           passage copied from the PDF, within one page and up
 #                         to about 150 characters. Pick words that belong to

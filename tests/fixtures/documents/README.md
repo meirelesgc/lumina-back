@@ -57,9 +57,9 @@ research_proposal/
 └── estrategias_teste_software_llm_judge_hitl.retrieval.yaml
 ```
 
-Start from `retrieval_template.yaml`. Each passage names its section exactly
-as the `.sections.yaml` does, the page, and a short excerpt copied from the
-PDF. Pick excerpts that tell a branch apart from its neighbours in the same
+Start from `retrieval_template.yaml`. Each passage names the page, a short
+excerpt copied from the PDF and, when the passage belongs to an annotated
+section, that section exactly as the `.sections.yaml` names it. Pick excerpts that tell a branch apart from its neighbours in the same
 section, and leave personal names out: the retrieval only sees the
 anonymized text.
 
