@@ -1,0 +1,200 @@
+# Expected retrieval for smart_technologies_microgrids_renewable_energy_slr.pdf
+# Page numbers follow the "N of 20" header of the PDF (1 = first page).
+# Section titles follow the headings of the PDF. Adjust them if
+# <name>.sections.yaml uses other names.
+
+tree:
+  - typification: Revisão Sistemática da Literatura
+    taxonomies:
+      - title: Fundamentação da Revisão
+        branches:
+          - id: justificativa-revisao
+            title: Existência de justificativa da revisão
+            description: >-
+              O manuscrito apresenta uma justificativa clara para a realização da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence:
+              - section: Abstract
+                page: 1
+                contains: 'The production of electricity from renewable sources has become a global necessity due to concerns about reducing carbon dioxide'
+              - section: 1. Introduction
+                page: 2
+                contains: 'the identification of smart technologies with the potential to support microgrid projects serves as a relevant reference'
+              - section: 1. Introduction
+                page: 2
+                contains: 'mapping the applicability of these technologies in environments geared toward practical use enables the generation'
+              - section: 1. Introduction
+                page: 2
+                contains: 'this study aims to fill gaps in the literature by investigating the application of smart technologies in the production'
+
+          - id: estado-da-arte
+            title: Estado da arte
+            description: >-
+              O autor apresenta evidências de que conhece o estado atual da literatura sobre o tema?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence:
+              - section: 1. Introduction
+                page: 1
+                contains: 'Smart technology has become a widespread practice implemented in complex activities.'
+              - section: 1. Introduction
+                page: 1
+                contains: 'which rely on machine learning algorithms, enhanced by the evolution of equipment and the volume of data currently generated'
+              - section: 1. Introduction
+                page: 2
+                contains: 'energy services, defined as energy poverty [5], still reflects a reality, with 1.18 billion people'
+              - section: 1. Introduction
+                page: 2
+                contains: 'The various possibilities of renewable energy sources have emerged as one of the best options for generating clean electricity'
+              - section: 1. Introduction
+                page: 2
+                contains: 'the use of microgrids presents a favorable scenario for utilizing renewable energy sources'
+
+          - id: lacuna-cientifica
+            title: Demonstração de lacuna científica
+            description: >-
+              O estudo demonstra explicitamente uma lacuna de conhecimento que justifique a revisão?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'this study aims to fill gaps in the literature by investigating the application of smart technologies in the production'
+              - section: 2. Materials and Methods
+                page: 2
+                contains: 'aiming to contribute by identifying gaps in the literature that lead to future work aligned with sustainability challenges'
+              - section: 5. Conclusions
+                page: 12
+                contains: 'but with a gap in the need to advance in the intersection with social justice'
+
+      # Avaliar a reprodutibilidade da busca.
+      - title: Estratégia de Busca
+        branches:
+          - id: descritores-definidos
+            title: Descritores definidos
+            description: >-
+              Os descritores utilizados na busca foram explicitamente informados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence:
+              - section: 2. Materials and Methods
+                page: 2
+                contains: 'The composition of descriptors through the search string based on articles at their final publication stage'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'The descriptors from the Institute of Electrical and Electronics Engineers (IEEE) Taxonomy [15] were adopted'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'Demonstration of the descriptors used by area based on the IEEE Taxonomy'
+
+          - id: palavras-chave-definidas
+            title: Palavras-chave definidas
+            description: >-
+              As palavras-chave utilizadas refletem adequadamente a questão de pesquisa?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'What smart technologies are used in the renewable energy sector for microgrid applications?'
+              - section: 2. Materials and Methods
+                page: 3
+                contains: '(“Renewable Energy Sources” OR “Sustainable Development” OR “Net zero”)'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'were adopted, which align with the areas of knowledge of the study'
+              - section: Abstract
+                page: 1
+                contains: 'Keywords: renewable energy; smart technologies; microgrids; artificial neural network;'
+
+          - id: sinonimos-identificados
+            title: Sinônimos identificados
+            description: >-
+              Foram utilizados sinônimos e termos relacionados para ampliar a identificação dos estudos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            expansions:
+              - synonyms and related terms used in the search string
+              - alternative search terms combined with OR
+            evidence:
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'OR “Artificial neural networks” OR “Multi-agent systems” OR “Computational modeling”)'
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'AND (microgrids OR “Smart grids”)'
+
+          - id: strings-apresentadas
+            title: Strings apresentadas
+            description: >-
+              A string de busca completa foi apresentada para possibilitar a replicação do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence:
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'Search strategy for descriptors utilized on Scopus and Web of Science Online databases.'
+              - section: 2. Materials and Methods
+                page: 3
+                contains: '(“Renewable Energy Sources” OR “Sustainable Development” OR “Net zero”)'
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'AND (microgrids OR “Smart grids”)'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'The online databases Scopus and Web of Science were limited to the publication of original articles, excluding duplicates'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'with the search conducted on 23 January 2024'
+
+      - title: Avaliação de Viés
+        branches:
+          - id: vies-estudos-avaliado
+            title: Viés dos estudos avaliado
+            description: >-
+              O risco de viés dos estudos incluídos foi avaliado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.4. Assessment of Study Bias Risk
+            evidence:
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 4
+                contains: 'The study was developed in two phases. The first phase was conditioned to an automated process'
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'In the second phase, the analysis is observational'
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'which may bring elements of influence into the study'
+
+          - id: vies-publicacao-avaliado
+            title: Viés de publicação avaliado
+            description: >-
+              O risco de viés de publicação foi analisado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.4. Assessment of Study Bias Risk
+            expansions:
+              - publication bias
+              - funnel plot or selective reporting analysis
+            evidence: []
+
+          - id: impacto-vies-discutido
+            title: Impacto do viés discutido
+            description: >-
+              O impacto dos vieses identificados foi discutido nos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            evidence:
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'which may bring elements of influence into the study'

@@ -1,0 +1,160 @@
+# Expected retrieval for dengue_brasil_revisao_sistematica.pdf
+# Page numbers follow the printed number of the PDF (1 = first page).
+# Section titles follow the headings of the PDF. Adjust them if
+# <name>.sections.yaml uses other names.
+# The article has no methods section: search strategy and bias branches
+# have no evidence in the document.
+
+tree:
+  - typification: Revisão Sistemática da Literatura
+    taxonomies:
+      - title: Fundamentação da Revisão
+        branches:
+          - id: justificativa-revisao
+            title: Existência de justificativa da revisão
+            description: >-
+              O manuscrito apresenta uma justificativa clara para a realização da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introdução
+            evidence:
+              - section: RESUMO
+                page: 1
+                contains: 'Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente'
+              - section: 1. Introdução
+                page: 2
+                contains: 'Somado a isso, os casos reportados da doença se concentram primordialmente em regiões com elevado contingente populacional'
+              - section: 1. Introdução
+                page: 3
+                contains: 'a abrangência mundial da dengue é muito vasta, tanto em termos geográficos, quanto populacional'
+              - section: 1. Introdução
+                page: 3
+                contains: 'há a perspectiva de que a distribuição global da dengue tenda a ser amplificada'
+              - section: 1. Introdução
+                page: 4
+                contains: 'qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle da dengue e sua história?'
+
+          - id: estado-da-arte
+            title: Estado da arte
+            description: >-
+              O autor apresenta evidências de que conhece o estado atual da literatura sobre o tema?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introdução
+            evidence:
+              - section: 1. Introdução
+                page: 2
+                contains: 'indicadores epidemiológicos como morbidade, mortalidade e o tempo de vida perdido ajustado por incapacidade'
+              - section: 1. Introdução
+                page: 2
+                contains: 'vem gradualmente aumentando nos últimos 30 anos'
+              - section: 1. Introdução
+                page: 3
+                contains: 'são aproximadamente 125 países com registros de casos todo ano, onde vivem mais de 3,5 bilhões de pessoas'
+              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
+                page: 10
+                contains: 'o Brasil está se consolidando como o país com maior número absoluto de casos de dengue no mundo'
+              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
+                page: 10
+                contains: 'a co-circulação do vírus da dengue com o SARS-CoV-2 pode promover dificuldades adicionais de diagnóstico diferencial'
+              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
+                page: 11
+                contains: 'estudos apontaram que embora o estado da Bahia possua prevalência histórica epidemiológica para o sorotipo DEN-1'
+              - section: 2.7 Desenvolvimento da Vacina para a Dengue
+                page: 19
+                contains: 'No entanto, até o momento, nenhuma vacina contra a dengue foi registrada.'
+
+          - id: lacuna-cientifica
+            title: Demonstração de lacuna científica
+            description: >-
+              O estudo demonstra explicitamente uma lacuna de conhecimento que justifique a revisão?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introdução
+            evidence:
+              - section: 2.2 Ligação do Vírus na Célula
+                page: 7
+                contains: 'Pouco ainda se sabe a respeito das células-alvo do vírus da dengue.'
+              - section: 3. Resultados e Discussão
+                page: 20
+                contains: 'têm gerado confusão e incerteza em diversas áreas do conhecimento, principalmente no que se refere aos determinantes de suas manifestações'
+
+      # Avaliar a reprodutibilidade da busca.
+      - title: Estratégia de Busca
+        branches:
+          - id: descritores-definidos
+            title: Descritores definidos
+            description: >-
+              Os descritores utilizados na busca foram explicitamente informados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: palavras-chave-definidas
+            title: Palavras-chave definidas
+            description: >-
+              As palavras-chave utilizadas refletem adequadamente a questão de pesquisa?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence:
+              - section: Palavras-chave
+                page: 2
+                contains: 'Palavras-chave: Dengue; Aedes aegypti; notificações e vetor.'
+              - section: 1. Introdução
+                page: 4
+                contains: 'qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle da dengue e sua história?'
+
+          - id: sinonimos-identificados
+            title: Sinônimos identificados
+            description: >-
+              Foram utilizados sinônimos e termos relacionados para ampliar a identificação dos estudos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            expansions:
+              - sinônimos e termos relacionados usados na busca
+              - termos alternativos combinados com OR
+            evidence: []
+
+          - id: strings-apresentadas
+            title: Strings apresentadas
+            description: >-
+              A string de busca completa foi apresentada para possibilitar a replicação do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Avaliação de Viés
+        branches:
+          - id: vies-estudos-avaliado
+            title: Viés dos estudos avaliado
+            description: >-
+              O risco de viés dos estudos incluídos foi avaliado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: vies-publicacao-avaliado
+            title: Viés de publicação avaliado
+            description: >-
+              O risco de viés de publicação foi analisado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            expansions:
+              - viés de publicação
+              - funnel plot ou análise de relato seletivo
+            evidence: []
+
+          - id: impacto-vies-discutido
+            title: Impacto do viés discutido
+            description: >-
+              O impacto dos vieses identificados foi discutido nos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
