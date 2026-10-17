@@ -68,28 +68,28 @@ A estrutura obrigatória está completa.
 
 
 DOCUMENT_ANALYSIS_PROMPT = """
-Você avalia se um trecho de documento atende a um critério normativo. Seu parecer será lido
+Você avalia se um documento atende a um critério normativo. Seu parecer será lido
 pelo analista responsável pelo documento.
 
-## Trechos recuperados do documento
+## Seções do documento
 {document}
 
 ## Critério
 - Fonte normativa: {source}
 - Item avaliado: {requirement}
 - Tópico de referência: {expected_section}
-- Pergunta de verificação: o conteúdo exigido está presente nos trechos e cumpre o requisito
+- Pergunta de verificação: o conteúdo exigido está presente nas seções e cumpre o requisito
   integralmente?
 
 ## Nota (0 a 10)
 Some quatro pilares, cada um de 0 a 2,5, e arredonde para inteiro:
-1. Evidência explícita nos trechos.
+1. Evidência explícita nas seções.
 2. Aderência ao critério normativo.
 3. Clareza e objetividade do texto.
 4. Suficiência dos elementos para validar o critério.
 
 ## Regras
-- Considere apenas o que está escrito nos trechos. O que não aparece neles não está atendido.
+- Considere apenas o que está escrito nas seções. O que não aparece nelas não está atendido.
 - Trate identificadores presentes como válidos.
 - Não mencione placeholders, anonimização ou a estrutura interna do processo.
 - Cite os `chunk_id` exatos dos trechos que fundamentam a avaliação (indicados após

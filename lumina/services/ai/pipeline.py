@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
+from langchain_core.documents import Document
 from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +18,6 @@ from lumina.models import (
     Typification,
 )
 from lumina.repositories import (
-    branch_query_expansion_repo,
     branch_section_requirement_repo,
     release_repo,
 )
@@ -147,6 +147,7 @@ async def save_applied_snapshot(
             section_requirement_version=branch_data.get(
                 'section_requirement_version'
             ),
+            context_selection=branch_data.get('context_selection'),
         )
         release_repo.add_applied_entity(session, applied_branch)
 
@@ -157,10 +158,12 @@ async def run_document_ingestion(
     file_path: Path | str,
     vstore: VStore,
     model: Model,
-) -> None:
+) -> list[Document]:
     """
     Executa a ingestão completa do documento passando pelas etapas de:
-    extração -> seções -> anonimização -> indexação vetorial.
+    extração -> seções -> anonimização -> indexação vetorial. Devolve os
+    chunks anonimizados, que a seleção de seções usa para montar o sumário.
+    Devolve uma lista vazia quando o arquivo não existe.
     """
     str_path = str(file_path)
     if os.path.exists(str_path):
@@ -169,7 +172,7 @@ async def run_document_ingestion(
         unique_filename = str_path.rsplit('/', maxsplit=1)[-1]
         full_path = os.path.join(SETTINGS.UPLOAD_DIRECTORY, unique_filename)
         if not os.path.exists(full_path):
-            return
+            return []
 
     ext = os.path.splitext(full_path)[1].lower()
     if ext != '.pdf':
@@ -187,6 +190,7 @@ async def run_document_ingestion(
     await stages.indexing.index_chunks_to_vstore(
         vstore, anonymized + section_docs
     )
+    return anonymized
 
 
 def _collect_branch_ids(tree: list[Typification]) -> list[UUID]:
@@ -207,8 +211,8 @@ async def process_release_pipeline(
 ) -> dict:
     """
     Orquestra todas as etapas do pipeline de avaliação de release:
-    ingestão/vetorização -> recuperação ponderada -> avaliação paralela ->
-    resolução de citações -> síntese executiva OiacIA.
+    ingestão/vetorização -> seleção de seções pelo sumário -> avaliação
+    paralela -> resolução de citações -> síntese executiva OiacIA.
     """
     db_release = await release_repo.get_release_with_details(
         session, release_id
@@ -220,25 +224,14 @@ async def process_release_pipeline(
 
     # 1. Ingestão e Vetorização
     await ws_update(redis, db_release, 'creating_vectors')
-    await run_document_ingestion(db_release.file_path, vstore, model)
+    chunks = await run_document_ingestion(db_release.file_path, vstore, model)
 
-    # 2. Avaliação da Árvore Normativa
+    # 2. Seleção de seções e avaliação da árvore normativa
     await ws_update(redis, db_release, 'evaluating')
     tree = await tree_service.get_tree_by_release(session, db_release)
-    branch_ids = _collect_branch_ids(tree)
-    active_expansions = await branch_query_expansion_repo.list_active_grouped(
-        session, branch_ids
-    )
-    expansions_by_branch = {
-        branch_id: (
-            expansions[0].generation_version,
-            [e.expansion_text for e in expansions],
-        )
-        for branch_id, expansions in active_expansions.items()
-    }
     active_requirements = (
         await branch_section_requirement_repo.get_active_grouped(
-            session, branch_ids
+            session, _collect_branch_ids(tree)
         )
     )
     section_requirements_by_branch = {
@@ -249,16 +242,18 @@ async def process_release_pipeline(
         }
         for branch_id, req in active_requirements.items()
     }
-    simplified_args = await stages.retrieval.retrieve_evaluation_payloads(
-        session,
-        vstore,
+    outline = stages.outline.build_outline(chunks)
+    simplified_args = await stages.selection.select_evaluation_payloads(
         tree,
-        db_release,
-        expansions_by_branch=expansions_by_branch,
+        outline,
+        stages.selection.get_selector_model(),
         section_requirements_by_branch=section_requirements_by_branch,
     )
     chain = stages.evaluation.get_evaluation_chain(model)
     await stages.evaluation.evaluate_criteria_batch(chain, simplified_args)
+    stages.audit.export_selection_audit(
+        db_release.file_path, outline, simplified_args
+    )
     await save_applied_snapshot(session, simplified_args, db_release.id)
 
     # 3. Síntese Executiva OiacIA

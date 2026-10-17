@@ -17,7 +17,6 @@ from .retrieval import (
     get_section_filter,
     reciprocal_rank_fusion,
     retrieve_criteria_payload,
-    retrieve_evaluation_payloads,
     route_candidate_sections,
 )
 from .section_models import Heading, Section, SectionRole
@@ -57,7 +56,6 @@ __all__ = [
     'build_chunk_prompts',
     'reciprocal_rank_fusion',
     'retrieve_criteria_payload',
-    'retrieve_evaluation_payloads',
     'DocumentMetadata',
     'generate_chunk_context',
     'rerank_chunks',

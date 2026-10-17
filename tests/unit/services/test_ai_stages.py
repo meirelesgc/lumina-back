@@ -16,7 +16,6 @@ from lumina.services.ai.stages.retrieval import (
     get_section_filter,
     reciprocal_rank_fusion,
     retrieve_criteria_payload,
-    retrieve_evaluation_payloads,
     route_candidate_sections,
 )
 
@@ -192,78 +191,6 @@ def test_format_context_formatting():
     assert res_dict == res_list
 
 
-@pytest.mark.asyncio
-async def test_retrieve_evaluation_payloads_structure():
-    now = '2026-09-14T00:00:00'
-    typ_id = str(uuid4())
-    tax_id = str(uuid4())
-    tree = [
-        {
-            'id': typ_id,
-            'name': 'Tipificacao 1',
-            'sources': [],
-            'created_at': now,
-            'taxonomies': [
-                {
-                    'id': tax_id,
-                    'typification_id': typ_id,
-                    'title': 'Habilitacao Juridica',
-                    'description': 'Desc Tax',
-                    'created_at': now,
-                    'sources': [
-                        {
-                            'id': str(uuid4()),
-                            'name': 'Edital',
-                            'description': 'Ref',
-                            'created_at': now,
-                        }
-                    ],
-                    'branches': [
-                        {
-                            'id': str(uuid4()),
-                            'taxonomy_id': tax_id,
-                            'title': 'Contrato Social',
-                            'description': 'Apresentar contrato ativo.',
-                            'created_at': now,
-                        }
-                    ],
-                }
-            ],
-        }
-    ]
-
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(
-        return_value=[
-            Document(
-                page_content='Contrato social regular.',
-                metadata={
-                    'chunk_id': 'chunk_1',
-                    'chunk_index': 1,
-                    'source': 'lumina/storage/uploads/doc.pdf',
-                    'section_title': 'Habilitacao Juridica',
-                },
-            )
-        ]
-    )
-    db_release = MagicMock()
-    db_release.file_path = 'uploads/doc.pdf'
-
-    payloads = await retrieve_evaluation_payloads(
-        _mock_sql_session(), mock_vstore, tree, db_release
-    )
-
-    assert len(payloads) == 1
-    p = payloads[0]
-    assert p['expected_section'] == 'Habilitacao Juridica'
-    assert p['source'] == 'Edital'
-    assert 'Contrato Social' in p['requirement']
-    assert '[FONTE] chunk_id: chunk_1' in p['document']
-    assert len(p['_chunks']) == 1
-    assert p['retrieved_chunks'] == ['chunk_1']
-    assert p['expansion_generation_version'] is None
-
-
 def test_reciprocal_rank_fusion_single_list_matches_topk():
     docs = [
         Document(page_content='a', metadata={'chunk_id': 'c1'}),
@@ -336,78 +263,6 @@ async def test_retrieve_criteria_payload_fuses_expansions_via_rrf():
     )
     assert 'chunk_original' in payload['retrieved_chunks']
     assert 'chunk_expansao' in payload['retrieved_chunks']
-
-
-@pytest.mark.asyncio
-async def test_retrieve_evaluation_payloads_passes_expansions_and_version():
-    now = '2026-09-22T00:00:00'
-    typ_id = str(uuid4())
-    tax_id = str(uuid4())
-    branch_id = uuid4()
-    tree = [
-        {
-            'id': typ_id,
-            'name': 'Tipificacao 1',
-            'sources': [],
-            'created_at': now,
-            'taxonomies': [
-                {
-                    'id': tax_id,
-                    'typification_id': typ_id,
-                    'title': 'Habilitacao Juridica',
-                    'description': 'Desc Tax',
-                    'created_at': now,
-                    'sources': [],
-                    'branches': [
-                        {
-                            'id': str(branch_id),
-                            'taxonomy_id': tax_id,
-                            'title': 'Contrato Social',
-                            'description': 'Apresentar contrato ativo.',
-                            'created_at': now,
-                        }
-                    ],
-                }
-            ],
-        }
-    ]
-
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(
-        return_value=[
-            Document(
-                page_content='Contrato social regular.',
-                metadata={
-                    'chunk_id': 'chunk_1',
-                    'chunk_index': 1,
-                    'source': 'lumina/storage/uploads/doc.pdf',
-                    'section_title': 'Habilitacao Juridica',
-                },
-            )
-        ]
-    )
-    db_release = MagicMock()
-    db_release.file_path = 'uploads/doc.pdf'
-
-    expansions_by_branch = {branch_id: (3, ['Formulacao alternativa'])}
-
-    payloads = await retrieve_evaluation_payloads(
-        _mock_sql_session(),
-        mock_vstore,
-        tree,
-        db_release,
-        expansions_by_branch=expansions_by_branch,
-    )
-
-    assert len(payloads) == 1
-    assert (
-        payloads[0]['expansion_generation_version']
-        == EXPECTED_ITEMS_COUNT_TWO + 1
-    )
-    # 1 chamada para a query original + 1 para a expansao ativa
-    assert (
-        mock_vstore.asimilarity_search.call_count == EXPECTED_ITEMS_COUNT_TWO
-    )
 
 
 def test_get_base_filter_excludes_section_summaries_backward_compatible():
