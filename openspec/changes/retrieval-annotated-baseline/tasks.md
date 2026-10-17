@@ -40,8 +40,21 @@
 
 ## 6. Acervo ampliado
 
-- [ ] 6.1 Em `normalize` (`tests/fixtures/answer_keys.py`), tratar como iguais as aspas retas e curvas e o hífen e os travessões. Criar `tests/unit/services/test_answer_keys_normalize.py` com um caso de aspas e um de travessão. Verificar que o teste falha antes da mudança e passa depois, e que `poetry run pytest tests/unit/services/test_ingestion_sections.py -s` mantém 63/63.
-- [ ] 6.2 Corrigir os 5 trechos que a normalização não resolve, conforme decidido com o usuário: `problema-analise` do anteprojeto na página 3; primeiro trecho de `vies-estudos-avaliado` do microgrids na página 5; remover de `caracterizacao-estudos` do microgrids o trecho de figura (`Records eligible…`), que o extrator não lê; encurtar os trechos de tabela de `sinonimos-identificados` e `strings-apresentadas` do microgrids para a parte que não quebra (#25). O usuário revisa o diff dos gabaritos antes do commit. Verificar que `poetry run pytest tests/unit/services/test_retrieval_answer_keys.py` passa para os três gabaritos.
-- [ ] 6.3 Rodar `poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai` três vezes sobre os três gabaritos e gravar nos quatro pisos o menor valor medido de cada métrica, arredondado para baixo na segunda casa decimal. Registrar aqui o placar por documento e a justificativa da mudança dos pisos (1 documento com 5 ramos para 3 documentos com 148 ramos). Verificar que o teste passa com os pisos gravados.
-- [ ] 6.4 Atualizar a regra de normalização e o acervo em `docs/arquitetura-engenharia.md` e no README do acervo. Verificar que os nomes citados existem no código.
-- [ ] 6.5 Rodar `poetry run task test` e `ruff check` e `ruff format --check` nos arquivos alterados, e registrar aqui o resultado.
+- [x] 6.1 Em `normalize` (`tests/fixtures/answer_keys.py`), tratar como iguais as aspas retas e curvas e o hífen e os travessões. Criar `tests/unit/services/test_answer_keys_normalize.py` com um caso de aspas e um de travessão. Verificar que o teste falha antes da mudança e passa depois, e que `poetry run pytest tests/unit/services/test_ingestion_sections.py -s` mantém 63/63.
+- [x] 6.2 Corrigir os 5 trechos que a normalização não resolve, conforme decidido com o usuário: `problema-analise` do anteprojeto na página 3; primeiro trecho de `vies-estudos-avaliado` do microgrids na página 5; remover de `caracterizacao-estudos` do microgrids o trecho de figura (`Records eligible…`), que o extrator não lê; encurtar os trechos de tabela de `sinonimos-identificados` e `strings-apresentadas` do microgrids para a parte que não quebra (#25). O usuário revisa o diff dos gabaritos antes do commit. Verificar que `poetry run pytest tests/unit/services/test_retrieval_answer_keys.py` passa para os três gabaritos.
+- [x] 6.3 Rodar `poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai` três vezes sobre os três gabaritos e gravar nos quatro pisos o menor valor medido de cada métrica, arredondado para baixo na segunda casa decimal. Registrar aqui o placar por documento e a justificativa da mudança dos pisos (1 documento com 5 ramos para 3 documentos com 146 ramos). Verificar que o teste passa com os pisos gravados.
+  - Resultado: as três execuções deram as mesmas métricas. Entre elas, só mudou a ordem de blocos quase empatados e um bloco sem anotação do microgrids. Pisos gravados: `MIN_EVIDENCE_RECALL = 0.44`, `MIN_SECTION_PAGE_HIT_RATE = 0.48`, `MIN_BRANCH_PRECISION = 0.18`, `MIN_ROUTING_HIT_RATE = 0.0`.
+
+    | Documento | Ramos (com evidência) | Recall de trechos | Seção e página | Precisão entre ramos |
+    | :--- | ---: | ---: | ---: | ---: |
+    | `research_proposal/estrategias_teste_software_llm_judge_hitl` | 16 (14) | 32/52 | 32/52 | 12/52 |
+    | `systematic_review/dengue_no_brasil` | 65 (15) | 4/22 | 6/22 | 4/25 |
+    | `systematic_review/smart_tech_microgrids` | 65 (46) | 22/55 | 25/55 | 20/122 |
+    | **Total** | 146 (75) | 58/129 = 0,44 | 63/129 = 0,48 | 36/199 = 0,18 |
+
+    Roteamento: 0/72 (#24). Cada execução leva cerca de 4 min.
+
+    Justificativa da queda dos pisos (0,54 / 0,54 / 0,21 para 0,44 / 0,48 / 0,18): o primeiro placar veio de 1 documento com 5 ramos. O acervo agora tem 3 documentos e 146 ramos, incluindo as árvores completas de Validação de Ante-Projeto e de Revisão Sistemática da Literatura. A recuperação não mudou entre as duas medições: nenhum código de produção foi alterado nesta mudança.
+- [x] 6.4 Atualizar a regra de normalização e o acervo em `docs/arquitetura-engenharia.md` e no README do acervo. Verificar que os nomes citados existem no código.
+- [x] 6.5 Rodar `poetry run task test` e `ruff check` e `ruff format --check` nos arquivos alterados, e registrar aqui o resultado.
+  - Resultado: 351 testes passam e 4 são pulados (os de `@pytest.mark.ai`: a verificação crítica dos 3 documentos e o teste dos pisos). A cobertura de `lumina/` fica em 75%, a mesma de antes. `ruff check` e `ruff format --check` passam nos três arquivos Python alterados neste grupo. Com `--run-ai`, o teste de recuperação passa com os pisos novos em 3 min 54 s.
