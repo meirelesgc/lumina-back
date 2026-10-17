@@ -64,6 +64,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.4. Assessment of Study Bias Risk
+            fulfilled: false
             evidence:
               - section: 2.4. Assessment of Study Bias Risk
                 page: 5
@@ -81,6 +82,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -93,6 +95,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -105,6 +108,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -117,6 +121,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -129,6 +134,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
             evidence:
               - section: 2.1. Eligibility Criteria and Data Collection
                 page: 3
@@ -144,6 +150,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -158,6 +165,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 4. Discussion
+            fulfilled: true
             evidence:
               - section: 4.2. Question 2 (Q2)
                 page: 7
@@ -170,6 +178,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 4. Discussion
+            fulfilled: true
             evidence:
               - section: 4.2. Question 2 (Q2)
                 page: 7
@@ -191,6 +200,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 4. Discussion
+            fulfilled: true
             evidence:
               - section: 4.2. Question 2 (Q2)
                 page: 8
@@ -206,6 +216,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 5. Conclusions
+            fulfilled: true
             evidence:
               - section: 5. Conclusions
                 page: 12
@@ -229,6 +240,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: true
             evidence:
               - section: 2.1. Eligibility Criteria and Data Collection
                 page: 3
@@ -241,6 +253,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: true
             evidence:
               - section: 2. Materials and Methods
                 page: 3
@@ -253,6 +266,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: true
             evidence:
               - section: 2.1. Eligibility Criteria and Data Collection
                 page: 3
@@ -268,6 +282,7 @@ tree:
             expansions:
               - synonyms and related terms used in the search string
               - alternative search terms combined with OR
+            fulfilled: true
             evidence:
               - section: 2. Materials and Methods
                 page: 3
@@ -283,6 +298,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: true
             evidence:
               - section: 2. Materials and Methods
                 page: 3
@@ -297,6 +313,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -309,6 +326,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -321,6 +339,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -335,6 +354,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 5
@@ -347,6 +367,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 5
@@ -359,6 +380,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 5
@@ -371,6 +393,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 5
@@ -383,6 +406,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 6
@@ -397,6 +421,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: true
             evidence:
               - section: 2.1. Eligibility Criteria and Data Collection
                 page: 3
@@ -409,6 +434,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
             evidence:
               - section: 2.1. Eligibility Criteria and Data Collection
                 page: 3
@@ -450,6 +476,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -462,6 +489,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -474,6 +502,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -495,8 +524,8 @@ tree:
             description: >-
               Existe coerência entre a questão de pesquisa, os objetivos e os procedimentos metodológicos adotados?
             section_requirement:
-              scope: SPECIFIC_SECTION
-              expected_section: 1. Introduction
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -509,6 +538,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introduction
+            fulfilled: true
             evidence:
               - section: 1. Introduction
                 page: 2
@@ -553,6 +583,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: false
             evidence:
               - section: 2. Materials and Methods
                 page: 2
@@ -565,6 +596,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: false
             evidence:
               - section: 2. Materials and Methods
                 page: 2
@@ -608,6 +640,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: false
             evidence:
               - section: 3. Results
                 page: 5
@@ -618,8 +651,8 @@ tree:
             description: >-
               Os resultados consolidados respondem às questões de pesquisa propostas?
             section_requirement:
-              scope: SPECIFIC_SECTION
-              expected_section: 3. Results
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
             evidence:
               - section: 4. Discussion
                 page: 6
@@ -635,6 +668,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: false
             evidence:
               - section: 4.3. Question 3 (Q3)
                 page: 9
@@ -658,6 +692,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
             evidence:
               - section: 3.1. Selection of Studies and Flow of the Methodological Process
                 page: 5
@@ -679,6 +714,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
             evidence:
               - section: 2.3. Selection Process
                 page: 4
@@ -693,6 +729,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 4. Discussion
+            fulfilled: true
             evidence:
               - section: 4.2. Question 2 (Q2)
                 page: 8
@@ -705,6 +742,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
+            fulfilled: false
             evidence:
               - section: 2.4. Assessment of Study Bias Risk
                 page: 4
@@ -720,6 +758,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 4. Discussion
                 page: 6
@@ -735,6 +774,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3. Results
+            fulfilled: true
             evidence:
               - section: 2.2. Automation Tools Used in the Bibliometric Data Collection and Analysis Process
                 page: 3
@@ -752,6 +792,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Declarations
+            fulfilled: true
             evidence:
               - section: Conflicts of Interest
                 page: 13
@@ -764,6 +805,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Data Availability Statement
+            fulfilled: true
             evidence:
               - section: Data Availability Statement
                 page: 12
@@ -776,6 +818,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Funding
+            fulfilled: true
             evidence:
               - section: Funding
                 page: 12
@@ -788,6 +831,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Supplementary Materials
+            fulfilled: true
             evidence:
               - section: Supplementary Materials
                 page: 12

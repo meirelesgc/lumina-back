@@ -93,6 +93,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
+            fulfilled: false
             evidence:
               - section: 1. Introdução
                 page: 4
@@ -105,6 +106,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
+            fulfilled: false
             evidence:
               - section: 1. Introdução
                 page: 4
@@ -129,6 +131,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
+            fulfilled: false
             evidence:
               - page: 1
                 contains: 'No Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente, em função do cenário desafiador.'
@@ -145,6 +148,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            fulfilled: false
             evidence:
               - section: 3. Resultados e Discussão
                 page: 20
@@ -157,6 +161,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            fulfilled: true
             evidence:
               - section: 3. Resultados e Discussão
                 page: 21
@@ -190,6 +195,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            fulfilled: false
             evidence:
               - section: 4. Considerações Finais
                 page: 22
@@ -386,6 +392,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Introdução
+            fulfilled: false
             evidence:
               - section: 3. Resultados e Discussão
                 page: 20
@@ -398,6 +405,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Introdução
+            fulfilled: true
             evidence:
               - section: 1. Introdução
                 page: 2
@@ -413,6 +421,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Introdução
+            fulfilled: false
             evidence:
               - page: 1
                 contains: 'No Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente, em função do cenário desafiador.'
@@ -436,8 +445,8 @@ tree:
             description: >-
               Existe coerência entre a questão de pesquisa, os objetivos e os procedimentos metodológicos adotados?
             section_requirement:
-              scope: SPECIFIC_SECTION
-              expected_section: Introdução
+              scope: ENTIRE_DOCUMENT
+            fulfilled: false
             evidence:
               - section: 1. Introdução
                 page: 4
@@ -453,6 +462,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Introdução
+            fulfilled: true
             evidence:
               - section: 1. Introdução
                 page: 4
@@ -550,8 +560,8 @@ tree:
             description: >-
               Os resultados consolidados respondem às questões de pesquisa propostas?
             section_requirement:
-              scope: SPECIFIC_SECTION
-              expected_section: Resultados e Discussão
+              scope: ENTIRE_DOCUMENT
+            fulfilled: false
             evidence:
               - section: 3. Resultados e Discussão
                 page: 20
@@ -564,6 +574,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            fulfilled: false
             evidence:
               - section: 3. Resultados e Discussão
                 page: 20
@@ -628,6 +639,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
+            fulfilled: false
             evidence:
               - page: 1
                 contains: 'A pesquisa seguiu a abordagem qualitativa, exploratória e bibliográfica de caráter sistemático.'
@@ -639,6 +651,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            fulfilled: false
             evidence:
               - section: 3. Resultados e Discussão
                 page: 20
@@ -687,6 +700,5 @@ tree:
             description: >-
               O conjunto de informações apresentado permite reproduzir a revisão sistemática?
             section_requirement:
-              scope: SPECIFIC_SECTION
-              expected_section: Materiais suplementares
+              scope: ENTIRE_DOCUMENT
             evidence: []
