@@ -91,6 +91,8 @@
 
 ## 7. Verificação
 
-- [ ] 7.1 Rodar `poetry run task test` e `ruff check` e `ruff format --check` nos arquivos alterados, e registrar aqui o resultado.
+- [x] 7.1 Rodar `poetry run task test` e `ruff check` e `ruff format --check` nos arquivos alterados, e registrar aqui o resultado.
+  - Resultado: 376 testes passam e 12 são pulados (`@pytest.mark.ai`). A cobertura de `lumina/` sobe de 75% para 77%. `ruff format --check` passa nos 31 arquivos Python alterados fora de `lumina/features/`; `ruff check` só acusa 4 erros em `assistant_service.py` (argumentos e linhas longas), os mesmos da `main`, em linhas que esta mudança não tocou.
 - [ ] 7.2 Rodar `poetry run pytest tests/ai/evaluation -s --run-ai -m ai` e registrar aqui os placares finais de recuperação, seleção e veredictos, e o tempo.
+  - Parcial (435 s): 11 testes passam. Seletor: recall 113/129 (0,88), acerto de inexistência 39/71 (0,55), segurança de inexistência 67/75 (0,89), todos acima dos pisos. Recuperação: placar igual ao anterior (recall 58/129). Fumaça dos modelos: 6 passam. O teste de veredictos não terminou: a conta da OpenAI ficou sem créditos (erro 429, `credit_balance_exhausted`). Falta rodar `poetry run pytest tests/ai/evaluation/verdicts -s --run-ai -m ai` para confirmar o piso de 0,84 com o prompt da tarefa 5.4.
 - [ ] 7.3 Abrir o PR da branch `evaluation-outline-selection` para `main`, sem merge, com os placares e a referência à #26.
