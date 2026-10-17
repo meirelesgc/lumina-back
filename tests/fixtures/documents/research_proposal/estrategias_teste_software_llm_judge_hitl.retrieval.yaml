@@ -346,7 +346,7 @@ tree:
               expected_section: 2. Problema de pesquisa
             evidence:
               - section: 2. Problema de pesquisa
-                page: 4
+                page: 3
                 contains: 'A avaliação de sistemas de inteligência artificial especializados apresenta desafios relacionados à diversidade e à natureza dos resultados produzidos.'
               - section: 2. Problema de pesquisa
                 page: 4

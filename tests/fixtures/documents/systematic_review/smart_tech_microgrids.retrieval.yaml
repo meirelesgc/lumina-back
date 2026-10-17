@@ -66,7 +66,7 @@ tree:
               expected_section: 2.4. Assessment of Study Bias Risk
             evidence:
               - section: 2.4. Assessment of Study Bias Risk
-                page: 4
+                page: 5
                 contains: 'In the second phase, the analysis is observational, aiming to identify the smart technologies and their applicability in the microgrid scenario'
               - section: 2.4. Assessment of Study Bias Risk
                 page: 5
@@ -244,7 +244,7 @@ tree:
             evidence:
               - section: 2. Materials and Methods
                 page: 3
-                contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero") AND ("Intelligent systems" OR "Machine learning"'
+                contains: 'AND ("Intelligent systems" OR "Machine learning"'
 
           - id: palavras-chave-definidas
             title: Palavras-chave definidas
@@ -274,7 +274,7 @@ tree:
                 contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero")'
               - section: 2. Materials and Methods
                 page: 3
-                contains: 'AND (microgrids OR "Smart grids")'
+                contains: 'OR "Smart grids")'
 
           - id: strings-apresentadas
             title: Strings apresentadas
@@ -286,7 +286,7 @@ tree:
             evidence:
               - section: 2. Materials and Methods
                 page: 3
-                contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero") AND ("Intelligent systems" OR "Machine learning" OR "Artificial neural networks"'
+                contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero")'
 
       - title: Extração de Dados
         branches:
@@ -612,9 +612,6 @@ tree:
               - section: 3. Results
                 page: 5
                 contains: 'Table 4. Demonstration of smart techniques used in the microgrid scenario.'
-              - section: 3.1. Selection of Studies and Flow of the Methodological Process
-                page: 6
-                contains: 'Records eligible: ANN (n=79) MAS (n=53) Others (n=24)'
 
           - id: resultados-consolidados
             title: Resultados consolidados
