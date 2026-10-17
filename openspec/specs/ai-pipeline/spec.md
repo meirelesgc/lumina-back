@@ -125,6 +125,48 @@ O sistema SHALL ter a recuperação de evidências validada contra um acervo ver
 - **WHEN** o gabarito declara que o documento não atende um critério
 - **THEN** a validação informa o que a recuperação devolveu para ele e o resultado do roteamento, sem contar o critério nas métricas com piso
 
+### Requirement: Seleção de Seções pelo Sumário do Documento
+O sistema SHALL escolher o contexto de cada critério a partir do sumário do documento, que lista cada seção com identificador, caminho de títulos, páginas, tamanho estimado e o início do texto. Para critérios de escopo de seção ou indeterminado, um seletor SHALL pedir seções pelo identificador, ler o texto integral delas e decidir se o conteúdo basta, pedir outras seções ou concluir que o conteúdo não existe no documento, em no máximo 3 rodadas. Critérios de escopo de documento inteiro SHALL receber todas as seções sem passar pelo seletor. Cada veredito SHALL registrar a seleção que o gerou.
+
+#### Scenario: Critério de seção com conteúdo encontrado
+- **WHEN** um critério de escopo de seção é avaliado e o seletor indica que as seções lidas bastam
+- **THEN** o avaliador recebe o texto integral dessas seções com os identificadores de chunk, e o veredito registra as seções, o motivo, as rodadas e os tokens
+
+#### Scenario: Critério de documento inteiro
+- **WHEN** um critério de escopo de documento inteiro é avaliado
+- **THEN** o avaliador recebe todas as seções do documento e o seletor não é chamado
+
+#### Scenario: Limite de rodadas
+- **WHEN** o seletor ainda pede seções ao fim da terceira rodada
+- **THEN** a seleção termina e o avaliador recebe todas as seções lidas até ali
+
+#### Scenario: Conteúdo inexistente
+- **WHEN** o seletor conclui, depois de ler ao menos uma seção, que o conteúdo do critério não existe no documento
+- **THEN** o critério recebe "não contempla", nota 0 e um parecer padrão que lista as seções inspecionadas, sem chamar o avaliador
+
+#### Scenario: Identificador de seção inexistente
+- **WHEN** o seletor pede um identificador que não está no sumário
+- **THEN** o identificador é ignorado e registrado na seleção
+
+#### Scenario: Saída inválida do seletor
+- **WHEN** o seletor devolve uma saída fora do formato esperado depois das retentativas
+- **THEN** o critério recebe o documento inteiro, e a seleção registra a falha
+
+### Requirement: Critério de Aceite da Seleção de Seções sobre Acervo Anotado
+A seleção de seções SHALL ser validada contra o acervo anotado de recuperação. O recall de trechos SHALL contar os trechos anotados presentes no contexto enviado ao avaliador. O acerto de veredicto SHALL comparar o `fulfilled` da avaliação com o anotado, e ramos sem evidência anotada SHALL contar como não contemplados. As métricas SHALL somar o acervo inteiro e falhar abaixo de um piso registrado, que só sobe.
+
+#### Scenario: Recall da seleção abaixo do piso
+- **WHEN** a fração de trechos anotados presentes no contexto selecionado, somada sobre o acervo, fica abaixo do piso registrado
+- **THEN** a validação falha e informa o placar por documento e por critério, com as seções escolhidas e as rodadas
+
+#### Scenario: Acerto de veredicto abaixo do piso
+- **WHEN** a fração de critérios cujo `fulfilled` coincide com o anotado fica abaixo do piso registrado
+- **THEN** a validação falha e informa os acertos e erros por documento e por critério
+
+#### Scenario: Conclusão de inexistência errada
+- **WHEN** o seletor conclui que o conteúdo não existe para um critério que tem evidência anotada
+- **THEN** o placar conta o caso como erro de inexistência e o lista no relatório
+
 ### Requirement: Anonimização e Proteção de Dados Pessoais
 O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos blocos de texto antes de qualquer operação de vetorização ou envio para provedores de LLM externos, mantendo os dados de reversão isolados exclusivamente nos metadados.
 
@@ -133,10 +175,10 @@ O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos bl
 - **THEN** as ocorrências são substituídas por marcadores indexados e o mapa de reversão é armazenado apenas no metadado `presidio_mapping`
 
 ### Requirement: Avaliação Estruturada de Critérios com Resolução de Citações
-O sistema SHALL avaliar concorrentemente critérios normativos utilizando trechos recuperados do documento expandidos com os chunks vizinhos da mesma seção e página ($\pm 1$), retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas. O parecer SHALL ser curto, em Markdown estruturado (listas ou tabela, sem parágrafos longos), seguindo um estilo de resposta sorteado de forma independente para cada critério, e SHALL conter sugestões de melhoria apenas para lacunas identificadas, limitadas a uma ação por lacuna.
+O sistema SHALL avaliar concorrentemente critérios normativos utilizando as seções do documento escolhidas pela seleção de seções, com o texto integral de cada seção e os identificadores de chunk, retornando parecer técnico, nota no barema de 0 a 10, flag de atendimento e coordenadas visuais das evidências citadas. O parecer SHALL ser curto, em Markdown estruturado (listas ou tabela, sem parágrafos longos), seguindo um estilo de resposta sorteado de forma independente para cada critério, e SHALL conter sugestões de melhoria apenas para lacunas identificadas, limitadas a uma ação por lacuna.
 
 #### Scenario: Avaliação de critério normativo com evidência no documento
-- **WHEN** um critério normativo é avaliado contra trechos recuperados
+- **WHEN** um critério normativo é avaliado contra as seções selecionadas
 - **THEN** a resposta contém nota de 0 a 10, parecer fundamentado, e os `chunk_id` citados são resolvidos em retângulos físicos `rects` para destaque visual no visualizador de PDF
 
 #### Scenario: Detecção de alucinação de citações
@@ -158,6 +200,10 @@ O sistema SHALL avaliar concorrentemente critérios normativos utilizando trecho
 #### Scenario: Critério parcialmente atendido ou não atendido
 - **WHEN** o modelo identifica lacunas no atendimento do critério
 - **THEN** o parecer lista as lacunas e propõe no máximo uma ação curta por lacuna
+
+#### Scenario: Todo critério recebe veredito
+- **WHEN** uma release é avaliada
+- **THEN** cada critério da árvore recebe um veredito, inclusive os que o seletor conclui não existirem no documento
 
 ### Requirement: Leitura do Texto da Resposta do Modelo
 O sistema SHALL extrair o texto da resposta do modelo de linguagem da mesma forma quando o conteúdo vem como texto simples e quando vem como lista de blocos de conteúdo. Pareceres, sínteses e respostas do chat SHALL conter apenas o texto gerado, sem a estrutura dos blocos.
@@ -186,11 +232,11 @@ O sistema SHALL sintetizar os resultados gerais da avaliação com base nos crit
 - **THEN** o texto contém os três títulos de seção fixos e o particionamento em saudação, pontos atendidos, pontos a aprimorar e orientação final continua funcionando
 
 ### Requirement: Auditoria e Exportação Estruturada de Ingestão de Documentos
-O sistema SHALL persistir em disco os artefatos intermediários de processamento e o arquivo PDF anotado com as seções e fragmentos textuais (chunks) delimitados, organizados em diretórios específicos, exclusivamente quando a flag `DEBUG_INGESTION_AUDIT` estiver configurada como verdadeira nas configurações da aplicação.
+O sistema SHALL persistir em disco os artefatos intermediários de processamento, o arquivo PDF anotado com as seções e fragmentos textuais (chunks) delimitados, o sumário do documento e a seleção de seções de cada critério, organizados em diretórios específicos, exclusivamente quando a flag `DEBUG_INGESTION_AUDIT` estiver configurada como verdadeira nas configurações da aplicação.
 
 #### Scenario: Ingestão de documento com auditoria desativada
 - **WHEN** um documento PDF é processado pelo motor de ingestão com a flag `DEBUG_INGESTION_AUDIT` desativada (`False`)
-- **THEN** o sistema executa todo o processamento, extração, árvore de seções e fatiamento em memória, sem criar diretórios ou persistir arquivos de auditoria no sistema de arquivos local
+- **THEN** o sistema executa todo o processamento, extração, árvore de seções, fatiamento e seleção de seções em memória, sem criar diretórios ou persistir arquivos de auditoria no sistema de arquivos local
 
 #### Scenario: Ingestão de documento com auditoria ativada
 - **WHEN** um documento PDF é processado pelo motor de ingestão com a flag `DEBUG_INGESTION_AUDIT` ativada (`True`)
@@ -200,25 +246,6 @@ O sistema SHALL persistir em disco os artefatos intermediários de processamento
   - `03_chunks/`: Fragmentos textuais finais enriquecidos com retângulos de linha em JSON (`_chunks.json`) e prévia textual em Markdown (`_chunks.md`)
   - `04_annotated_pdfs/`: Arquivo PDF anotado visualmente (`_annotated.pdf`) com barras marginais identificando as seções por papel semântico e caixas destacando os chunks
 
-### Requirement: Fusão de Consultas Expandidas por Reciprocal Rank Fusion
-O sistema SHALL gerar, de forma assíncrona e versionada, formulações alternativas de consulta
-para cada critério normativo (`branch`) e, quando existirem expansões ativas, SHALL fundir os
-resultados da busca vetorial da consulta original com os resultados das expansões via
-Reciprocal Rank Fusion antes de formatar o contexto enviado à avaliação estruturada.
-
-#### Scenario: Critério sem expansões ativas
-- **WHEN** um critério normativo não possui expansões de consulta ativas
-- **THEN** o sistema recupera os chunks apenas pela consulta original, com resultado idêntico
-  ao comportamento de busca vetorial de consulta única
-
-#### Scenario: Critério com expansões ativas
-- **WHEN** um critério normativo possui de 2 a 4 expansões de consulta ativas
-- **THEN** o sistema executa a busca vetorial da consulta original e de cada expansão em
-  paralelo, isolada pelo mesmo filtro de documento, e funde os resultados por Reciprocal Rank
-  Fusion, mantendo o número final de chunks recuperados inalterado
-
-#### Scenario: Regeneração de expansões não afeta avaliações já concluídas
-- **WHEN** as expansões de consulta de um critério são regeneradas após uma avaliação já ter
-  sido concluída
-- **THEN** o snapshot de auditoria daquela avaliação preserva a versão de geração das expansões
-  vigentes no momento em que foi realizada, sem ser afetado pela regeneração
+#### Scenario: Seleção de seções com auditoria ativada
+- **WHEN** os critérios de uma release são avaliados com a flag `DEBUG_INGESTION_AUDIT` ativada (`True`)
+- **THEN** o sistema grava o sumário do documento, exatamente como o seletor o recebe, em `05_outline/<documento>.md`, e, para cada critério, as rodadas do seletor, o contexto enviado ao avaliador e o veredito em `06_selection/<documento>/<critério>.md`
