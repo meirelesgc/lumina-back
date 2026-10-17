@@ -101,6 +101,10 @@ Cada medição roda três vezes. A comparação usa a mediana de cada lado. O cr
 
 Se o `gpt-6-luna` não atingir os dois, o `gpt-6.1-sol` é testado como seletor. Se nenhum atingir, a integração não acontece e os resultados ficam registrados em `tasks.md`. Os pisos novos (`MIN_SELECTION_RECALL`, `MIN_FULFILLED_ACCURACY`) recebem o menor valor das três execuções, arredondado para baixo na segunda casa.
 
+### Modelo do avaliador: decisão de custo depois do aceite
+
+O aceite foi medido com o `gpt-6.1-sol` como avaliador: acerto de 0,86 com o seletor, contra 0,79 da recuperação. Depois da integração, o usuário trocou o uso médio para `gpt-6-luna` com `reasoning.effort = medium`, por custo. O `gpt-6.1-sol` custa 20 vezes mais por token (US$ 2 e US$ 10 por milhão de tokens de entrada e saída, contra US$ 0,10 e US$ 0,50). Com o `gpt-6-luna` avaliando, o acerto volta a 0,79 (115 e 116 de 146 em duas execuções), e o erro dominante é "falso não contempla" com as seções certas no contexto. O seletor mantém o recall de 0,87. Uma avaliação completa do acervo de 146 ramos custa cerca de US$ 0,19 com `gpt-6-luna`, contra cerca de US$ 1,50 estimados com o `gpt-6.1-sol`. `MIN_FULFILLED_ACCURACY` desce de 0,84 para 0,78 por essa decisão.
+
 ## Risks / Trade-offs
 
 - [Um `not_found` errado vira "não contempla" sem avaliador] → `not_found` só depois de uma leitura. O placar conta o erro de inexistência, e o critério de aceite do veredicto pega o efeito.
@@ -108,6 +112,7 @@ Se o `gpt-6-luna` não atingir os dois, o `gpt-6.1-sol` é testado como seletor.
 - [Latência: até 3 chamadas do modelo rápido mais 1 do principal por ramo] → Semáforo de 8 e cache do prefixo. Tokens e tempo por release ficam registrados.
 - [A sobreposição entre chunks repete cerca de 15% do texto no contexto] → Aceita para não mudar as citações. O placar registra os tokens enviados.
 - [Veredictos variam entre execuções] → Três execuções e comparação por mediana.
+- [Com o `gpt-6-luna` no avaliador, o acerto de `fulfilled` não melhora em relação à recuperação antiga] → Decisão de custo do usuário. O teste de veredictos imprime o consumo por etapa, e trocar o modelo do avaliador é uma constante em `lumina/core/llm.py`.
 - [O serviço de expansões continua gerando consultas que a avaliação não usa] → A issue #28 decide o destino dele. Fica fora desta mudança.
 - [Documentos muito longos geram contextos grandes em `ENTIRE_DOCUMENT` ou no teto de rodadas] → O acervo vai até ~21 mil tokens. Os tokens por ramo ficam registrados. Limite e filtro ficam para quando aparecer o caso.
 
