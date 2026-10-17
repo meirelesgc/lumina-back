@@ -23,6 +23,11 @@
 #     expected_section:   text the routing searches for, e.g. Metodologia.
 #   expansions:           optional. Alternative phrasings of the branch,
 #                         searched together with the original query.
+#   fulfilled:            expected verdict: true when the document meets the
+#                         branch in full, false otherwise (partial = false).
+#                         Required when the branch has evidence. A branch
+#                         with evidence: [] is false; write it or leave it out.
+#                         Judge the document, not the verdict Lumina gave.
 #   evidence:             passages the retrieval must return for the branch.
 #                         Write [] when the document does not meet the branch.
 #     section:            optional. Most specific section title of the
@@ -49,6 +54,7 @@ tree:
           - id: <branch-slug>
             title: <branch title>
             description: <branch description>
+            fulfilled: true
             evidence:
               - section: <section title>
                 page: <page>
@@ -65,6 +71,7 @@ tree:
             expansions:
               - <alternative phrasing>
               - <alternative phrasing>
+            fulfilled: false
             evidence:
               - section: <section title>
                 page: <page>

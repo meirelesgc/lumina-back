@@ -66,6 +66,10 @@ the excerpt that does not break. Pick excerpts that tell a branch apart from its
 section, and leave personal names out: the retrieval only sees the
 anonymized text.
 
+Each branch with evidence also carries `fulfilled`, the expected verdict:
+`true` only when the document meets the branch in full. A partial answer is
+`false`, and a branch with `evidence: []` is `false`.
+
 Check the file without spending tokens:
 
 ```
