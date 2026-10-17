@@ -15,21 +15,18 @@ evidências de cada ramo de `<nome>.retrieval.yaml`, com embeddings reais.
 
 from dataclasses import dataclass
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Optional
 from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
 from langchain_postgres import PGVector
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina.core.settings import Settings
 from lumina.schemas.branch import SectionRequirementScope
-from lumina.services.ai.pipeline import run_document_ingestion
 from lumina.services.ai.stages import retrieval
+from tests.ai.evaluation.support import branch_query, document_filter
 from tests.fixtures.answer_keys import (
     RETRIEVAL_KEYS,
     chunk_text,
@@ -37,7 +34,6 @@ from tests.fixtures.answer_keys import (
     expected_branches,
     is_annotated_place,
     normalize,
-    pdf_for,
 )
 
 pytestmark = [pytest.mark.ai, pytest.mark.asyncio(loop_scope='session')]
@@ -76,25 +72,10 @@ class DocumentResult:
     branches: list[BranchResult]
 
 
-def build_vectorstore(connection) -> PGVector:
-    # Mesmos parâmetros de lumina/core/vectorstore.py, ligados ao container.
-    return PGVector(
-        embeddings=OpenAIEmbeddings(
-            model='text-embedding-3-small',
-            api_key=Settings().OPENAI_API_KEY,
-        ),
-        connection=connection,
-        use_jsonb=True,
-        async_mode=True,
-    )
-
-
 async def retrieve_branches(
     session: AsyncSession, vstore: PGVector, retrieval_key: Path
 ) -> DocumentResult:
-    base_filter = retrieval.get_base_filter(
-        SimpleNamespace(file_path=str(pdf_for(retrieval_key)))
-    )
+    base_filter = document_filter(retrieval_key)
     route = retrieval.route_candidate_sections
     routed: list = []
 
@@ -110,12 +91,7 @@ async def retrieve_branches(
             payload = await retrieval.retrieve_criteria_payload(
                 session,
                 vstore,
-                {'title': taxonomy['title']},
-                {
-                    'id': branch['id'],
-                    'title': branch['title'],
-                    'description': branch['description'],
-                },
+                *branch_query(taxonomy, branch),
                 base_filter,
                 expansions=branch.get('expansions'),
                 section_requirement=branch.get('section_requirement'),
@@ -131,24 +107,17 @@ async def retrieve_branches(
 
 
 @pytest_asyncio.fixture(scope='session', loop_scope='session')
-async def retrieval_results(engine) -> dict[str, DocumentResult]:
-    """
-    Ingere todos os PDFs anotados na mesma coleção, como em produção, e
-    recupera as evidências de todos os ramos uma vez por sessão.
-    """
-    vstore = build_vectorstore(engine)
-    for key in RETRIEVAL_KEYS:
-        await run_document_ingestion(pdf_for(key), vstore, model=None)
-
+async def retrieval_results(
+    engine, indexed_vectorstore
+) -> dict[str, DocumentResult]:
+    """Recupera as evidências de todos os ramos uma vez por sessão."""
     async with AsyncSession(engine) as session:
-        results = {
-            doc_id(key): await retrieve_branches(session, vstore, key)
+        return {
+            doc_id(key): await retrieve_branches(
+                session, indexed_vectorstore, key
+            )
             for key in RETRIEVAL_KEYS
         }
-
-    yield results
-
-    await vstore.adelete_collection()
 
 
 def own_snippets(result: BranchResult) -> list[str]:

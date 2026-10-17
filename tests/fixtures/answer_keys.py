@@ -104,6 +104,14 @@ def expected_branches(retrieval_key: Path) -> list[tuple[dict, dict]]:
     ]
 
 
+def expected_fulfilled(branch: dict) -> bool:
+    """
+    Veredicto esperado do ramo: o `fulfilled` anotado, ou "não contempla"
+    quando o ramo não tem evidência.
+    """
+    return bool(branch['evidence']) and branch.get('fulfilled') is True
+
+
 @cache
 def extract(pdf: Path) -> list:
     chunks, *_ = extract_pdf_chunks(str(pdf), pdf.name)

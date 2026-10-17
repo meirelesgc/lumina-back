@@ -60,6 +60,37 @@ def test_gabarito_de_recuperacao_tem_estrutura_valida(retrieval_key: Path):
 
 
 @pytest.mark.parametrize('retrieval_key', RETRIEVAL_KEYS, ids=doc_id)
+def test_veredito_anotado_e_coerente_com_a_evidencia(retrieval_key: Path):
+    """
+    `fulfilled` é obrigatório nos ramos com evidência e, num ramo com
+    `evidence: []`, só pode ser `false`.
+    """
+    branches = [branch for _, branch in expected_branches(retrieval_key)]
+
+    not_bool = [
+        branch['id']
+        for branch in branches
+        if 'fulfilled' in branch and not isinstance(branch['fulfilled'], bool)
+    ]
+    missing = [
+        branch['id']
+        for branch in branches
+        if branch['evidence'] and 'fulfilled' not in branch
+    ]
+    contemplated_empty = [
+        branch['id']
+        for branch in branches
+        if not branch['evidence'] and branch.get('fulfilled') is True
+    ]
+
+    assert not not_bool, f'fulfilled não booleano: {not_bool}'
+    assert not missing, f'ramos com evidência sem fulfilled: {missing}'
+    assert not contemplated_empty, (
+        f'ramos sem evidência marcados como contemplados: {contemplated_empty}'
+    )
+
+
+@pytest.mark.parametrize('retrieval_key', RETRIEVAL_KEYS, ids=doc_id)
 def test_secoes_anotadas_existem_no_gabarito_de_secoes(retrieval_key: Path):
     titles = {
         normalize(section['title'])

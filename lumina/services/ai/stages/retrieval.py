@@ -13,6 +13,10 @@ from lumina.models import DocumentRelease, Typification
 from lumina.schemas.branch import SectionRequirementScope
 from lumina.schemas.typification import TypificationList
 from lumina.services.ai.stages import reranking, vector_store_sql
+from lumina.services.ai.stages.criteria import (
+    criteria_fields,
+    merge_presidio_mappings,
+)
 from lumina.services.ai.stages.sections import SECTION_SUMMARY_RECORD_TYPE
 
 SETTINGS = Settings()
@@ -370,35 +374,10 @@ async def retrieve_criteria_payload(  # noqa: PLR0913, PLR0917, PLR0914
     ]
 
     # 4. Consolidação de Metadados PII (Presidio Mapping)
-    full_mapping: dict = {}
-    for d in evidence_chunks:
-        current_mapping = d.metadata.get('presidio_mapping') or {}
-        for category, entities in current_mapping.items():
-            if category not in full_mapping:
-                full_mapping[category] = {}
-            full_mapping[category].update(entities)
-
-    formatted_doc = format_context(evidence_chunks)
-    sources = taxonomy.get('sources') or []
-    source_names = ', '.join([
-        s.get('name', '')
-        if isinstance(s, dict)
-        else getattr(s, 'name', str(s))
-        for s in sources
-    ])
-
     return {
-        'id': branch.get('id'),
-        'document': formatted_doc,
-        'source': source_names,
-        'requirement': (
-            f'{b_title}: {b_desc}'
-            if b_title and b_desc
-            else (b_title or b_desc)
-        ),
-        'expected_section': taxonomy_title,
-        'query': f"Analise o item '{b_title}' na seção '{taxonomy_title}'.",
-        'presidio_mapping': full_mapping,
+        **criteria_fields(taxonomy, branch),
+        'document': format_context(evidence_chunks),
+        'presidio_mapping': merge_presidio_mappings(evidence_chunks),
         '_chunks': evidence_chunks,
         'retriever_query': query,
         'retrieved_chunks': retrieved_chunk_ids,

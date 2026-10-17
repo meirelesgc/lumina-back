@@ -7,6 +7,7 @@ from .extraction import (
     extract_raw_markdown_and_pages,
 )
 from .indexing import index_chunks_to_vstore
+from .outline import build_outline, outline_markdown
 from .reranking import rerank_chunks
 from .retrieval import (
     build_chunk_prompts,
@@ -29,6 +30,7 @@ from .sections import (
     detect_sections_with_model,
     normalize_with_mapping,
 )
+from .selection import select_evaluation_payloads
 from .synthesis import generate_release_synthesis, generate_synthesis_prompt
 from .vector_store_sql import fetch_chunk_siblings, lexical_search
 
@@ -64,6 +66,9 @@ __all__ = [
     'get_evaluation_chain',
     'evaluate_criteria_batch',
     'resolve_citations',
+    'build_outline',
+    'outline_markdown',
+    'select_evaluation_payloads',
     'generate_synthesis_prompt',
     'generate_release_synthesis',
 ]
