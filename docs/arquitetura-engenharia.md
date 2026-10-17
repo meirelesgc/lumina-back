@@ -159,7 +159,7 @@ A avaliação usa a seleção de seções pelo sumário, e não mais a recupera�
 
 Os testes com IA compartilham `tests/ai/evaluation/support.py` (base vetorial, ingestão, entrada do ramo e seleção por gabarito) e a fixture `indexed_vectorstore` de `tests/ai/evaluation/conftest.py`, que ingere o acervo uma vez por sessão. A seleção roda em memória sobre os chunks anonimizados, sem PGVector.
 
-**Pisos.** `MIN_SELECTION_RECALL`, `MIN_NOT_FOUND_HIT_RATE` e `MIN_NOT_FOUND_SAFETY` ficam no teste do seletor, e `MIN_FULFILLED_ACCURACY` no teste de veredictos, com a mesma regra dos outros pisos. Na troca, a recuperação vetorial tinha recall de 0,44 e acerto de `fulfilled` de 0,79 (mediana de três execuções); o seletor chegou a 0,87 e 0,86.
+**Pisos.** `MIN_SELECTION_RECALL`, `MIN_NOT_FOUND_HIT_RATE` e `MIN_NOT_FOUND_SAFETY` ficam no teste do seletor, e `MIN_FULFILLED_ACCURACY` no teste de veredictos, com a mesma regra dos outros pisos. Na troca, a recuperação vetorial tinha recall de 0,44 e acerto de `fulfilled` de 0,79 (mediana de três execuções); o seletor chegou a 0,87 e 0,86 com o `gpt-6.1-sol` como avaliador. Por custo, o avaliador passou a ser o `gpt-6-luna` com `reasoning.effort = medium`, e o acerto ficou em 0,79. Os testes do seletor e de veredictos imprimem o consumo de tokens por etapa.
 
 **Depuração.** Com `DEBUG_INGESTION_AUDIT=True`, `05_outline/<documento>.md` mostra o sumário que o seletor recebeu e `06_selection/<documento>/<critério>.md` mostra cada rodada, o contexto enviado ao avaliador e o veredito.
 
