@@ -1,91 +1,224 @@
 # Expected retrieval for dengue_brasil_revisao_sistematica.pdf
 # Page numbers follow the printed number of the PDF (1 = first page).
-# Section titles follow the headings of the PDF. Adjust them if
-# <name>.sections.yaml uses other names.
-# The article has no methods section: search strategy and bias branches
-# have no evidence in the document.
+# Section titles follow the headings of the PDF.
 
 tree:
   - typification: Revisão Sistemática da Literatura
     taxonomies:
-      - title: Fundamentação da Revisão
+      - title: Avaliação da Qualidade Metodológica
         branches:
-          - id: justificativa-revisao
-            title: Existência de justificativa da revisão
+          - id: ferramenta-avaliacao-definida
+            title: Ferramenta de avaliação definida
             description: >-
-              O manuscrito apresenta uma justificativa clara para a realização da Revisão Sistemática?
+              Foi utilizada uma ferramenta reconhecida para avaliação da qualidade metodológica dos estudos?
             section_requirement:
               scope: SPECIFIC_SECTION
-              expected_section: 1. Introdução
+              expected_section: Metodologia
+            evidence: []
+
+          - id: metodo-avaliacao-descrito
+            title: Método de avaliação descrito
+            description: >-
+              O método de aplicação da ferramenta de avaliação foi descrito?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: resultado-avaliacao-reportado
+            title: Resultado da avaliação reportado
+            description: >-
+              Os resultados da avaliação metodológica foram apresentados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+      - title: Avaliação de Viés
+        branches:
+          - id: impacto-vies-discutido
+            title: Impacto do viés discutido
+            description: >-
+              O impacto dos vieses identificados foi discutido nos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: vies-publicacao-avaliado
+            title: Viés de publicação avaliado
+            description: >-
+              O risco de viés de publicação foi analisado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            expansions:
+              - viés de publicação
+              - funnel plot ou análise de relato seletivo
+            evidence: []
+
+          - id: vies-estudos-avaliado
+            title: Viés dos estudos avaliado
+            description: >-
+              O risco de viés dos estudos incluídos foi avaliado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Critérios de Elegibilidade
+        branches:
+          - id: criterios-exclusao-definidos
+            title: Critérios de exclusão definidos
+            description: >-
+              Os critérios de exclusão dos estudos foram definidos de forma objetiva e reproduzível?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: criterios-inclusao-definidos
+            title: Critérios de inclusão definidos
+            description: >-
+              Os critérios de inclusão dos estudos foram definidos de forma objetiva e reproduzível?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: desfechos-definidos
+            title: Desfechos definidos
+            description: >-
+              Os resultados ou desfechos de interesse foram claramente especificados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
             evidence:
-              - section: RESUMO
-                page: 1
-                contains: 'Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente'
-              - section: 1. Introdução
-                page: 2
-                contains: 'Somado a isso, os casos reportados da doença se concentram primordialmente em regiões com elevado contingente populacional'
-              - section: 1. Introdução
-                page: 3
-                contains: 'a abrangência mundial da dengue é muito vasta, tanto em termos geográficos, quanto populacional'
-              - section: 1. Introdução
-                page: 3
-                contains: 'há a perspectiva de que a distribuição global da dengue tenda a ser amplificada'
               - section: 1. Introdução
                 page: 4
-                contains: 'qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle da dengue e sua história?'
+                contains: 'demonstrando como e o agir na busca por melhoria da saúde e controle desta doença.'
 
-          - id: estado-da-arte
-            title: Estado da arte
+          - id: intervencao-definida
+            title: Intervenção definida
             description: >-
-              O autor apresenta evidências de que conhece o estado atual da literatura sobre o tema?
+              As intervenções ou fenômenos analisados foram adequadamente definidos?
             section_requirement:
               scope: SPECIFIC_SECTION
-              expected_section: 1. Introdução
+              expected_section: Metodologia
             evidence:
               - section: 1. Introdução
-                page: 2
-                contains: 'indicadores epidemiológicos como morbidade, mortalidade e o tempo de vida perdido ajustado por incapacidade'
-              - section: 1. Introdução
-                page: 2
-                contains: 'vem gradualmente aumentando nos últimos 30 anos'
-              - section: 1. Introdução
-                page: 3
-                contains: 'são aproximadamente 125 países com registros de casos todo ano, onde vivem mais de 3,5 bilhões de pessoas'
-              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
-                page: 10
-                contains: 'o Brasil está se consolidando como o país com maior número absoluto de casos de dengue no mundo'
-              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
-                page: 10
-                contains: 'a co-circulação do vírus da dengue com o SARS-CoV-2 pode promover dificuldades adicionais de diagnóstico diferencial'
-              - section: 2.3 Dengue no Brasil – Histórico e Epidemiologia
-                page: 11
-                contains: 'estudos apontaram que embora o estado da Bahia possua prevalência histórica epidemiológica para o sorotipo DEN-1'
-              - section: 2.7 Desenvolvimento da Vacina para a Dengue
-                page: 19
-                contains: 'No entanto, até o momento, nenhuma vacina contra a dengue foi registrada.'
+                page: 4
+                contains: 'O principal objetivo é discorrer sobre a dengue no Brasil buscando identificar estratégias de gestão dos ecossistemas para a sustentabilidade do mesmo'
+              - section: 2.6 Medidas de Controle da Doença
+                page: 17
+                contains: 'Para o combate ao vetor utiliza-se três tipos de mecanismos: saneamento do meio ambiente, atividades de educação em saúde'
 
-          - id: lacuna-cientifica
-            title: Demonstração de lacuna científica
+          - id: periodo-definido
+            title: Período definido
             description: >-
-              O estudo demonstra explicitamente uma lacuna de conhecimento que justifique a revisão?
+              O período da pesquisa foi definido e justificado?
             section_requirement:
               scope: SPECIFIC_SECTION
-              expected_section: 1. Introdução
+              expected_section: Metodologia
+            evidence: []
+
+          - id: populacao-definida
+            title: População definida
+            description: >-
+              A população ou contexto de interesse foi claramente delimitado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
             evidence:
-              - section: 2.2 Ligação do Vírus na Célula
-                page: 7
-                contains: 'Pouco ainda se sabe a respeito das células-alvo do vírus da dengue.'
+              - page: 1
+                contains: 'No Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente, em função do cenário desafiador.'
+              - section: 1. Introdução
+                page: 4
+                contains: 'O principal objetivo é discorrer sobre a dengue no Brasil buscando identificar estratégias de gestão dos ecossistemas para a sustentabilidade do mesmo'
+
+      - title: Discussão
+        branches:
+          - id: achados-interpretados
+            title: Achados interpretados
+            description: >-
+              Os resultados foram interpretados à luz da literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
               - section: 3. Resultados e Discussão
                 page: 20
-                contains: 'têm gerado confusão e incerteza em diversas áreas do conhecimento, principalmente no que se refere aos determinantes de suas manifestações'
+                contains: 'As complexas inter-relações entre os fatores envolvidos na dinâmica de transmissão dos quatro sorotipos do vírus da dengue têm gerado confusão e incerteza'
 
-      # Avaliar a reprodutibilidade da busca.
+          - id: implicacoes-praticas-discutidas
+            title: Implicações práticas discutidas
+            description: >-
+              Foram apresentadas implicações práticas, teóricas ou gerenciais dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
+              - section: 3. Resultados e Discussão
+                page: 21
+                contains: 'Melhor forma de prevenir e limpar seu quintal, jogue fora o que não usa, retire a água das bandejas das plantas, vire garrafa vazia de cabeça para baixo'
+              - section: 4. Considerações Finais
+                page: 21
+                contains: 'Estratégias de prevenção através de políticas públicas que viabilizem a conscientização da população e combate vetorial por meio de órgãos epidemiológicos'
+
+          - id: limitacoes-revisao
+            title: Limitações da Revisão
+            description: >-
+              As limitações metodológicas da própria revisão foram reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: limitacoes-discutidas
+            title: Limitações discutidas
+            description: >-
+              As limitações dos estudos incluídos foram discutidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: pesquisas-futuras
+            title: Pesquisas futura
+            description: >-
+              Foram identificadas oportunidades e direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
+              - section: 4. Considerações Finais
+                page: 22
+                contains: 'Proporcionando para possíveis buscas futuras uma forma de enriquecer o conhecimento do leitor ou pesquisador, ajudando a busca uma prevenção adequada'
+
       - title: Estratégia de Busca
         branches:
+          - id: bases-dados-justificadas
+            title: Bases de dados justificadas
+            description: >-
+              As bases de dados utilizadas foram justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
           - id: descritores-definidos
             title: Descritores definidos
             description: >-
               Os descritores utilizados na busca foram explicitamente informados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: operadores-booleanos-utilizados
+            title: Operadores booleanos utilizados
+            description: >-
+              Os operadores booleanos foram empregados adequadamente na construção das buscas?
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
@@ -98,13 +231,7 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
-            evidence:
-              - section: Palavras-chave
-                page: 2
-                contains: 'Palavras-chave: Dengue; Aedes aegypti; notificações e vetor.'
-              - section: 1. Introdução
-                page: 4
-                contains: 'qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle da dengue e sua história?'
+            evidence: []
 
           - id: sinonimos-identificados
             title: Sinônimos identificados
@@ -127,34 +254,439 @@ tree:
               expected_section: Metodologia
             evidence: []
 
-      - title: Avaliação de Viés
+      - title: Extração de Dados
         branches:
-          - id: vies-estudos-avaliado
-            title: Viés dos estudos avaliado
+          - id: formulario-extracao-definido
+            title: Formulário de extração definido
             description: >-
-              O risco de viés dos estudos incluídos foi avaliado?
+              O instrumento utilizado para extração dos dados foi descrito?
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
             evidence: []
 
-          - id: vies-publicacao-avaliado
-            title: Viés de publicação avaliado
+          - id: processo-documentado
+            title: Processo documentado
             description: >-
-              O risco de viés de publicação foi analisado?
+              O processo de extração foi conduzido de forma padronizada entre os revisores?
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
-            expansions:
-              - viés de publicação
-              - funnel plot ou análise de relato seletivo
             evidence: []
 
-          - id: impacto-vies-discutido
-            title: Impacto do viés discutido
+          - id: variaveis-descritas
+            title: Variáveis descritas
             description: >-
-              O impacto dos vieses identificados foi discutido nos resultados?
+              As variáveis coletadas foram claramente definidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Fluxo PRISMA
+        branches:
+          - id: etapa-elegibilidade-apresentada
+            title: Etapa de elegibilidade apresentada
+            description: >-
+              Os motivos de exclusão na fase de elegibilidade foram apresentados?
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: etapa-identificacao-apresentada
+            title: Etapa de identificação apresentada
+            description: >-
+              O número de registros identificados foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: etapa-inclusao-apresentada
+            title: Etapa de inclusão apresentada
+            description: >-
+              O número final de estudos incluídos foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: etapa-selecao-apresentada
+            title: Etapa de seleção apresentada
+            description: >-
+              O número de estudos removidos durante a triagem foi apresentado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: fluxograma-prisma-disponivel
+            title: Fluxograma PRISMA disponível
+            description: >-
+              O fluxograma PRISMA foi apresentado de forma completa e consistente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+      - title: Fontes de Informação
+        branches:
+          - id: bases-cientificas-identificadas
+            title: Bases científicas identificadas
+            description: >-
+              As bases de dados selecionadas são adequadas ao tema investigado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: datas-busca-informadas
+            title: Datas da busca informadas
+            description: >-
+              O período coberto pelas buscas foi explicitamente informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: fontes-complementares-utilizadas
+            title: Fontes complementares utilizadas
+            description: >-
+              Foram consultadas fontes complementares?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: literatura-cinzenta-considerada
+            title: Literatura cinzenta considerada
+            description: >-
+              Foram consideradas fontes de literatura cinzenta quando pertinentes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: protocolos-pesquisados
+            title: Protocolos pesquisados
+            description: >-
+              Foram consultadas bases de protocolos de revisões sistemáticas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Fundamentação da Revisão
+        branches:
+          - id: lacuna-cientifica
+            title: Demonstração de lacuna científica
+            description: >-
+              O estudo demonstra explicitamente uma lacuna de conhecimento que justifique a revisão?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence:
+              - section: 3. Resultados e Discussão
+                page: 20
+                contains: 'As complexas inter-relações entre os fatores envolvidos na dinâmica de transmissão dos quatro sorotipos do vírus da dengue têm gerado confusão e incerteza'
+
+          - id: estado-da-arte
+            title: Estado da arte
+            description: >-
+              O autor apresenta evidências de que conhece o estado atual da literatura sobre o tema?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence:
+              - section: 1. Introdução
+                page: 2
+                contains: 'O impacto mundial da dengue é consideravelmente relevante, levando em conta que indicadores epidemiológicos como morbidade, mortalidade e o tempo de vida'
+              - section: 1. Introdução
+                page: 3
+                contains: 'De fato, a abrangência mundial da dengue é muito vasta, tanto em termos geográficos, quanto populacional: são aproximadamente 125 países com registros'
+
+          - id: justificativa-revisao
+            title: Existência de justificativa da revisão
+            description: >-
+              O manuscrito apresenta uma justificativa clara para a realização da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence:
+              - page: 1
+                contains: 'No Brasil, ano após ano a dengue perpetua-se como um problema de saúde persistente, em função do cenário desafiador.'
+              - section: 1. Introdução
+                page: 4
+                contains: 'O principal objetivo é discorrer sobre a dengue no Brasil buscando identificar estratégias de gestão dos ecossistemas para a sustentabilidade do mesmo'
+
+          - id: revisoes-semelhantes-identificadas
+            title: Revisões semelhantes identificadas
+            description: >-
+              Foram identificadas e discutidas revisões sistemáticas previamente publicadas ou em andamento?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence: []
+
+      - title: Pergunta da Pesquisa
+        branches:
+          - id: coerencia-questao-objetivo
+            title: Coerência entre questão e objetivo
+            description: >-
+              Existe coerência entre a questão de pesquisa, os objetivos e os procedimentos metodológicos adotados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence:
+              - section: 1. Introdução
+                page: 4
+                contains: 'Dessa forma a pergunta relacionada a pesquisa diz respeito à qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle'
+              - section: 1. Introdução
+                page: 4
+                contains: 'O principal objetivo é discorrer sobre a dengue no Brasil buscando identificar estratégias de gestão dos ecossistemas para a sustentabilidade do mesmo'
+
+          - id: questao-pesquisa-explicita
+            title: Questão de pesquisa explícita
+            description: >-
+              A Revisão Sistemática apresenta uma questão de pesquisa claramente formulada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence:
+              - section: 1. Introdução
+                page: 4
+                contains: 'Dessa forma a pergunta relacionada a pesquisa diz respeito à qual importância da educação em saúde com foco na abordagem ecossistêmica aplicada ao controle'
+
+          - id: uso-abordagem-5w
+            title: Uso da abordagem 5W
+            description: >-
+              A questão de pesquisa contempla adequadamente os elementos What, Why, Where, When e Who?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence: []
+
+          - id: uso-pico-pico-spider-spice
+            title: Uso de PICO/PICo/SPIDER/SPICE
+            description: >-
+              Os elementos População, Intervenção, Comparação e Desfecho foram explicitamente definidos quando aplicáveis?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Introdução
+            evidence: []
+
+      - title: Protocolo da Revisão
+        branches:
+          - id: alteracoes-documentadas
+            title: Alterações documentadas
+            description: >-
+              Quando há alterações realizadas durante a revisão, elas foram documentadas e justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: estrutura-aderente-prisma
+            title: Estrutura aderente ao PRISMA
+            description: >-
+              O protocolo contempla os itens recomendados pelo PRISMA-P ou pelo PRISMA 2020?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: protocolo-utilizado
+            title: Protocolo utilizado
+            description: >-
+              O estudo apresenta um protocolo formal para condução da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Registro do Protocolo
+        branches:
+          - id: numero-registro-informado
+            title: Número de registro informado
+            description: >-
+              O número de registro do protocolo foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: plataforma-identificada
+            title: Plataforma identificada
+            description: >-
+              O protocolo foi registrado em uma plataforma reconhecida?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: protocolo-disponivel-publicamente
+            title: Protocolo disponível publicamente
+            description: >-
+              O protocolo está disponível para consulta pública?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Resultados
+        branches:
+          - id: caracterizacao-estudos
+            title: Caracterização dos estudos
+            description: >-
+              Os estudos incluídos foram adequadamente caracterizados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: resultados-consolidados
+            title: Resultados consolidados
+            description: >-
+              Os resultados consolidados respondem às questões de pesquisa propostas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
+              - section: 3. Resultados e Discussão
+                page: 20
+                contains: 'Por meio de pesquisa bibliográfica analisamos que a dengue, doença infecciosa transmitida pela picada da fêmea do mosquito Aedes aegypti, possui quatro sorotipos'
+
+          - id: resultados-individuais-apresentados
+            title: Resultados individuais apresentados
+            description: >-
+              Os resultados individuais dos estudos foram apresentados de forma transparente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
+              - section: 3. Resultados e Discussão
+                page: 20
+                contains: 'Os sistemas de vigilância da dengue foram severamente prejudicados nos últimos dois anos devido às limitações nas medidas de controle do mosquito'
+              - section: 3. Resultados e Discussão
+                page: 21
+                contains: 'os ovos de mosquito são resistentes e podem sobreviver por um ano, mesmo em locais secos.'
+
+      - title: Seleção dos Estudos
+        branches:
+          - id: criterio-desempate
+            title: Critério de desempate
+            description: >-
+              Existe procedimento documentado para resolução de divergências entre revisores?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: exclusoes-justificadas
+            title: Exclusões justificadas
+            description: >-
+              As exclusões realizadas durante a seleção foram justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: revisores-independentes
+            title: Revisores independentes
+            description: >-
+              A seleção dos estudos foi realizada por revisores independentes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+          - id: triagem-inicial
+            title: Triagem inicial
+            description: >-
+              Os títulos, resumos e palavras-chave foram avaliados conforme critérios previamente definidos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence: []
+
+      - title: Síntese dos Dados
+        branches:
+          - id: heterogeneidade-discutida
+            title: Heterogeneidade discutida
+            description: >-
+              A heterogeneidade entre os estudos foi avaliada e discutida?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+          - id: metodo-sintese-descrito
+            title: Método de síntese descrito
+            description: >-
+              O método utilizado para síntese dos dados foi claramente descrito?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Metodologia
+            evidence:
+              - page: 1
+                contains: 'A pesquisa seguiu a abordagem qualitativa, exploratória e bibliográfica de caráter sistemático.'
+
+          - id: sintese-qualitativa-realizada
+            title: Síntese qualitativa realizada
+            description: >-
+              Os resultados qualitativos foram organizados de forma sistemática e transparente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence:
+              - section: 3. Resultados e Discussão
+                page: 20
+                contains: 'Por meio de pesquisa bibliográfica analisamos que a dengue, doença infecciosa transmitida pela picada da fêmea do mosquito Aedes aegypti, possui quatro sorotipos'
+
+          - id: sintese-quantitativa-realizada
+            title: Síntese quantitativa realizada
+            description: >-
+              Quando aplicável, os dados foram sintetizados por métodos estatísticos apropriados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Resultados e Discussão
+            evidence: []
+
+      - title: Transparência Científica
+        branches:
+          - id: conflitos-interesse-declarados
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse foram explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Declarações finais
+            evidence: []
+
+          - id: dados-disponiveis
+            title: Dados disponíveis
+            description: >-
+              Os dados utilizados na revisão estão disponíveis para consulta ou reutilização?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Declarações finais
+            evidence: []
+
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento foram declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Declarações finais
+            evidence: []
+
+          - id: materiais-suplementares-disponiveis
+            title: Materiais suplementares disponíveis
+            description: >-
+              O conjunto de informações apresentado permite reproduzir a revisão sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Materiais suplementares
             evidence: []

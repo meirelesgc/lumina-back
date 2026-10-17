@@ -1,44 +1,61 @@
 # Expected retrieval for estrategias_teste_software_llm_judge_hitl.pdf
-# Page 1 = capa, page 2 = folha de rosto, page 3 = start of "1. Introdução".
-# Section titles follow the headings of the PDF. Adjust them if
-# <name>.sections.yaml uses other names.
+# Page 1 = capa, page 2 = folha de rosto, page 3 = início de "1. Introdução".
+# As seções adicionais devem ser confirmadas no PDF e no arquivo .sections.yaml.
+# As evidências fornecidas foram preservadas. Evidências ainda não fornecidas
+# devem ser adicionadas após a inspeção do documento original.
 
 tree:
   - typification: Validação de Ante-Projeto
     taxonomies:
-      - title: Título
+
+      - title: Cronograma
         branches:
-          - id: titulo-claro-e-objetivo
-            title: Título
+          - id: cronograma-planejamento
+            title: Cronograma
             description: >-
-              O título deve representar, de forma clara e objetiva, o tema central da pesquisa.
-              Recomenda-se evitar títulos excessivamente amplos, genéricos ou que não indiquem
-              o objeto investigado.
+              Apresentar o cronograma de execução do trabalho, planejando a
+              duração de cada etapa prevista na metodologia até a conclusão
+              do trabalho ao final da disciplina TCC. As etapas devem ser
+              compatíveis com os objetivos, os procedimentos metodológicos,
+              os recursos disponíveis e o prazo acadêmico.
             section_requirement:
               scope: SPECIFIC_SECTION
-              expected_section: Capa
-            evidence:
-              - page: 1
-                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa: integração entre LLM-as-a-Judge e Human-in-the-Loop'
-              - page: 2
-                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa'
+              expected_section: Cronograma
+            evidence: []
+
+          - id: cronograma-analise
+            title: Análise do Cronograma
+            description: >-
+              Verificar se o cronograma descreve as etapas de execução do
+              trabalho e a duração planejada de cada uma delas. Avaliar se
+              as atividades estão organizadas em uma sequência coerente com
+              a metodologia e se o planejamento permite concluir o trabalho
+              até o final da disciplina TCC. Verificar a compatibilidade
+              entre o tempo disponível, os objetivos e as atividades previstas.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Cronograma
+            evidence: []
 
       - title: Introdução
         branches:
           - id: introducao-contextualizacao
             title: Introdução
             description: >-
-              Apresentar o tema do trabalho e contextualizá-lo no campo científico, tecnológico,
-              profissional ou social em que está inserido. A introdução deve permitir que o leitor
-              compreenda o assunto, sua delimitação e sua relação com as áreas de conhecimento
-              envolvidas. Apresentar o tema e delimitar o objeto de estudo; explicar o contexto no
-              qual a pesquisa será desenvolvida; indicar as áreas de conhecimento relacionadas ao
-              tema; utilizar autores e trabalhos de referência para fundamentar a contextualização;
-              apresentar conceitos essenciais para a compreensão do estudo; demonstrar como o
-              contexto apresentado conduz ao problema de pesquisa. Escrever com frases curtas.
-              Todas as definições de conceitos e afirmações devem estar referenciadas. Escrever
-              com precisão científica e sem juízo de valor. Ao final da introdução, deve estar
-              clara a situação que motivou a investigação e a necessidade de aprofundamento do tema.
+              Apresentar o tema do trabalho e contextualizá-lo no campo
+              científico, tecnológico, profissional ou social em que está
+              inserido. Delimitar o objeto de estudo e explicar o contexto
+              no qual a pesquisa será desenvolvida. Indicar as áreas de
+              conhecimento relacionadas ao tema. Utilizar autores e trabalhos
+              de referência para fundamentar a contextualização. Apresentar
+              os conceitos essenciais para a compreensão do estudo.
+              Demonstrar como o contexto apresentado conduz ao problema de
+              pesquisa. Escrever com frases curtas, precisão científica e
+              sem juízo de valor. Todas as definições de conceitos e
+              afirmações que dependam de fundamentação devem estar
+              referenciadas. Ao final da introdução, deve estar clara a
+              situação que motivou a investigação e a necessidade de
+              aprofundamento do tema.
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 1. Introdução
@@ -65,15 +82,78 @@ tree:
                 page: 3
                 contains: 'O trabalho está inserido nas áreas de Inteligência Artificial, Processamento de Linguagem Natural e Engenharia de Software'
 
+      - title: Justificativa
+        branches:
+          - id: justificativa-relevancia
+            title: Justificativa
+            description: >-
+              Apresentar as razões que tornam a realização do trabalho
+              necessária e relevante. Demonstrar a importância da pesquisa
+              sem fundamentar os argumentos apenas em preferências ou
+              interesses pessoais. Abordar, quando aplicável, a relevância
+              científica e acadêmica, tecnológica e profissional, social,
+              econômica, educacional ou institucional. Explicitar as
+              contribuições esperadas para a área de conhecimento e os
+              benefícios para usuários, organizações ou comunidades.
+              Identificar a originalidade ou o diferencial da proposta e
+              as lacunas que poderão ser reduzidas. Demonstrar a viabilidade
+              do trabalho considerando prazo, recursos, dados e tecnologias
+              disponíveis.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Justificativa
+            evidence:
+              - section: 4. Justificativa
+                page: 4
+                contains: 'A utilização de sistemas de inteligência artificial em atividades que envolvem análise e interpretação de informações especializadas torna necessária a adoção de estratégias capazes de avaliar a qualidade e a adequação dos resultados produzidos.'
+              - section: 4. Justificativa
+                page: 5
+                contains: 'Do ponto de vista científico, a pesquisa contribui para os estudos relacionados à avaliação de sistemas baseados em modelos de linguagem'
+              - section: 4. Justificativa
+                page: 5
+                contains: 'Do ponto de vista tecnológico e profissional, a proposta pode contribuir para processos de desenvolvimento e manutenção de sistemas de inteligência artificial'
+              - section: 4. Justificativa
+                page: 5
+                contains: 'A realização do trabalho também é viável devido à disponibilidade do sistema utilizado como estudo de caso'
+
+          - id: justificativa-analise
+            title: Análise da Justificativa
+            description: >-
+              Verificar se a justificativa apresenta razões concretas e
+              fundamentadas para a realização da pesquisa. Avaliar a presença
+              de relevância científica, acadêmica, tecnológica, profissional
+              ou social, conforme a natureza do trabalho. Identificar as
+              contribuições esperadas, as lacunas abordadas, o diferencial
+              da proposta e sua viabilidade. Verificar se os argumentos
+              estão relacionados ao problema de pesquisa e aos objetivos.
+              Evitar justificativas baseadas exclusivamente em interesses
+              pessoais ou afirmações sem fundamentação.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Justificativa
+            evidence:
+              - section: 4. Justificativa
+                page: 5
+                contains: 'A pesquisa contribui para os estudos relacionados à avaliação de sistemas baseados em modelos de linguagem'
+              - section: 4. Justificativa
+                page: 5
+                contains: 'A proposta pode contribuir para processos de desenvolvimento e manutenção de sistemas de inteligência artificial'
+              - section: 4. Justificativa
+                page: 5
+                contains: 'a possibilidade de contar com especialistas para a definição e validação dos casos de referência'
+
       - title: Metodologia
         branches:
           - id: metodologia-percurso
             title: Metodologia
             description: >-
-              Escrever detalhadamente a Metodologia que será usada para execução do Trabalho.
-              Em outras palavras, dizer como os objetivos geral e específicos serão atingidos,
-              que ações serão executadas, que testes serão realizados, que indicadores serão
-              usados, etc. Deve ser descrito o percurso metodológico.
+              Descrever detalhadamente a metodologia que será utilizada para
+              executar o trabalho. Explicar como os objetivos geral e
+              específicos serão atingidos, quais ações serão executadas,
+              quais testes serão realizados e quais indicadores serão usados.
+              Descrever o percurso metodológico de forma organizada e
+              verificável, incluindo os procedimentos de coleta, preparação,
+              avaliação e análise dos dados, quando aplicáveis.
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 5. Metodologia
@@ -103,18 +183,56 @@ tree:
                 page: 6
                 contains: 'Também será investigado se a estratégia permite identificar alterações nos resultados produzidos pelo sistema'
 
+          - id: metodologia-analise
+            title: Análise da Metodologia
+            description: >-
+              Verificar se a metodologia descreve um percurso de execução
+              suficientemente detalhado para alcançar os objetivos da
+              pesquisa. Identificar as etapas, as ações previstas, os dados
+              utilizados, os procedimentos de avaliação, os testes e os
+              indicadores. Verificar se os métodos são compatíveis com o
+              problema, os objetivos, o contexto do estudo de caso e os
+              recursos disponíveis. Avaliar se os procedimentos permitem
+              produzir resultados verificáveis e responder à questão de
+              pesquisa. Para avaliações de sistemas de inteligência
+              artificial, verificar a definição das referências de avaliação,
+              a participação de especialistas, a aplicação de métodos
+              determinísticos e semânticos e a análise dos resultados.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 5. Metodologia
+            evidence:
+              - section: 5. Metodologia
+                page: 5
+                contains: 'A pesquisa terá caráter aplicado e exploratório, sendo desenvolvida a partir de um estudo de caso'
+              - section: 5. Metodologia
+                page: 5
+                contains: 'será construído um conjunto de casos de referência, ou golden dataset'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Para informações estruturadas ou passíveis de verificação objetiva, serão utilizadas comparações determinísticas.'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Para resultados textuais ou que dependam de interpretação semântica, será utilizada a abordagem LLM-as-a-Judge.'
+              - section: 5. Metodologia
+                page: 6
+                contains: 'Também será investigado se a estratégia permite identificar alterações nos resultados produzidos pelo sistema em diferentes execuções.'
+
       - title: Objetivo
         branches:
           - id: objetivo-geral
             title: Objetivo geral
             description: >-
-              Apresentar, de forma clara e abrangente, o principal resultado que se pretende
-              alcançar ao final do trabalho. O objetivo geral deverá estar diretamente relacionado
-              ao problema e à questão principal da pesquisa. O objetivo geral deve indicar o que
-              será realizado, sobre qual objeto ou contexto e com qual finalidade principal. Não
-              utilizar dois ou mais verbos na definição no início da frase do objetivo. Exemplo:
-              Desenvolver [produto, modelo, método, sistema ou abordagem] para [finalidade],
-              considerando o contexto de [ambiente ou público].
+              Apresentar, de forma clara e abrangente, o principal resultado
+              que se pretende alcançar ao final do trabalho. O objetivo geral
+              deve estar diretamente relacionado ao problema e à questão
+              principal da pesquisa. Deve indicar o que será realizado,
+              sobre qual objeto ou contexto e com qual finalidade principal.
+              Não utilizar dois ou mais verbos no início da frase do objetivo.
+              Recomenda-se a estrutura: desenvolver, propor ou avaliar
+              determinado produto, modelo, método, sistema ou abordagem
+              para uma finalidade específica, considerando o contexto
+              investigado.
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3.1. Objetivo geral
@@ -129,13 +247,15 @@ tree:
           - id: objetivos-especificos
             title: Objetivos específicos
             description: >-
-              Apresentar os resultados intermediários necessários para alcançar o objetivo geral.
-              Os objetivos específicos devem ser claros, verificáveis e compatíveis com o tempo
-              e os recursos disponíveis. Podem contemplar ações como realizar uma revisão da
-              literatura; caracterizar o contexto ou o público investigado; levantar e analisar
-              requisitos; definir critérios, indicadores ou categorias de análise; modelar ou
-              desenvolver uma solução; implementar um protótipo; executar testes ou avaliações;
-              analisar e discutir os resultados; validar a solução proposta.
+              Apresentar os resultados intermediários necessários para
+              alcançar o objetivo geral. Os objetivos específicos devem
+              ser claros, verificáveis e compatíveis com o tempo e os
+              recursos disponíveis. Podem contemplar a revisão da literatura,
+              a caracterização do contexto, o levantamento de requisitos,
+              a definição de critérios e indicadores, o desenvolvimento
+              de uma solução, a implementação de um protótipo, a execução
+              de testes, a análise dos resultados e a validação da proposta.
+              Cada objetivo deve contribuir diretamente para o objetivo geral.
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 3.2. Objetivos específicos
@@ -155,3 +275,173 @@ tree:
               - section: 3.2. Objetivos específicos
                 page: 4
                 contains: 'Analisar os resultados obtidos, considerando a concordância com as referências dos especialistas'
+
+          - id: objetivo-analise
+            title: Analisar o objetivo geral e específico
+            description: >-
+              Verificar se o objetivo geral expressa o principal resultado
+              pretendido e está alinhado à questão de pesquisa. Avaliar se
+              os objetivos específicos descrevem resultados intermediários
+              verificáveis, se contribuem para alcançar o objetivo geral e
+              se podem ser executados dentro do prazo e dos recursos
+              disponíveis. Verificar a coerência entre objetivos, metodologia,
+              problema de pesquisa e resultados esperados. No objetivo geral,
+              verificar se há apenas um verbo principal no início da frase.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Objetivos
+            evidence:
+              - section: 3.1. Objetivo geral
+                page: 4
+                contains: 'Propor e avaliar uma estratégia para avaliação de sistemas de inteligência artificial especializados'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Construir um conjunto de casos de referência com resultados esperados definidos e validados por especialistas'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Aplicar uma estratégia de avaliação combinando métodos determinísticos e LLM-as-a-Judge aos resultados produzidos pelo sistema'
+              - section: 3.2. Objetivos específicos
+                page: 4
+                contains: 'Analisar os resultados obtidos, considerando a concordância com as referências dos especialistas, as divergências identificadas e as limitações da estratégia proposta.'
+
+      - title: Problema de Pesquisa
+        branches:
+          - id: problema-pesquisa-formulacao
+            title: Problema de pesquisa
+            description: >-
+              Apresentar e delimitar a situação específica que será
+              investigada. Indicar uma lacuna de conhecimento, uma
+              dificuldade prática, uma necessidade de melhoria ou uma
+              questão ainda não suficientemente respondida pelos estudos
+              existentes. Contextualizar o problema e demonstrar sua
+              relevância com base na literatura. Apresentar os trabalhos
+              relacionados e identificar lacunas, limitações ou aspectos
+              pouco explorados. Delimitar o contexto, o público, o ambiente,
+              o sistema ou o processo analisado. Apresentar hipóteses ou
+              proposições quando pertinentes. Formular uma questão principal
+              clara, específica, interrogativa e passível de investigação.
+              As questões secundárias, quando necessárias, devem estar
+              relacionadas à questão principal.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Problema de pesquisa
+            evidence:
+              - section: 2. Problema de pesquisa
+                page: 4
+                contains: 'Como uma estratégia baseada em casos de referência validados por especialistas, combinada a avaliações determinísticas e LLM-as-a-Judge'
+
+          - id: problema-analise
+            title: Análise do Problema
+            description: >-
+              Verificar se o problema está contextualizado, delimitado e
+              fundamentado na literatura. Avaliar se são apresentados
+              trabalhos relacionados e se a lacuna ou dificuldade investigada
+              está explícita. Verificar se a questão principal é clara,
+              específica, interrogativa e passível de investigação. Avaliar
+              o alinhamento entre o problema, a introdução, a justificativa,
+              os objetivos e a metodologia. Confirmar se os resultados
+              previstos no trabalho permitem responder à questão formulada.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Problema de pesquisa
+            evidence:
+              - section: 2. Problema de pesquisa
+                page: 4
+                contains: 'A avaliação de sistemas de inteligência artificial especializados apresenta desafios relacionados à diversidade e à natureza dos resultados produzidos.'
+              - section: 2. Problema de pesquisa
+                page: 4
+                contains: 'Sem um conjunto de casos de referência previamente definido, torna-se mais difícil acompanhar de forma sistemática possíveis alterações nos resultados produzidos pelo sistema.'
+              - section: 2. Problema de pesquisa
+                page: 4
+                contains: 'Como uma estratégia baseada em casos de referência validados por especialistas, combinada a avaliações determinísticas e LLM-as-a-Judge, pode contribuir para a avaliação de sistemas de inteligência artificial especializados?'
+
+      - title: Referências
+        branches:
+          - id: referencias-bibliograficas
+            title: Referências
+            description: >-
+              Incluir as referências bibliográficas das obras efetivamente
+              citadas durante a elaboração do anteprojeto. As referências
+              devem seguir as normas ABNT aplicáveis, com dados suficientes
+              para identificar e localizar cada fonte. Verificar a
+              correspondência entre as citações no texto e a lista de
+              referências. Não incluir como citadas obras que não aparecem
+              no texto, salvo quando as regras institucionais determinarem
+              outra organização bibliográfica.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Referências
+            evidence:
+              - section: Referências
+                page: 6
+                contains: 'FERREIRA, Bruno Carlos Luís; SILVA, Catarina; OLIVEIRA, Hugo Gonçalo. Towards automated evaluation of knowledge encoded in large language models.'
+              - section: Referências
+                page: 6
+                contains: 'RAJU, Ravi Shanker; JAIN, Swayambhoo; LI, Bo; LI, Jonathan Lingjie; THAKKER, Urmish. Constructing domain-specific evaluation sets for LLM-as-a-judge.'
+              - section: Referências
+                page: 6
+                contains: 'SZYMANSKI, Annalisa; ZIEMS, Noah; EICHER-MILLER, Heather A.; LI, Toby Jia-Jun; JIANG, Meng; METOYER, Ronald A. Limitations of the LLM-as-a-judge approach for evaluating LLM outputs in expert knowledge tasks.'
+
+          - id: referencias-analise
+            title: Análise da Referência
+            description: >-
+              Verificar se as referências bibliográficas correspondem às
+              fontes citadas no anteprojeto e se estão formatadas conforme
+              as normas ABNT aplicáveis. Avaliar a consistência dos dados
+              bibliográficos, a identificação dos autores, os títulos,
+              os anos de publicação e os dados de publicação ou acesso,
+              conforme o tipo de documento. Conferir se as citações do texto
+              possuem referências correspondentes e se as referências
+              listadas são efetivamente citadas.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Referências
+            evidence:
+              - section: Referências
+                page: 6
+                contains: 'FERREIRA, Bruno Carlos Luís; SILVA, Catarina; OLIVEIRA, Hugo Gonçalo. Towards automated evaluation of knowledge encoded in large language models.'
+              - section: Referências
+                page: 6
+                contains: 'RAJU, Ravi Shanker; JAIN, Swayambhoo; LI, Bo; LI, Jonathan Lingjie; THAKKER, Urmish. Constructing domain-specific evaluation sets for LLM-as-a-judge.'
+              - section: Referências
+                page: 6
+                contains: 'SZYMANSKI, Annalisa; ZIEMS, Noah; EICHER-MILLER, Heather A.; LI, Toby Jia-Jun; JIANG, Meng; METOYER, Ronald A. Limitations of the LLM-as-a-judge approach for evaluating LLM outputs in expert knowledge tasks.'
+
+      - title: Título
+        branches:
+          - id: titulo-claro-e-objetivo
+            title: Título
+            description: >-
+              O título deve representar, de forma clara e objetiva, o tema
+              central da pesquisa. Deve indicar o objeto investigado e
+              evitar formulações excessivamente amplas, genéricas ou que
+              não permitam identificar o foco do trabalho. Verificar se
+              o título é coerente com o problema de pesquisa, os objetivos,
+              a metodologia e o contexto do estudo.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Capa
+            evidence:
+              - page: 1
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa: integração entre LLM-as-a-Judge e Human-in-the-Loop'
+              - page: 2
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa'
+
+          - id: titulo-verificacao
+            title: Verificar o Título
+            description: >-
+              Avaliar se o título representa o tema central e delimita
+              adequadamente o objeto da pesquisa. Verificar sua clareza,
+              objetividade e coerência com o conteúdo do anteprojeto.
+              Identificar termos excessivamente amplos ou genéricos e
+              verificar se a formulação permite reconhecer o foco da
+              investigação. Conferir a consistência entre o título da
+              capa e o título apresentado na folha de rosto.
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Capa
+            evidence:
+              - page: 1
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa: integração entre LLM-as-a-Judge e Human-in-the-Loop'
+              - page: 2
+                contains: 'Desenvolvimento de estratégias de teste de software com IA generativa'
