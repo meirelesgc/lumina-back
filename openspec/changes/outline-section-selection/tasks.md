@@ -73,10 +73,14 @@
 
 ## 5. Integração na avaliação
 
-- [ ] 5.1 Criar um teste de integração com modelos falsos para `process_release_pipeline`: todos os ramos da árvore recebem veredito, ramos `not_found` não chamam o avaliador e `AppliedBranch.context_selection` é gravado. Verificar que falha antes da mudança.
-- [ ] 5.2 Criar a migração Alembic da coluna `context_selection` em `applied_branches`, o campo em `AppliedBranch` e a gravação em `save_applied_snapshot`. Verificar `alembic upgrade head` e `alembic downgrade -1` num banco limpo.
-- [ ] 5.3 Fazer `run_document_ingestion` devolver os chunks anonimizados, trocar `retrieve_evaluation_payloads` por `select_evaluation_payloads` em `process_release_pipeline` com o seletor aprovado, deixar de carregar as expansões e remover `retrieve_evaluation_payloads` e os testes dela em `test_ai_stages.py`. Verificar que 5.1 passa.
-- [ ] 5.4 Trocar no `DOCUMENT_ANALYSIS_PROMPT` "Trechos recuperados do documento" por "Seções do documento" e "trechos" por "seções" nas regras, mantendo as regras de citação. Verificar que `test_evaluation_styles.py` passa.
+- [x] 5.1 Criar um teste de integração com modelos falsos para `process_release_pipeline`: todos os ramos da árvore recebem veredito, ramos `not_found` não chamam o avaliador e `AppliedBranch.context_selection` é gravado. Verificar que falha antes da mudança.
+  - Resultado: `tests/integration/test_release_pipeline.py` roda `process_release_pipeline` com banco real, extração e anonimização reais sobre o anteprojeto, base vetorial simulada e modelos falsos (um seletor por regra e um modelo que registra os prompts). Antes da mudança, falhou dentro de `retrieve_evaluation_payloads`, porque a avaliação ainda dependia da busca vetorial. A divisão em teste unitário do pipeline e teste de integração do snapshot, prevista no início, não foi necessária: o teste único cobre os três comportamentos.
+- [x] 5.2 Criar a migração Alembic da coluna `context_selection` em `applied_branches`, o campo em `AppliedBranch` e a gravação em `save_applied_snapshot`. Verificar `alembic upgrade head` e `alembic downgrade -1` num banco limpo.
+  - Resultado: migração `0211df046da3`. Num container `pgvector/pgvector:pg16` limpo, `upgrade head`, `downgrade -1` e `upgrade head` rodaram, e a coluna ficou como `jsonb`.
+- [x] 5.3 Fazer `run_document_ingestion` devolver os chunks anonimizados, trocar `retrieve_evaluation_payloads` por `select_evaluation_payloads` em `process_release_pipeline` com o seletor aprovado, deixar de carregar as expansões e remover `retrieve_evaluation_payloads` e os testes dela em `test_ai_stages.py`. Verificar que 5.1 passa.
+  - Resultado: além de `retrieve_evaluation_payloads` e dos 2 testes dele, saíram `iter_typifications`, `iter_taxonomies` e `iter_branches`, que só ele usava, e a carga de expansões no pipeline. 5.1 passa.
+- [x] 5.4 Trocar no `DOCUMENT_ANALYSIS_PROMPT` "Trechos recuperados do documento" por "Seções do documento" e "trechos" por "seções" nas regras, mantendo as regras de citação. Verificar que `test_evaluation_styles.py` passa.
+  - Resultado: o prompt passa a falar em "Seções do documento" e "nas seções"; as regras de citação por `chunk_id` não mudam. `test_evaluation_styles.py` e 5.1 passam. A mudança veio depois da medição dos pisos e é verificada em 7.2.
 
 ## 6. Documentação e registros
 
