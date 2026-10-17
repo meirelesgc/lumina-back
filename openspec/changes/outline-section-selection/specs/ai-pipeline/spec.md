@@ -98,4 +98,4 @@ O sistema SHALL persistir em disco os artefatos intermediários de processamento
 
 ### Requirement: Fusão de Consultas Expandidas por Reciprocal Rank Fusion
 **Reason**: A avaliação deixa de usar a busca vetorial. O contexto de cada critério vem da seleção de seções pelo sumário, e as expansões de consulta não entram mais no contexto enviado ao avaliador.
-**Migration**: Os vereditos já gravados mantêm a versão de expansão registrada. O serviço de expansão continua gerando expansões até que uma issue decida se elas viram dica do seletor ou se o serviço sai.
+**Migration**: Os vereditos já gravados mantêm a versão de expansão registrada. O serviço de expansão continua gerando expansões até que a issue #28 decida se elas viram dica do seletor ou se o serviço sai.

@@ -108,7 +108,7 @@ Se o `gpt-6-luna` não atingir os dois, o `gpt-6.1-sol` é testado como seletor.
 - [Latência: até 3 chamadas do modelo rápido mais 1 do principal por ramo] → Semáforo de 8 e cache do prefixo. Tokens e tempo por release ficam registrados.
 - [A sobreposição entre chunks repete cerca de 15% do texto no contexto] → Aceita para não mudar as citações. O placar registra os tokens enviados.
 - [Veredictos variam entre execuções] → Três execuções e comparação por mediana.
-- [O serviço de expansões continua gerando consultas que a avaliação não usa] → Uma issue nova decide o destino dele. Fica fora desta mudança.
+- [O serviço de expansões continua gerando consultas que a avaliação não usa] → A issue #28 decide o destino dele. Fica fora desta mudança.
 - [Documentos muito longos geram contextos grandes em `ENTIRE_DOCUMENT` ou no teto de rodadas] → O acervo vai até ~21 mil tokens. Os tokens por ramo ficam registrados. Limite e filtro ficam para quando aparecer o caso.
 
 ## Migration Plan

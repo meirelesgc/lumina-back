@@ -84,8 +84,10 @@
 
 ## 6. Documentação e registros
 
-- [ ] 6.1 Atualizar `docs/arquitetura-engenharia.md` (seleção de seções, auditoria `05` e `06`, gabarito de veredictos e os dois testes novos) e `.agents/skills/testing-methodology/references/06-projeto-lumina.md`. Verificar que os nomes citados existem no código.
-- [ ] 6.2 Abrir uma issue, pelo modelo `demanda.md`, sobre o destino do serviço de expansões de consulta, que a avaliação deixa de usar, e citar o número aqui e no design.
+- [x] 6.1 Atualizar `docs/arquitetura-engenharia.md` (seleção de seções, auditoria `05` e `06`, gabarito de veredictos e os dois testes novos) e `.agents/skills/testing-methodology/references/06-projeto-lumina.md`. Verificar que os nomes citados existem no código.
+  - Resultado: `docs/ia-plataforma.md` troca "Recuperação de Evidências por Critério" por "Seleção de Seções por Critério" e ajusta o fluxo, o barema e as diretrizes; `docs/arquitetura-engenharia.md` ganha "Validação da Seleção de Seções e dos Veredictos"; a referência da skill de testes ganha os testes novos e o comando dos veredictos.
+- [x] 6.2 Abrir uma issue, pelo modelo `demanda.md`, sobre o destino do serviço de expansões de consulta, que a avaliação deixa de usar, e citar o número aqui e no design.
+  - Resultado: issue #28, citada no design e no delta spec.
 
 ## 7. Verificação
 
