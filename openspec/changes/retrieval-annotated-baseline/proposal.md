@@ -11,6 +11,8 @@ O acervo anotado de `tests/fixtures/documents/` mede a ingestão até os chunks,
   - **Crítico, tolerância zero:** nenhuma evidência recuperada vem de outro documento.
   - **Métricas com piso, somadas sobre o acervo:** recall de trechos, acerto de seção e página, precisão entre ramos e acerto do roteamento por seção. O teste imprime o placar por documento e por ramo. Cada piso nasce com o valor medido na implementação, arredondado para baixo, e só sobe.
 - O container PostgreSQL dos testes passa de `postgres:16` para `pgvector/pgvector:pg16`.
+- A normalização dos testes trata como iguais as aspas retas e curvas e o hífen e os travessões, para o anotador não depender da tipografia do PDF.
+- O acervo de recuperação cobre três documentos: o anteprojeto, com a árvore de Validação de Ante-Projeto, e as duas revisões sistemáticas, com a árvore de Revisão Sistemática da Literatura.
 
 ## Capabilities
 
@@ -29,3 +31,4 @@ Nenhuma.
 - **Acervo:** `retrieval_template.yaml` e uma seção nova em `tests/fixtures/documents/README.md`. Os `*.retrieval.yaml` de cada documento vêm do usuário.
 - **Custo:** o teste de avaliação gera embeddings de todos os chunks do acervo anotado a cada execução de `poetry run task test-ai`.
 - **Documentação:** seção sobre a validação da recuperação em `docs/arquitetura-engenharia.md`.
+- **Débitos registrados:** #22 (nome em maiúsculas sem anonimização), #23 (placar com entradas geradas por LLM), #24 (limite do roteamento por seção) e #25 (palavras hifenizadas em tabelas).

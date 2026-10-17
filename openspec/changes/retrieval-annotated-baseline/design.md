@@ -68,6 +68,8 @@ Alternativas: só a seção esperada (modelo A) não separa dois ramos da mesma 
 
 `normalize`, `expected_sections`, a extração com cache e a descoberta de gabaritos saem de `test_ingestion_sections.py` para `tests/fixtures/answer_keys.py`, que ganha a leitura do `*.retrieval.yaml` e os chunks anonimizados com cache. `test_ingestion_sections.py` passa a importar desse módulo, sem mudar o comportamento. A normalização ganha a remoção dos prefixos `[título]` no início de cada linha, porque um bloco com vizinhos unidos traz um prefixo por chunk.
 
+A normalização também trata como iguais as aspas retas e curvas (`"`, `“`, `”`, `'`, `‘`, `’`) e o hífen e os travessões (`-`, `‐`, `–`, `—`). O anotador copia os trechos de um leitor de PDF ou digita à mão, e o PDF usa a tipografia do editor. No microgrids, 10 trechos falharam na consistência só por aspas e travessões. Exigir a tipografia exata obrigaria o anotador a reproduzir o caractere do PDF sem mudar o que o trecho diz. A regra só deixa a comparação mais tolerante, então o teste de seções mantém o placar.
+
 ### Teste de consistência do gabarito, sem IA
 
 `tests/unit/services/test_retrieval_answer_keys.py`, na suíte padrão, parametrizado por gabarito. Tolerância zero, porque um gabarito errado distorce todas as métricas:
@@ -107,10 +109,12 @@ Alternativa: um teste por ramo, aprovado ou reprovado. Rejeitada pelo motivo da 
 
 - [Embeddings da OpenAI podem variar um pouco entre chamadas e trocar a ordem de blocos empatados] → O piso usa o menor de três valores medidos, arredondado para baixo.
 - [O `PGVector` do teste copia os parâmetros de `lumina/core/vectorstore.py` e pode divergir deles] → Um comentário no teste aponta o arquivo de produção. Extrair uma fábrica do `PGVector` em produção resolveria a duplicação, mas muda código de produção e fica fora desta mudança.
-- [O placar reflete o acervo anotado, de 1 a 4 documentos, com poucos ramos] → Cada documento ou ramo novo pode baixar uma métrica. A decisão segue a regra do piso: melhorar a recuperação ou baixar o piso numa mudança do OpenSpec, com a justificativa registrada.
+- [O placar reflete o acervo anotado, de 1 a 4 documentos, com poucos ramos] → Cada documento ou ramo novo pode baixar uma métrica. A decisão segue a regra do piso: melhorar a recuperação ou baixar o piso numa mudança do OpenSpec, com a justificativa registrada. Esta mudança já passou por isso: o primeiro placar veio de 1 documento com 5 ramos, e a árvore ampliada tem 3 documentos com 148 ramos. Os pisos refeitos ficam registrados no grupo 6 de `tasks.md`.
+- [Trechos de tabela com palavras hifenizadas (`net-‖works`, `mi- crogrids`) não casam com o texto extraído] → O anotador escolhe a parte do trecho que não quebra. A correção da extração fica na issue #25.
+- [O nome de autoria em maiúsculas passa pela anonimização e vira título de seção na capa] → O gabarito não anota esse rótulo. A correção fica na issue #22.
 - [A ingestão completa a cada `task test-ai` gera embeddings de todos os chunks e roda o Presidio em todo o acervo] → O custo é de centavos por execução. A fixture de sessão ingere cada PDF uma vez.
 - [O teste de consistência roda o Presidio na suíte padrão e exige o modelo `pt_core_news_lg`] → `test_metadata_anonymization.py` já roda o Presidio real na suíte padrão.
-- [Expansões e requisitos de seção fixados à mão medem um roteamento que a produção talvez não alcance com os valores gerados por LLM] → Fica fora desta mudança. Medir as entradas geradas por LLM pede uma issue própria.
+- [Expansões e requisitos de seção fixados à mão medem um roteamento que a produção talvez não alcance com os valores gerados por LLM] → Fica fora desta mudança, na issue #23. O limite de distância que hoje desliga o roteamento fica na issue #24.
 
 ## Migration Plan
 
