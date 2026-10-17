@@ -125,6 +125,10 @@ A recuperação de evidências decide quais trechos chegam ao avaliador de cada 
 
 **Gabarito.** `<nome>.retrieval.yaml` fica ao lado do PDF e do `<nome>.sections.yaml`. Ele guarda a árvore de critérios (tipificação, taxonomia e ramo) e, em cada ramo, os trechos que a recuperação precisa devolver: página, um trecho de até cerca de 150 caracteres copiado do PDF e, quando o trecho pertence a uma seção anotada, a seção. Expansões de consulta e requisito de seção entram como campos opcionais do ramo. O modelo comentado fica em `tests/fixtures/documents/retrieval_template.yaml`. A leitura dos dois gabaritos fica em `tests/fixtures/answer_keys.py`.
 
+**Comparação de texto.** Os dois testes comparam o trecho com o texto dos chunks depois de `normalize`: sem marcação Markdown e HTML, sem os prefixos `[título]`, com espaços juntos e sem diferença de caixa. Aspas curvas contam como retas e travessões contam como hífen, então o anotador pode digitar o trecho sem reproduzir a tipografia do PDF. Em tabelas, o extrator ainda mantém palavras partidas por hífen (`net-‖works`, issue #25): escolha a parte do trecho que não quebra.
+
+**Acervo atual.** Três documentos têm gabarito de recuperação: o anteprojeto, com a árvore de Validação de Ante-Projeto, e as duas revisões sistemáticas, com a árvore de Revisão Sistemática da Literatura.
+
 **Testes.**
 
 | Teste | Onde roda | Verifica | Tolerância |

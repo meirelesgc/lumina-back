@@ -59,7 +59,10 @@ research_proposal/
 
 Start from `retrieval_template.yaml`. Each passage names the page, a short
 excerpt copied from the PDF and, when the passage belongs to an annotated
-section, that section exactly as the `.sections.yaml` names it. Pick excerpts that tell a branch apart from its neighbours in the same
+section, that section exactly as the `.sections.yaml` names it. Straight and
+curly quotes compare as equal, and so do hyphens and dashes. Inside tables
+the extractor keeps words broken by a hyphen (`net-‖works`): pick the part of
+the excerpt that does not break. Pick excerpts that tell a branch apart from its neighbours in the same
 section, and leave personal names out: the retrieval only sees the
 anonymized text.
 
