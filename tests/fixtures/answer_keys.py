@@ -25,15 +25,19 @@ CHUNK_PREFIX = re.compile(r'^\[[^\]]*\]\s*', re.MULTILINE)
 HTML_TAG = re.compile(r'<[^>]+>')
 MARKDOWN_MARK = re.compile(r'[*_#`]')
 SPACE_BEFORE_PUNCTUATION = re.compile(r'\s+([:;,.!?])')
+TYPOGRAPHY = str.maketrans('“”‘’‐–—', '""\'\'---')
 
 
 def normalize(text: str) -> str:
     """
     Remove a marcação do pymupdf4llm, junta espaços e ignora caixa. O
     pymupdf4llm separa a pontuação que segue um negrito (`**Objetivo** :`),
-    então o espaço antes da pontuação também sai.
+    então o espaço antes da pontuação também sai. Aspas curvas viram retas e
+    travessões viram hífen, porque o anotador não reproduz a tipografia do
+    PDF.
     """
     text = MARKDOWN_MARK.sub('', HTML_TAG.sub(' ', text))
+    text = text.translate(TYPOGRAPHY)
     text = SPACE_BEFORE_PUNCTUATION.sub(r'\1', text)
     return ' '.join(text.split()).casefold()
 
