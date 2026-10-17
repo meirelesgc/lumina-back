@@ -171,47 +171,34 @@ POST /doc/{doc_id}/release
 1. **Background Task**: A rota enfileira `release_pipeline` via `BackgroundTasks` e retorna `201 Created` com status `QUEUED`.
 2. **Eventos WebSocket**: O worker publica atualizações de progresso no canal Redis `ws:broadcast`:
    * `creating_vectors`: Extração, seções, anonimização e gravação no PGVector;
-   * `evaluating`: Execução concorrente da avaliação dos critérios;
+   * `evaluating`: Seleção de seções e avaliação concorrente dos critérios;
    * `complete`: Conclusão e disponibilidade do relatório.
 3. **Snapshot Imutável**: Clona a árvore normativa ativa nas tabelas `Applied*` (`AppliedTypification`, `AppliedTaxonomy`, `AppliedBranch`, `AppliedSource`).
 
-### Recuperação de Evidências por Critério
-Implementada em `lumina/services/ai/stages/retrieval.py` (`retrieve_criteria_payload`). Para cada critério (`Branch`) da árvore:
+### Seleção de Seções por Critério
+Implementada em `lumina/services/ai/stages/outline.py` e `selection.py`. O contexto de cada critério (`Branch`) são seções inteiras do documento, escolhidas por um seletor a partir do sumário:
 
-1. **Montagem da query**: o título da seção (taxonomia) é triplicado para ancorar a similaridade semântica:
-   ```python
-   QUERY = """
-   SECTION: {section}
-   SECTION: {section}
-   SECTION: {section}
-   --- {branch_title}: {branch_description}
-   """
-   ```
-   Se o critério tiver **expansões de consulta** ativas (paráfrases geradas por LLM e persistidas por critério), cada expansão gera uma query adicional no mesmo formato.
-2. **Roteamento por seção (opcional)**: quando o requisito de seção do critério tem escopo `SPECIFIC_SECTION`, o sistema busca a seção esperada (`expected_section`) entre os resumos de seção indexados (veja "Resumos de Seção" em Embeddings & PGVector). Os escopos `ENTIRE_DOCUMENT` e `UNKNOWN` não ativam o roteamento. As até 2 seções com distância ≤ `0.25` passam a restringir a busca vetorial (`section_title $in [...]`). Se nenhuma atingir o limiar, a busca segue sem restrição de seção.
-3. **Busca híbrida**:
-   * *Densa*: uma busca vetorial no PGVector por query (original + expansões), executadas em paralelo;
-   * *Léxica*: full-text search do PostgreSQL (`plainto_tsquery('portuguese', ...)` ranqueado por `ts_rank`) sobre `{branch_title}: {branch_description}`. Não aplica o roteamento por seção.
+1. **Sumário**: `build_outline` agrupa os chunks anonimizados que a ingestão devolve por seção, na ordem de leitura. Cada seção recebe um id (`s01`, `s02`…), as páginas, os tokens estimados (caracteres ÷ 4) e os primeiros 200 caracteres do texto. `outline_markdown` gera o sumário em Markdown, indentado pelo caminho de títulos.
+2. **Escopo do critério**: o requisito de seção (`section_requirement`) decide o caminho. `ENTIRE_DOCUMENT` recebe todas as seções sem chamar o seletor. `SPECIFIC_SECTION`, `UNKNOWN` e critério sem requisito passam pelo seletor, que recebe o `expected_section` como dica.
+3. **Seletor** (`select_sections`, modelo rápido `gpt-6-luna`): em cada rodada, recebe o sumário, o critério e o texto das seções já lidas, e devolve uma saída estruturada (`SelectionStep`) com os ids que faltam ler, se o que leu basta e se o conteúdo não existe no documento. São no máximo 3 rodadas (`MAX_ROUNDS`). "Basta" e "não existe" só valem depois de ao menos uma leitura. Ids fora do sumário são ignorados e registrados. Uma saída fora do schema é repetida 2 vezes e depois cai no documento inteiro; o mesmo vale quando a primeira rodada não traz nenhum id válido.
+4. **Payload**: as seções escolhidas vão ao avaliador com os marcadores `[FONTE] chunk_id: {id}` de cada chunk, então as citações e o destaque no PDF funcionam como antes. Os critérios rodam em paralelo, limitados a 8 (`SELECTION_CONCURRENCY`), e o sumário vem antes do critério no prompt, para aproveitar o cache de prompt.
+5. **Conteúdo inexistente**: quando o seletor conclui que o conteúdo não existe, o critério recebe "não contempla", nota 0 e um parecer padrão (`NOT_FOUND_FEEDBACK`) com as seções inspecionadas, sem chamar o avaliador.
+6. **Registro**: cada veredito guarda a seleção em `AppliedBranch.context_selection` (escopo, resultado, seções, rodadas, tokens, modelo e falha, se houve). Com `DEBUG_INGESTION_AUDIT=True`, o sumário vai para `05_outline/<documento>.md` e a seleção de cada critério, com o contexto enviado e o veredito, para `06_selection/<documento>/<critério>.md`.
 
-   Todas as buscas são filtradas pelo arquivo do documento (`source`) e excluem os resumos de seção. As listas são fundidas por **Reciprocal Rank Fusion** (`RRF_K = 60`), com deduplicação por `chunk_id`, mantendo os **5 melhores** (`MAX_CHUNKS = 5`).
-4. **Reranking (não implementado)**: com `CROSS_ENCODER_RERANKING_ENABLED=true`, cada busca traz 25 candidatos (`RERANK_CANDIDATE_K`) para reordenação por cross-encoder. Hoje `rerank_chunks` retorna `None` e a flag vem desligada, então vale a ordem do RRF.
-5. **Expansão de vizinhos**: cada chunk selecionado é mesclado com os vizinhos da mesma seção e página (`chunk_index_in_section ± 1`), removendo o texto duplicado pelo overlap do splitter. Se a seção tiver até 4 chunks naquela página, todos eles entram. A expansão não atravessa a quebra de página: `chunk_index_in_section` recomeça em cada página, e a busca por vizinhos filtra por seção e página. Janelas idênticas são deduplicadas, e os retângulos (`rects`) de todos os chunks mesclados são preservados para as citações.
-6. **Formatação**: os blocos são ordenados por posição no documento e entregues à LLM agrupados por `## CONTEXTO DA SEÇÃO: {título}`, cada um identificado por `[FONTE] chunk_id: {id}`.
-
-Critérios sem nenhuma evidência recuperada não são enviados para avaliação.
+Todo critério da árvore recebe veredito. A ingestão continua gerando embeddings e resumos de seção para o chat; `retrieve_criteria_payload`, em `retrieval.py`, continua medido pelo placar de recuperação do acervo anotado.
 
 ### O Barema de Pontuação e Regras de Avaliação
 O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com base no seguinte barema de 0 a 10 pontos:
 
 | Pilar de Avaliação | Faixa de Pontos | Critério de Avaliação |
 | :--- | :---: | :--- |
-| **1. Evidência nos Trechos** | 0 a 2.5 | Há comprovação explícita e literal nos trechos recuperados do documento? |
+| **1. Evidência nas Seções** | 0 a 2.5 | Há comprovação explícita e literal nas seções enviadas do documento? |
 | **2. Aderência Normativa** | 0 a 2.5 | O texto do edital atende fielmente ao que a norma ou legislação especifica? |
 | **3. Qualidade e Clareza** | 0 a 2.5 | As exigências estão redigidas com clareza, sem ambiguidades ou termos vagos? |
 | **4. Suficiência Documental** | 0 a 2.5 | Há informações suficientes para que a regra seja cumprida e fiscalizada? |
 
 ### Diretrizes Inegociáveis da Avaliação:
-* **Fato sobre Opinião**: O modelo considera exclusivamente o que está escrito nos trechos fornecidos. Se a exigência não constar nos blocos recuperados, ela não é considerada atendida.
+* **Fato sobre Opinião**: O modelo considera exclusivamente o que está escrito nas seções enviadas. Se a exigência não constar nelas, ela não é considerada atendida.
 * **Citação Obrigatória de Chunks**: Cada afirmação deve obrigatoriamente referenciar o `chunk_id` de origem. É expressamente vedado inventar identificadores.
 * **Parecer Objetivo**: O campo `feedback` é curto e em Markdown (no máximo 4 itens, até 25 palavras por item), sem parágrafos longos, listas numeradas, emojis, saudação ou autoapresentação.
 * **Sugestões Apenas em Lacunas**: Critério atendido integralmente não recebe sugestão. Critério parcial ou não atendido recebe no máximo uma ação curta por lacuna identificada.

@@ -52,6 +52,11 @@ Em `tests/conftest.py`:
   esperados por ramo. `tests/unit/services/test_retrieval_answer_keys.py`
   confere o gabarito sem IA. `tests/ai/evaluation/retrieval/test_retrieval_baseline.py`
   mede a recuperação com embeddings reais e tem quatro pisos no próprio teste.
+- O gabarito de recuperação também traz `fulfilled` por ramo.
+  `tests/ai/evaluation/retrieval/test_outline_selection.py` mede o seletor de
+  seções e `tests/ai/evaluation/verdicts/test_verdict_accuracy.py` mede o
+  acerto do veredicto. Os testes com IA compartilham
+  `tests/ai/evaluation/support.py` e a fixture `indexed_vectorstore`.
 - O container de teste usa a imagem `pgvector/pgvector:pg16`, que tem a
   extensão `vector` para o `PGVector` do teste de recuperação.
 - Para comparar com o comportamento anterior a uma correção, rode o mesmo
@@ -80,4 +85,8 @@ poetry run pytest tests/unit/services/test_ingestion_sections.py -s
 
 ```bash
 poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai
+```
+
+```bash
+poetry run pytest tests/ai/evaluation/verdicts -s --run-ai -m ai
 ```

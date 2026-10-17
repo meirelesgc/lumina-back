@@ -147,6 +147,22 @@ O teste de avaliação ingere os PDFs anotados por `run_document_ingestion` e ch
 
 **Pisos.** Os quatro pisos (`MIN_EVIDENCE_RECALL`, `MIN_SECTION_PAGE_HIT_RATE`, `MIN_BRANCH_PRECISION`, `MIN_ROUTING_HIT_RATE`) ficam no teste de avaliação. Cada um recebe o menor valor de três execuções, arredondado para baixo na segunda casa decimal, e só sobe.
 
+### Validação da Seleção de Seções e dos Veredictos
+A avaliação usa a seleção de seções pelo sumário, e não mais a recuperação vetorial (`docs/ia-plataforma.md`, "Seleção de Seções por Critério"). Os mesmos gabaritos `<nome>.retrieval.yaml` medem a seleção e o veredicto. Cada ramo com evidência traz `fulfilled`: `true` só quando o documento atende o critério por inteiro; atendimento parcial é `false`; ramo com `evidence: []` é `false`.
+
+| Teste | Onde roda | Verifica | Tolerância |
+| :--- | :--- | :--- | :--- |
+| `tests/unit/services/test_retrieval_answer_keys.py` | Suíte padrão, sem IA | `fulfilled` booleano, presente nos ramos com evidência e nunca `true` num ramo vazio | Zero falhas, por documento |
+| `tests/ai/evaluation/retrieval/test_outline_selection.py` | `poetry run task test-ai` | Recall de trechos no contexto selecionado, acerto de inexistência (ramos vazios encerrados como "não existe") e segurança de inexistência (ramos com evidência que não foram encerrados assim) | Piso por métrica sobre o acervo |
+| `tests/ai/evaluation/verdicts/test_verdict_accuracy.py` | `poetry run task test-ai` | Acerto de `fulfilled` da avaliação contra o anotado, com matriz de confusão por documento | Piso sobre o acervo |
+| `tests/integration/test_release_pipeline.py` | Suíte padrão, modelos falsos | Todo critério recebe veredito, "não existe" não chama o avaliador e a seleção fica gravada | Zero falhas |
+
+Os testes com IA compartilham `tests/ai/evaluation/support.py` (base vetorial, ingestão, entrada do ramo e seleção por gabarito) e a fixture `indexed_vectorstore` de `tests/ai/evaluation/conftest.py`, que ingere o acervo uma vez por sessão. A seleção roda em memória sobre os chunks anonimizados, sem PGVector.
+
+**Pisos.** `MIN_SELECTION_RECALL`, `MIN_NOT_FOUND_HIT_RATE` e `MIN_NOT_FOUND_SAFETY` ficam no teste do seletor, e `MIN_FULFILLED_ACCURACY` no teste de veredictos, com a mesma regra dos outros pisos. Na troca, a recuperação vetorial tinha recall de 0,44 e acerto de `fulfilled` de 0,79 (mediana de três execuções); o seletor chegou a 0,87 e 0,86.
+
+**Depuração.** Com `DEBUG_INGESTION_AUDIT=True`, `05_outline/<documento>.md` mostra o sumário que o seletor recebeu e `06_selection/<documento>/<critério>.md` mostra cada rodada, o contexto enviado ao avaliador e o veredito.
+
 ---
 
 ## 3. Segurança e Privacidade por Padrão
