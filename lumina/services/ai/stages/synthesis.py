@@ -66,5 +66,5 @@ async def generate_release_synthesis(
     """
     prompt = generate_synthesis_prompt(simplified_args)
     desc_response = with_low_verbosity(model).invoke(prompt)
-    db_release.description = desc_response.content.strip()
+    db_release.description = desc_response.text.strip()
     await session.commit()

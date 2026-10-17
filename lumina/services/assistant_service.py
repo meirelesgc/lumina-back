@@ -90,7 +90,7 @@ async def chat_with_document(
 
     try:
         response = await model.ainvoke(messages)
-        return {'response': response.content}
+        return {'response': response.text}
     except Exception as e:
         raise HTTPException(
             status_code=500,

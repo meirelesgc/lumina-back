@@ -10,65 +10,27 @@ verificam a extração contra os gabaritos de `tests/fixtures/documents/`
   piso. Quem melhorar a detecção de títulos sobe o piso no mesmo commit.
 """
 
-import re
-from functools import cache
 from pathlib import Path
 
 import pytest
-import yaml
 
-from lumina.services.ai.stages.extraction import extract_pdf_chunks
-
-DOCUMENTS_DIR = Path(__file__).parents[2] / 'fixtures' / 'documents'
-ANSWER_KEYS = sorted(DOCUMENTS_DIR.rglob('*.sections.yaml'))
-ANSWER_KEY_SUFFIX = '.sections.yaml'
+from tests.fixtures.answer_keys import (
+    SECTIONS_KEYS,
+    chunk_text,
+    doc_id,
+    expected_sections,
+    extract,
+    normalize,
+    pdf_for,
+)
 
 MIN_SECTION_IDENTIFICATION_RATE = 1.0
 
-CHUNK_PREFIX = re.compile(r'^\[[^\]]*\]\s*')
-HTML_TAG = re.compile(r'<[^>]+>')
-MARKDOWN_MARK = re.compile(r'[*_#`]')
-SPACE_BEFORE_PUNCTUATION = re.compile(r'\s+([:;,.!?])')
 
-
-def normalize(text: str) -> str:
-    """
-    Remove a marcação do pymupdf4llm, junta espaços e ignora caixa. O
-    pymupdf4llm separa a pontuação que segue um negrito (`**Objetivo** :`),
-    então o espaço antes da pontuação também sai.
-    """
-    text = MARKDOWN_MARK.sub('', HTML_TAG.sub(' ', text))
-    text = SPACE_BEFORE_PUNCTUATION.sub(r'\1', text)
-    return ' '.join(text.split()).casefold()
-
-
-def expected_sections(answer_key: Path) -> list[dict]:
-    data = yaml.safe_load(answer_key.read_text(encoding='utf-8'))
-    sections = []
-    for section in data['sections']:
-        sections.append(section)
-        sections.extend(section.get('subsections', []))
-    return sections
-
-
-@cache
-def extract(answer_key: Path) -> list:
-    stem = answer_key.name.removesuffix(ANSWER_KEY_SUFFIX)
-    pdf = answer_key.with_name(f'{stem}.pdf')
-    chunks, *_ = extract_pdf_chunks(str(pdf), pdf.name)
-    return chunks
-
-
-def doc_id(answer_key: Path) -> str:
-    return str(answer_key.relative_to(DOCUMENTS_DIR))
-
-
-@pytest.mark.parametrize('answer_key', ANSWER_KEYS, ids=doc_id)
+@pytest.mark.parametrize('answer_key', SECTIONS_KEYS, ids=doc_id)
 def test_texto_de_cada_secao_anotada_chega_aos_chunks(answer_key):
-    chunks = extract(answer_key)
-    text = normalize(
-        ' '.join(CHUNK_PREFIX.sub('', c.page_content) for c in chunks)
-    )
+    chunks = extract(pdf_for(answer_key))
+    text = ' '.join(chunk_text(c.page_content) for c in chunks)
 
     missing = [
         section['title']
@@ -88,7 +50,7 @@ def identified_sections(answer_key: Path) -> tuple[int, int]:
     no caminho dos chunks das filhas.
     """
     first_page: dict[str, int] = {}
-    for chunk in extract(answer_key):
+    for chunk in extract(pdf_for(answer_key)):
         page = chunk.metadata['page'] + 1
         for title in chunk.metadata['section_path'].split(' > '):
             key = normalize(title)
@@ -103,7 +65,7 @@ def identified_sections(answer_key: Path) -> tuple[int, int]:
 
 
 def test_identificacao_de_secoes_atinge_o_piso():
-    scores = {doc_id(key): identified_sections(key) for key in ANSWER_KEYS}
+    scores = {doc_id(key): identified_sections(key) for key in SECTIONS_KEYS}
     hits = sum(hit for hit, _ in scores.values())
     total = sum(count for _, count in scores.values())
     report = '\n'.join(

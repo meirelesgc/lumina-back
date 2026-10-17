@@ -1,6 +1,7 @@
 import random
 from typing import Any
 
+from langchain_core.messages import BaseMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 
@@ -52,6 +53,12 @@ def get_evaluation_chain(model: Model):
 
 
 def _extract_raw_text(raw_resp: Any) -> str:
+    """
+    Texto da resposta do modelo. Modelos com raciocínio devolvem o conteúdo
+    como lista de blocos, e `AIMessage.text` junta os blocos de texto.
+    """
+    if isinstance(raw_resp, BaseMessage):
+        return raw_resp.text
     if hasattr(raw_resp, 'content'):
         return str(raw_resp.content)
     return str(raw_resp)
@@ -97,7 +104,8 @@ async def _execute_chain_batch(
 async def evaluate_criteria_batch(chain: Any, eval_args: list[dict]) -> None:
     """
     Avalia concorrentemente os ramos da árvore com retentativas e
-    isolamento de falhas de schema por critério.
+    isolamento de falhas de schema por critério. Itens com `skip_evaluation`
+    já trazem o veredito e não vão ao modelo.
     """
     last_exception = None
     can_decompose = (
@@ -105,15 +113,18 @@ async def evaluate_criteria_batch(chain: Any, eval_args: list[dict]) -> None:
         and isinstance(chain.steps, (list, tuple))
         and len(chain.steps) == CHAIN_STEPS_COUNT
     )
-    for item in eval_args:
+    pending = [item for item in eval_args if not item.get('skip_evaluation')]
+    if not pending:
+        return eval_args
+    for item in pending:
         item['style_instructions'] = select_evaluation_style()
 
     for _ in range(MAX_RETRIES):
         try:
             raw_responses, parser_step = await _execute_chain_batch(
-                chain, eval_args, can_decompose
+                chain, pending, can_decompose
             )
-            for item, raw_resp in zip(eval_args, raw_responses):
+            for item, raw_resp in zip(pending, raw_responses):
                 _process_eval_item(item, raw_resp, parser_step)
             return eval_args
         except Exception as e:

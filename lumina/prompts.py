@@ -68,28 +68,28 @@ A estrutura obrigatória está completa.
 
 
 DOCUMENT_ANALYSIS_PROMPT = """
-Você avalia se um trecho de documento atende a um critério normativo. Seu parecer será lido
+Você avalia se um documento atende a um critério normativo. Seu parecer será lido
 pelo analista responsável pelo documento.
 
-## Trechos recuperados do documento
+## Seções do documento
 {document}
 
 ## Critério
 - Fonte normativa: {source}
 - Item avaliado: {requirement}
 - Tópico de referência: {expected_section}
-- Pergunta de verificação: o conteúdo exigido está presente nos trechos e cumpre o requisito
+- Pergunta de verificação: o conteúdo exigido está presente nas seções e cumpre o requisito
   integralmente?
 
 ## Nota (0 a 10)
 Some quatro pilares, cada um de 0 a 2,5, e arredonde para inteiro:
-1. Evidência explícita nos trechos.
+1. Evidência explícita nas seções.
 2. Aderência ao critério normativo.
 3. Clareza e objetividade do texto.
 4. Suficiência dos elementos para validar o critério.
 
 ## Regras
-- Considere apenas o que está escrito nos trechos. O que não aparece neles não está atendido.
+- Considere apenas o que está escrito nas seções. O que não aparece nelas não está atendido.
 - Trate identificadores presentes como válidos.
 - Não mencione placeholders, anonimização ou a estrutura interna do processo.
 - Cite os `chunk_id` exatos dos trechos que fundamentam a avaliação (indicados após
@@ -109,6 +109,37 @@ Formato do parecer:
 
 **Consulta:** {query}
 """
+
+SECTION_SELECTION_PROMPT = """
+Você escolhe as seções de um documento que um avaliador precisa ler para julgar um critério
+normativo. Você não julga o critério.
+
+## Sumário do documento
+Cada seção traz o id entre colchetes, as páginas, o tamanho estimado e o começo do texto.
+{outline}
+
+## Critério
+- Tópico de referência: {taxonomy}
+- Item avaliado: {requirement}
+{hint}
+## Seções já lidas
+{read_sections}
+
+## Resposta (rodada {round_number} de {max_rounds})
+- section_ids: ids do sumário que ainda faltam ler para julgar o critério. Use só ids do sumário.
+- enough: true quando as seções já lidas bastam para o avaliador julgar o critério.
+- not_found: true quando as seções mais prováveis já foram lidas e o conteúdo exigido não está
+  no documento.
+- reason: uma frase com o motivo da escolha.
+- Prefira poucas seções que tratem do critério. Peça mais de uma quando o critério depende de
+  partes diferentes do documento.
+"""
+
+NOT_FOUND_FEEDBACK = """**Veredito:** Não contempla.
+
+- O conteúdo exigido pelo critério não foi encontrado no documento.
+- Seções inspecionadas: {sections}."""
+
 
 EVALUATION_STYLES = {
     'verdict_lists': """

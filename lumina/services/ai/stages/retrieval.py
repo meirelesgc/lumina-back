@@ -1,7 +1,6 @@
 import asyncio
 import difflib
 from typing import Any, List, Optional
-from uuid import UUID
 
 from langchain_core.documents import Document
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,10 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lumina import prompts as PROMPTS
 from lumina.core.dependencies import VStore
 from lumina.core.settings import Settings
-from lumina.models import DocumentRelease, Typification
+from lumina.models import DocumentRelease
 from lumina.schemas.branch import SectionRequirementScope
-from lumina.schemas.typification import TypificationList
 from lumina.services.ai.stages import reranking, vector_store_sql
+from lumina.services.ai.stages.criteria import (
+    criteria_fields,
+    merge_presidio_mappings,
+)
 from lumina.services.ai.stages.sections import SECTION_SUMMARY_RECORD_TYPE
 
 SETTINGS = Settings()
@@ -52,21 +54,6 @@ def get_section_filter(base_filter: dict) -> dict:
         'source': base_filter['source'],
         'record_type': SECTION_SUMMARY_RECORD_TYPE,
     }
-
-
-def iter_typifications(eval_args: dict):
-    for typification in eval_args.get('typifications') or []:
-        yield typification
-
-
-def iter_taxonomies(typification: dict):
-    for taxonomy in typification.get('taxonomies') or []:
-        yield taxonomy
-
-
-def iter_branches(taxonomy: dict):
-    for branch in taxonomy.get('branches') or []:
-        yield branch
 
 
 def format_context(branch_or_chunks: Any) -> str:
@@ -370,94 +357,14 @@ async def retrieve_criteria_payload(  # noqa: PLR0913, PLR0917, PLR0914
     ]
 
     # 4. Consolidação de Metadados PII (Presidio Mapping)
-    full_mapping: dict = {}
-    for d in evidence_chunks:
-        current_mapping = d.metadata.get('presidio_mapping') or {}
-        for category, entities in current_mapping.items():
-            if category not in full_mapping:
-                full_mapping[category] = {}
-            full_mapping[category].update(entities)
-
-    formatted_doc = format_context(evidence_chunks)
-    sources = taxonomy.get('sources') or []
-    source_names = ', '.join([
-        s.get('name', '')
-        if isinstance(s, dict)
-        else getattr(s, 'name', str(s))
-        for s in sources
-    ])
-
     return {
-        'id': branch.get('id'),
-        'document': formatted_doc,
-        'source': source_names,
-        'requirement': (
-            f'{b_title}: {b_desc}'
-            if b_title and b_desc
-            else (b_title or b_desc)
-        ),
-        'expected_section': taxonomy_title,
-        'query': f"Analise o item '{b_title}' na seção '{taxonomy_title}'.",
-        'presidio_mapping': full_mapping,
+        **criteria_fields(taxonomy, branch),
+        'document': format_context(evidence_chunks),
+        'presidio_mapping': merge_presidio_mappings(evidence_chunks),
         '_chunks': evidence_chunks,
         'retriever_query': query,
         'retrieved_chunks': retrieved_chunk_ids,
     }
-
-
-async def retrieve_evaluation_payloads(  # noqa: PLR0913, PLR0917
-    session: AsyncSession,
-    vstore: VStore,
-    tree: list[Typification],
-    db_release: DocumentRelease,
-    expansions_by_branch: Optional[dict[UUID, tuple[int, List[str]]]] = None,
-    section_requirements_by_branch: Optional[dict[UUID, dict]] = None,
-) -> list[dict]:
-    """
-    Percorre a árvore normativa em uma única passada, recuperando
-    evidências diretamente para cada critério normativo, com roteamento
-    por seção (Fase 2), fusão de consultas e busca híbrida (Fases 1 e 4),
-    reranking opcional (Fase 5) e expansão de vizinhos (Fase 3).
-    """
-    payload = {'typifications': tree}
-    eval_args = TypificationList.model_validate(payload).model_dump(
-        mode='json'
-    )
-    base_filter = get_base_filter(db_release)
-    expansions_by_branch = expansions_by_branch or {}
-    section_requirements_by_branch = section_requirements_by_branch or {}
-    payloads = []
-
-    for typification in iter_typifications(eval_args):
-        for taxonomy in iter_taxonomies(typification):
-            for branch in iter_branches(taxonomy):
-                branch_id = branch.get('id')
-                branch_uuid = UUID(branch_id) if branch_id else None
-                version, expansions = expansions_by_branch.get(
-                    branch_uuid, (None, [])
-                )
-                section_requirement = section_requirements_by_branch.get(
-                    branch_uuid
-                )
-                crit_payload = await retrieve_criteria_payload(
-                    session,
-                    vstore,
-                    taxonomy,
-                    branch,
-                    base_filter,
-                    expansions=expansions,
-                    section_requirement=section_requirement,
-                )
-                crit_payload['expansion_generation_version'] = version
-                crit_payload['section_requirement_version'] = (
-                    section_requirement.get('generation_version')
-                    if section_requirement
-                    else None
-                )
-                if crit_payload['document']:
-                    payloads.append(crit_payload)
-
-    return payloads
 
 
 def build_chunk_prompts(chunks: List[Document]) -> List[str]:

@@ -1,0 +1,838 @@
+# Expected retrieval for smart_technologies_microgrids_renewable_energy_slr.pdf
+# Page numbers follow the "N of 20" header of the PDF (1 = first page).
+# Section titles follow the headings of the PDF.
+
+tree:
+  - typification: Revisão Sistemática da Literatura
+    taxonomies:
+      - title: Avaliação da Qualidade Metodológica
+        branches:
+          - id: ferramenta-avaliacao-definida
+            title: Ferramenta de avaliação definida
+            description: >-
+              Foi utilizada uma ferramenta reconhecida para avaliação da qualidade metodológica dos estudos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: metodo-avaliacao-descrito
+            title: Método de avaliação descrito
+            description: >-
+              O método de aplicação da ferramenta de avaliação foi descrito?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: resultado-avaliacao-reportado
+            title: Resultado da avaliação reportado
+            description: >-
+              Os resultados da avaliação metodológica foram apresentados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            evidence: []
+
+      - title: Avaliação de Viés
+        branches:
+          - id: impacto-vies-discutido
+            title: Impacto do viés discutido
+            description: >-
+              O impacto dos vieses identificados foi discutido nos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            evidence: []
+
+          - id: vies-publicacao-avaliado
+            title: Viés de publicação avaliado
+            description: >-
+              O risco de viés de publicação foi analisado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.4. Assessment of Study Bias Risk
+            expansions:
+              - publication bias
+              - funnel plot or selective reporting analysis
+            evidence: []
+
+          - id: vies-estudos-avaliado
+            title: Viés dos estudos avaliado
+            description: >-
+              O risco de viés dos estudos incluídos foi avaliado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.4. Assessment of Study Bias Risk
+            fulfilled: false
+            evidence:
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'In the second phase, the analysis is observational, aiming to identify the smart technologies and their applicability in the microgrid scenario'
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'which may bring elements of influence into the study.'
+
+      - title: Critérios de Elegibilidade
+        branches:
+          - id: criterios-exclusao-definidos
+            title: Critérios de exclusão definidos
+            description: >-
+              Os critérios de exclusão dos estudos foram definidos de forma objetiva e reproduzível?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'All articles with the absence of smart technologies implemented in the study were excluded.'
+
+          - id: criterios-inclusao-definidos
+            title: Critérios de inclusão definidos
+            description: >-
+              Os critérios de inclusão dos estudos foram definidos de forma objetiva e reproduzível?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'Inclusion in the final database was made considering only the articles that provided information directing towards the use of smart technologies'
+
+          - id: desfechos-definidos
+            title: Desfechos definidos
+            description: >-
+              Os resultados ou desfechos de interesse foram claramente especificados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'aiming to investigate the smart technology used in the study, "desc_technique," for a brief description of the technology used'
+
+          - id: intervencao-definida
+            title: Intervenção definida
+            description: >-
+              As intervenções ou fenômenos analisados foram adequadamente definidos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'microgrids presents a favorable scenario for utilizing renewable energy sources [9,10], with smart technologies acting as a key enabler'
+
+          - id: periodo-definido
+            title: Período definido
+            description: >-
+              O período da pesquisa foi definido e justificado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
+            evidence:
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'The starting point for this milestone was considered to be the year 2015, represented by the COP21, which brought the Paris Agreement [13]'
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'requiring coordination among countries in their priorities and ambitions regarding climate actions [14], with the temporal scope ending in the year 2023.'
+
+          - id: populacao-definida
+            title: População definida
+            description: >-
+              A população ou contexto de interesse foi claramente delimitado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'investigating the application of smart technologies in the production of renewable energy for microgrids (REM)'
+
+      - title: Discussão
+        branches:
+          - id: achados-interpretados
+            title: Achados interpretados
+            description: >-
+              Os resultados foram interpretados à luz da literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            fulfilled: true
+            evidence:
+              - section: 4.2. Question 2 (Q2)
+                page: 7
+                contains: 'At this point, the focus is on the hybrid power generation, because of the specific characteristics such as the intermittency of the energy flow'
+
+          - id: implicacoes-praticas-discutidas
+            title: Implicações práticas discutidas
+            description: >-
+              Foram apresentadas implicações práticas, teóricas ou gerenciais dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            fulfilled: true
+            evidence:
+              - section: 4.2. Question 2 (Q2)
+                page: 7
+                contains: 'The literature highlights that these technologies allow the adjustment of strategies to better meet local needs, which can result in reduced operational'
+
+          - id: limitacoes-revisao
+            title: Limitações da Revisão
+            description: >-
+              As limitações metodológicas da própria revisão foram reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            evidence: []
+
+          - id: limitacoes-discutidas
+            title: Limitações discutidas
+            description: >-
+              As limitações dos estudos incluídos foram discutidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            fulfilled: true
+            evidence:
+              - section: 4.2. Question 2 (Q2)
+                page: 8
+                contains: 'However, the literature also highlights that the quality of forecasts may be inaccurate or limited, mainly due to the conditions and data provided'
+              - section: 4.5. Question 5 (Q5)
+                page: 11
+                contains: 'This impossibility of acquiring data represents a limitation, since such data are not always available [47,53,56-58,117,125].'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futura
+            description: >-
+              Foram identificadas oportunidades e direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 5. Conclusions
+            fulfilled: true
+            evidence:
+              - section: 5. Conclusions
+                page: 12
+                contains: 'Such characteristics would support the expansion of the scope of the models presented, thus allowing new research to focus on this scope.'
+
+      - title: Estratégia de Busca
+        branches:
+          - id: bases-dados-justificadas
+            title: Bases de dados justificadas
+            description: >-
+              As bases de dados utilizadas foram justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: descritores-definidos
+            title: Descritores definidos
+            description: >-
+              Os descritores utilizados na busca foram explicitamente informados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: true
+            evidence:
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'The descriptors from the Institute of Electrical and Electronics Engineers (IEEE) Taxonomy [15] were adopted'
+
+          - id: operadores-booleanos-utilizados
+            title: Operadores booleanos utilizados
+            description: >-
+              Os operadores booleanos foram empregados adequadamente na construção das buscas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: true
+            evidence:
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'AND ("Intelligent systems" OR "Machine learning"'
+
+          - id: palavras-chave-definidas
+            title: Palavras-chave definidas
+            description: >-
+              As palavras-chave utilizadas refletem adequadamente a questão de pesquisa?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: true
+            evidence:
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'which align with the areas of knowledge of the study (Table 2), with the search conducted on 23 January 2024.'
+
+          - id: sinonimos-identificados
+            title: Sinônimos identificados
+            description: >-
+              Foram utilizados sinônimos e termos relacionados para ampliar a identificação dos estudos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            expansions:
+              - synonyms and related terms used in the search string
+              - alternative search terms combined with OR
+            fulfilled: true
+            evidence:
+              - section: 2. Materials and Methods
+                page: 3
+                contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero")'
+              - section: 2. Materials and Methods
+                page: 3
+                contains: 'OR "Smart grids")'
+
+          - id: strings-apresentadas
+            title: Strings apresentadas
+            description: >-
+              A string de busca completa foi apresentada para possibilitar a replicação do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: true
+            evidence:
+              - section: 2. Materials and Methods
+                page: 3
+                contains: '("Renewable Energy Sources" OR "Sustainable Development" OR "Net zero")'
+
+      - title: Extração de Dados
+        branches:
+          - id: formulario-extracao-definido
+            title: Formulário de extração definido
+            description: >-
+              O instrumento utilizado para extração dos dados foi descrito?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'reading the abstract and inserting the metadata "technique_used," aiming to investigate the smart technology used in the study'
+
+          - id: processo-documentado
+            title: Processo documentado
+            description: >-
+              O processo de extração foi conduzido de forma padronizada entre os revisores?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'concatenated with the number identifying the criterion (Table 3), according to the flow of the analysis process (Figure 1).'
+
+          - id: variaveis-descritas
+            title: Variáveis descritas
+            description: >-
+              As variáveis coletadas foram claramente definidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: false
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'inserting the metadata "technique_used," aiming to investigate the smart technology used in the study, "desc_technique," for a brief description'
+
+      - title: Fluxo PRISMA
+        branches:
+          - id: etapa-elegibilidade-apresentada
+            title: Etapa de elegibilidade apresentada
+            description: >-
+              Os motivos de exclusão na fase de elegibilidade foram apresentados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 5
+                contains: 'excluded 115 publications that were outside the scope of implementation or applied techniques not considered as smart systems within the scope'
+
+          - id: etapa-identificacao-apresentada
+            title: Etapa de identificação apresentada
+            description: >-
+              O número de registros identificados foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 5
+                contains: 'in a total of 56 duplicate observations, which were unified, totaling 271 observations with 30 variables in the database after the merge.'
+
+          - id: etapa-inclusao-apresentada
+            title: Etapa de inclusão apresentada
+            description: >-
+              O número final de estudos incluídos foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 5
+                contains: 'The applied methodology resulted in a total of 156 publications that used smart technologies focused on the descriptors'
+
+          - id: etapa-selecao-apresentada
+            title: Etapa de seleção apresentada
+            description: >-
+              O número de estudos removidos durante a triagem foi apresentado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 5
+                contains: 'excluded 115 publications that were outside the scope of implementation or applied techniques not considered as smart systems within the scope'
+
+          - id: fluxograma-prisma-disponivel
+            title: Fluxograma PRISMA disponível
+            description: >-
+              O fluxograma PRISMA foi apresentado de forma completa e consistente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 6
+                contains: 'Figure 3. Process flow for handling the articles found in the database.'
+
+      - title: Fontes de Informação
+        branches:
+          - id: bases-cientificas-identificadas
+            title: Bases científicas identificadas
+            description: >-
+              As bases de dados selecionadas são adequadas ao tema investigado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: true
+            evidence:
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'The online databases Scopus and Web of Science were limited to the publication of original articles'
+
+          - id: datas-busca-informadas
+            title: Datas da busca informadas
+            description: >-
+              O período coberto pelas buscas foi explicitamente informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
+            evidence:
+              - section: 2.1. Eligibility Criteria and Data Collection
+                page: 3
+                contains: 'with the search conducted on 23 January 2024.'
+
+          - id: fontes-complementares-utilizadas
+            title: Fontes complementares utilizadas
+            description: >-
+              Foram consultadas fontes complementares?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: literatura-cinzenta-considerada
+            title: Literatura cinzenta considerada
+            description: >-
+              Foram consideradas fontes de literatura cinzenta quando pertinentes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: protocolos-pesquisados
+            title: Protocolos pesquisados
+            description: >-
+              Foram consultadas bases de protocolos de revisões sistemáticas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+      - title: Fundamentação da Revisão
+        branches:
+          - id: lacuna-cientifica
+            title: Demonstração de lacuna científica
+            description: >-
+              O estudo demonstra explicitamente uma lacuna de conhecimento que justifique a revisão?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'this study aims to fill gaps in the literature by investigating the application of smart technologies in the production of renewable energy'
+
+          - id: estado-da-arte
+            title: Estado da arte
+            description: >-
+              O autor apresenta evidências de que conhece o estado atual da literatura sobre o tema?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'the use of microgrids presents a favorable scenario for utilizing renewable energy sources [9,10], with smart technologies acting as a key enabler'
+
+          - id: justificativa-revisao
+            title: Existência de justificativa da revisão
+            description: >-
+              O manuscrito apresenta uma justificativa clara para a realização da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'the identification of smart technologies with the potential to support microgrid projects serves as a relevant reference for understanding the integration'
+
+          - id: revisoes-semelhantes-identificadas
+            title: Revisões semelhantes identificadas
+            description: >-
+              Foram identificadas e discutidas revisões sistemáticas previamente publicadas ou em andamento?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence: []
+
+      - title: Pergunta da Pesquisa
+        branches:
+          - id: coerencia-questao-objetivo
+            title: Coerência entre questão e objetivo
+            description: >-
+              Existe coerência entre a questão de pesquisa, os objetivos e os procedimentos metodológicos adotados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: 'aims to fill gaps in the literature by investigating the application of smart technologies in the production of renewable energy for microgrids (REM)'
+
+          - id: questao-pesquisa-explicita
+            title: Questão de pesquisa explícita
+            description: >-
+              A Revisão Sistemática apresenta uma questão de pesquisa claramente formulada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            fulfilled: true
+            evidence:
+              - section: 1. Introduction
+                page: 2
+                contains: '(Q01) What smart technologies are used in the renewable energy sector for microgrid applications?'
+              - section: 1. Introduction
+                page: 2
+                contains: '(Q02) How have smart technologies been used in microgeneration?'
+
+          - id: uso-abordagem-5w
+            title: Uso da abordagem 5W
+            description: >-
+              A questão de pesquisa contempla adequadamente os elementos What, Why, Where, When e Who?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence: []
+
+          - id: uso-pico-pico-spider-spice
+            title: Uso de PICO/PICo/SPIDER/SPICE
+            description: >-
+              Os elementos População, Intervenção, Comparação e Desfecho foram explicitamente definidos quando aplicáveis?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 1. Introduction
+            evidence: []
+
+      - title: Protocolo da Revisão
+        branches:
+          - id: alteracoes-documentadas
+            title: Alterações documentadas
+            description: >-
+              Quando há alterações realizadas durante a revisão, elas foram documentadas e justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: estrutura-aderente-prisma
+            title: Estrutura aderente ao PRISMA
+            description: >-
+              O protocolo contempla os itens recomendados pelo PRISMA-P ou pelo PRISMA 2020?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: false
+            evidence:
+              - section: 2. Materials and Methods
+                page: 2
+                contains: 'developed using the Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA) method [12] with all items being available'
+
+          - id: protocolo-utilizado
+            title: Protocolo utilizado
+            description: >-
+              O estudo apresenta um protocolo formal para condução da Revisão Sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: false
+            evidence:
+              - section: 2. Materials and Methods
+                page: 2
+                contains: 'The methodological approach of the systematic literature review (SLR) was developed using the Preferred Reporting Items for Systematic Reviews'
+
+      - title: Registro do Protocolo
+        branches:
+          - id: numero-registro-informado
+            title: Número de registro informado
+            description: >-
+              O número de registro do protocolo foi informado?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: plataforma-identificada
+            title: Plataforma identificada
+            description: >-
+              O protocolo foi registrado em uma plataforma reconhecida?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: protocolo-disponivel-publicamente
+            title: Protocolo disponível publicamente
+            description: >-
+              O protocolo está disponível para consulta pública?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+      - title: Resultados
+        branches:
+          - id: caracterizacao-estudos
+            title: Caracterização dos estudos
+            description: >-
+              Os estudos incluídos foram adequadamente caracterizados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: false
+            evidence:
+              - section: 3. Results
+                page: 5
+                contains: 'Table 4. Demonstration of smart techniques used in the microgrid scenario.'
+
+          - id: resultados-consolidados
+            title: Resultados consolidados
+            description: >-
+              Os resultados consolidados respondem às questões de pesquisa propostas?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 4. Discussion
+                page: 6
+                contains: 'Based on the results obtained from the elements explored in the methodological process, it forms the foundation to answer the questions proposed'
+              - section: 4.1. Question 1 (Q1)
+                page: 6
+                contains: 'two main approaches predominated-artificial neural networks (ANN) and multi-agent systems (MAS)-standing out as the most recurrent'
+
+          - id: resultados-individuais-apresentados
+            title: Resultados individuais apresentados
+            description: >-
+              Os resultados individuais dos estudos foram apresentados de forma transparente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: false
+            evidence:
+              - section: 4.3. Question 3 (Q3)
+                page: 9
+                contains: 'More recent studies, in 2023, used experimental data from Austria, Belgium, and Slovenia with a one-hour sampling interval for total electricity'
+
+      - title: Seleção dos Estudos
+        branches:
+          - id: criterio-desempate
+            title: Critério de desempate
+            description: >-
+              Existe procedimento documentado para resolução de divergências entre revisores?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: exclusoes-justificadas
+            title: Exclusões justificadas
+            description: >-
+              As exclusões realizadas durante a seleção foram justificadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
+            evidence:
+              - section: 3.1. Selection of Studies and Flow of the Methodological Process
+                page: 5
+                contains: 'excluded 115 publications that were outside the scope of implementation or applied techniques not considered as smart systems within the scope'
+
+          - id: revisores-independentes
+            title: Revisores independentes
+            description: >-
+              A seleção dos estudos foi realizada por revisores independentes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            evidence: []
+
+          - id: triagem-inicial
+            title: Triagem inicial
+            description: >-
+              Os títulos, resumos e palavras-chave foram avaliados conforme critérios previamente definidos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2.1. Eligibility Criteria and Data Collection
+            fulfilled: true
+            evidence:
+              - section: 2.3. Selection Process
+                page: 4
+                contains: 'The eligibility of the articles was carried out using the content available in their respective abstracts.'
+
+      - title: Síntese dos Dados
+        branches:
+          - id: heterogeneidade-discutida
+            title: Heterogeneidade discutida
+            description: >-
+              A heterogeneidade entre os estudos foi avaliada e discutida?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 4. Discussion
+            fulfilled: true
+            evidence:
+              - section: 4.2. Question 2 (Q2)
+                page: 8
+                contains: 'The literature highlights questions about its ability to generalize to different regions, especially in places with different climatic conditions'
+
+          - id: metodo-sintese-descrito
+            title: Método de síntese descrito
+            description: >-
+              O método utilizado para síntese dos dados foi claramente descrito?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 2. Materials and Methods
+            fulfilled: false
+            evidence:
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 4
+                contains: 'The study was developed in two phases. The first phase was conditioned to an automated process, utilizing the computational environment'
+              - section: 2.4. Assessment of Study Bias Risk
+                page: 5
+                contains: 'In the second phase, the analysis is observational, aiming to identify the smart technologies and their applicability in the microgrid scenario'
+
+          - id: sintese-qualitativa-realizada
+            title: Síntese qualitativa realizada
+            description: >-
+              Os resultados qualitativos foram organizados de forma sistemática e transparente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 4. Discussion
+                page: 6
+                contains: 'Based on the results obtained from the elements explored in the methodological process, it forms the foundation to answer the questions proposed'
+              - section: 4.1. Question 1 (Q1)
+                page: 6
+                contains: 'Regarding the smart technologies used in the production of renewable energy for applications in microgrids, two main approaches predominated'
+
+          - id: sintese-quantitativa-realizada
+            title: Síntese quantitativa realizada
+            description: >-
+              Quando aplicável, os dados foram sintetizados por métodos estatísticos apropriados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 3. Results
+            fulfilled: true
+            evidence:
+              - section: 2.2. Automation Tools Used in the Bibliometric Data Collection and Analysis Process
+                page: 3
+                contains: 'enabled statistical and computational treatment for bibliometric and scientometric research [16].'
+              - section: 3. Results
+                page: 5
+                contains: 'Table 4. Demonstration of smart techniques used in the microgrid scenario.'
+
+      - title: Transparência Científica
+        branches:
+          - id: conflitos-interesse-declarados
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse foram explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Declarations
+            fulfilled: true
+            evidence:
+              - section: Conflicts of Interest
+                page: 13
+                contains: 'The authors declare no conflicts of interest.'
+
+          - id: dados-disponiveis
+            title: Dados disponíveis
+            description: >-
+              Os dados utilizados na revisão estão disponíveis para consulta ou reutilização?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Data Availability Statement
+            fulfilled: true
+            evidence:
+              - section: Data Availability Statement
+                page: 12
+                contains: 'https://github.com/toniarb/STAMP-RES.'
+
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento foram declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Funding
+            fulfilled: true
+            evidence:
+              - section: Funding
+                page: 12
+                contains: 'This research was supported by National Council for Scientific and Technological Development-CNPq, Grant numbers 309032/2022-9 and 303123/2023-0'
+
+          - id: materiais-suplementares-disponiveis
+            title: Materiais suplementares disponíveis
+            description: >-
+              O conjunto de informações apresentado permite reproduzir a revisão sistemática?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: Supplementary Materials
+            fulfilled: true
+            evidence:
+              - section: Supplementary Materials
+                page: 12
+                contains: 'Supplementary File S1: Details about the PRISMA checklist.'

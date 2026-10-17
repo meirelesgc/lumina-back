@@ -11,6 +11,10 @@ from lumina.services.ai.stages.chunking import (
     documents_to_dict,
     documents_to_markdown_preview,
 )
+from lumina.services.ai.stages.outline import (
+    OutlineSection,
+    outline_markdown,
+)
 from lumina.services.ai.stages.positioning import (
     char_range_to_blocks,
     refine_block_to_line_rects,
@@ -234,3 +238,82 @@ def export_ingestion_audit(  # noqa: PLR0913, PLR0917
     logger.info(
         'Auditoria de ingestao concluida para %s em %s', stem, base_dir
     )
+
+
+def yes_no(value: Any) -> str:
+    return 'sim' if value else 'não'
+
+
+def selection_markdown(payload: Dict[str, Any]) -> str:
+    """
+    Relatório legível da seleção de seções de um critério: rodadas do
+    seletor, contexto enviado ao avaliador e veredito.
+    """
+    selection = payload.get('context_selection') or {}
+    lines = [
+        f'# {payload.get("requirement", "")}',
+        '',
+        f'- Ramo: `{payload.get("id")}`',
+        f'- Escopo: {selection.get("scope")}',
+        f'- Resultado: {selection.get("outcome")}',
+        f'- Seções enviadas: {", ".join(selection.get("section_ids", []))}',
+        f'- Tokens enviados: ~{selection.get("tokens", 0)}',
+        f'- Modelo do seletor: {selection.get("model")}',
+    ]
+    if selection.get('error'):
+        lines.append(f'- Falha: {selection["error"]}')
+    for number, step in enumerate(selection.get('rounds', []), start=1):
+        lines.extend([
+            '',
+            f'## Rodada {number}',
+            '',
+            f'- Pedidas: {", ".join(step["requested"]) or "nenhuma"}',
+            f'- Inválidas: {", ".join(step["invalid"]) or "nenhuma"}',
+            f'- Basta: {yes_no(step["enough"])}',
+            f'- Não existe: {yes_no(step["not_found"])}',
+            f'- Motivo: {step["reason"]}',
+        ])
+    lines.extend([
+        '',
+        '## Contexto enviado ao avaliador',
+        '',
+        payload.get('document') or 'Avaliador não chamado.',
+        '',
+        '## Veredito',
+        '',
+        f'- Contempla: {yes_no(payload.get("fulfilled"))}',
+        f'- Nota: {payload.get("score")}',
+        '',
+        str(payload.get('feedback') or ''),
+    ])
+    return '\n'.join(lines) + '\n'
+
+
+def export_selection_audit(
+    source_name: str,
+    outline: List[OutlineSection],
+    payloads: List[Dict[str, Any]],
+    audit_base_dir: Optional[Path] = None,
+) -> None:
+    """
+    Grava o sumário do documento (`05_outline/`) e a seleção de cada
+    critério (`06_selection/`) caso DEBUG_INGESTION_AUDIT esteja ativo.
+    """
+    if not SETTINGS.DEBUG_INGESTION_AUDIT:
+        return
+
+    base_dir = Path(audit_base_dir or SETTINGS.INGESTION_AUDIT_DIRECTORY)
+    stem = Path(source_name).stem
+    outline_dir = base_dir / '05_outline'
+    selection_dir = base_dir / '06_selection' / stem
+    outline_dir.mkdir(parents=True, exist_ok=True)
+    selection_dir.mkdir(parents=True, exist_ok=True)
+
+    (outline_dir / f'{stem}.md').write_text(
+        outline_markdown(outline) + '\n', encoding='utf-8'
+    )
+    for payload in payloads:
+        (selection_dir / f'{payload.get("id")}.md').write_text(
+            selection_markdown(payload), encoding='utf-8'
+        )
+    logger.info('Auditoria de seleção concluída para %s em %s', stem, base_dir)

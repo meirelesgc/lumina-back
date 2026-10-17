@@ -1032,6 +1032,9 @@ class AppliedBranch:
     section_requirement_version: Mapped[Optional[int]] = mapped_column(
         nullable=True, default=None
     )
+    context_selection: Mapped[Optional[dict]] = mapped_column(
+        JSONB, nullable=True, default=None
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()

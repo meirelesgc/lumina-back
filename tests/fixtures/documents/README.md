@@ -43,3 +43,45 @@ test can reuse it.
 The floor only goes up: whoever improves the heuristic raises it in the same
 commit. See "Validação da Ingestão sobre Acervo Anotado" in
 `docs/arquitetura-engenharia.md`.
+
+## Expected retrieval
+
+Next to a PDF that has its `<name>.sections.yaml`, a `<name>.retrieval.yaml`
+file holds a check tree and, for each branch, the passages the retrieval must
+return for it:
+
+```
+research_proposal/
+├── estrategias_teste_software_llm_judge_hitl.pdf
+├── estrategias_teste_software_llm_judge_hitl.sections.yaml
+└── estrategias_teste_software_llm_judge_hitl.retrieval.yaml
+```
+
+Start from `retrieval_template.yaml`. Each passage names the page, a short
+excerpt copied from the PDF and, when the passage belongs to an annotated
+section, that section exactly as the `.sections.yaml` names it. Straight and
+curly quotes compare as equal, and so do hyphens and dashes. Inside tables
+the extractor keeps words broken by a hyphen (`net-‖works`): pick the part of
+the excerpt that does not break. Pick excerpts that tell a branch apart from its neighbours in the same
+section, and leave personal names out: the retrieval only sees the
+anonymized text.
+
+Each branch with evidence also carries `fulfilled`, the expected verdict:
+`true` only when the document meets the branch in full. A partial answer is
+`false`, and a branch with `evidence: []` is `false`.
+
+Check the file without spending tokens:
+
+```
+poetry run pytest tests/unit/services/test_retrieval_answer_keys.py
+```
+
+Then measure the retrieval against it with real embeddings:
+
+```
+poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai
+```
+
+The second test prints the score per branch and fails below the floors kept
+in the test. See "Validação da Recuperação sobre Acervo Anotado" in
+`docs/arquitetura-engenharia.md`.

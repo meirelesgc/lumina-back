@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-# Modelo de visão usado na comparação entre template e artigo. gpt-5.4-mini só aceita "temperature" quando reasoning.effort='none' (API rejeita a combinação com esforço > none); por isso usamos os dois no mínimo.
-VISION_MODEL = 'gpt-5.4-mini'
+from lumina.core.llm import FAST_MODEL, FAST_REASONING_EFFORT, FAST_TEMPERATURE
+
+# Modelo de visão usado na comparação entre template e artigo: o uso rápido de lumina/core/llm.py. Com reasoning.effort='none' o modelo aceita "temperature", e os dois no mínimo aumentam o determinismo.
+VISION_MODEL = FAST_MODEL
 VISION_DPI = 150
 VISION_DETAIL = 'high'
-VISION_REASONING_EFFORT = 'none'
-VISION_TEMPERATURE = 0
+VISION_REASONING_EFFORT = FAST_REASONING_EFFORT
+VISION_TEMPERATURE = FAST_TEMPERATURE
 
 # Conversão de unidades (ponto tipográfico -> milímetro).
 PT_TO_MM = 25.4 / 72.0
