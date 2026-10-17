@@ -6,6 +6,7 @@ from pathlib import Path
 
 from openai import OpenAI
 
+from lumina.core.llm import MAIN_MODEL, MAIN_REASONING_EFFORT
 from lumina.features.abnt_check.schemas import (
     EXPECTED_BRANCH_COUNT,
     AbntAiBody,
@@ -17,10 +18,9 @@ from lumina.features.abnt_check.schemas import (
 )
 from lumina.features.prompt_loader import render_prompt
 
-# gpt-5.4 aceita temperature só com reasoning.effort='none'; os dois no mínimo aumentam o determinismo e evitam o erro 400 da API.
-AI_MODEL = 'gpt-5.4'
-REASONING_EFFORT = 'none'
-TEMPERATURE = 0
+# Uso médio de lumina/core/llm.py. O modelo recusa "temperature" (erro 400 da API), então o parâmetro não é enviado.
+AI_MODEL = MAIN_MODEL
+REASONING_EFFORT = MAIN_REASONING_EFFORT
 PROMPT_TEMPLATE = 'prompt_abnt.jinja2'
 AUDIT_INSTRUCTION = (
     'Audite este documento ramo a ramo, na ordem da taxonomia das instruções. '
@@ -58,7 +58,6 @@ def request_criteria(article_path: str) -> list[AbntCriterionItem]:
         input=build_input(article_id),
         text_format=AbntAiBody,
         reasoning={'effort': REASONING_EFFORT},
-        temperature=TEMPERATURE,
     )
     body = response.output_parsed
     if body is None:

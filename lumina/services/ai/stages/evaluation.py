@@ -1,6 +1,7 @@
 import random
 from typing import Any
 
+from langchain_core.messages import BaseMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 
@@ -52,6 +53,12 @@ def get_evaluation_chain(model: Model):
 
 
 def _extract_raw_text(raw_resp: Any) -> str:
+    """
+    Texto da resposta do modelo. Modelos com raciocínio devolvem o conteúdo
+    como lista de blocos, e `AIMessage.text` junta os blocos de texto.
+    """
+    if isinstance(raw_resp, BaseMessage):
+        return raw_resp.text
     if hasattr(raw_resp, 'content'):
         return str(raw_resp.content)
     return str(raw_resp)
