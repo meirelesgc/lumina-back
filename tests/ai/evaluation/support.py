@@ -98,3 +98,23 @@ async def select_answer_key(
         for taxonomy, branch in expected_branches(retrieval_key)
     ])
     return outline, list(pairs)
+
+
+def usage_report(usage: dict[str, dict], label: str = 'Consumo') -> list[str]:
+    """
+    Consumo por modelo coletado por `get_usage_metadata_callback`: tokens de
+    entrada (e quantos vieram do cache), de saída e de raciocínio, que a
+    OpenAI cobra como saída.
+    """
+    lines = [label]
+    for model, data in sorted(usage.items()):
+        cached = (data.get('input_token_details') or {}).get('cache_read', 0)
+        reasoning = (data.get('output_token_details') or {}).get(
+            'reasoning', 0
+        )
+        lines.append(
+            f'  {model}: entrada {data["input_tokens"]} '
+            f'(cache {cached}) | saída {data["output_tokens"]} '
+            f'(raciocínio {reasoning})'
+        )
+    return lines

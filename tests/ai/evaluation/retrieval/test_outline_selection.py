@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 import pytest
 import pytest_asyncio
+from langchain_core.callbacks import get_usage_metadata_callback
 
 from lumina.services.ai.stages.outline import OutlineSection
 from lumina.services.ai.stages.selection import (
@@ -29,7 +30,7 @@ from lumina.services.ai.stages.selection import (
     SelectionOutcome,
     get_selector_model,
 )
-from tests.ai.evaluation.support import select_answer_key
+from tests.ai.evaluation.support import select_answer_key, usage_report
 from tests.fixtures.answer_keys import (
     RETRIEVAL_KEYS,
     chunk_text,
@@ -95,13 +96,15 @@ async def select_document(
 
 
 @pytest_asyncio.fixture(scope='session', loop_scope='session')
-async def selections() -> dict[str, DocumentSelection]:
+async def selections() -> tuple[dict[str, DocumentSelection], dict]:
     model = get_selector_model()
     semaphore = asyncio.Semaphore(SELECTION_CONCURRENCY)
-    return {
-        doc_id(key): await select_document(key, model, semaphore)
-        for key in RETRIEVAL_KEYS
-    }
+    with get_usage_metadata_callback() as usage:
+        results = {
+            doc_id(key): await select_document(key, model, semaphore)
+            for key in RETRIEVAL_KEYS
+        }
+    return results, usage.usage_metadata
 
 
 def branch_report(result: BranchSelection) -> str:
@@ -135,7 +138,8 @@ def rate(hits: int, total: int) -> float | None:
 
 
 async def test_selecao_de_secoes_atinge_os_pisos(selections):
-    branches = [b for doc in selections.values() for b in doc.branches]
+    results, usage = selections
+    branches = [b for doc in results.values() for b in doc.branches]
     with_evidence = [b for b in branches if b.branch['evidence']]
     empty = [b for b in branches if not b.branch['evidence']]
 
@@ -158,7 +162,7 @@ async def test_selecao_de_secoes_atinge_os_pisos(selections):
     }
 
     lines = []
-    for name, doc in selections.items():
+    for name, doc in results.items():
         lines.extend(document_report(name, doc))
     lines.append('Total')
     below = []
@@ -174,6 +178,7 @@ async def test_selecao_de_secoes_atinge_os_pisos(selections):
             below.append(metric)
     wrong = [b.branch['id'] for b in with_evidence if b.not_found]
     lines.append(f'  Inexistência com evidência anotada: {wrong or "nenhuma"}')
+    lines.extend(usage_report(usage))
     report = '\n'.join(lines)
     print(f'\nSeleção de seções sobre o acervo anotado\n{report}')
 
