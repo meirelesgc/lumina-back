@@ -14,10 +14,10 @@ FAST_MODEL = 'gpt-6-luna'
 FAST_REASONING_EFFORT = 'none'
 FAST_TEMPERATURE = 0
 
-# Uso médio e equilibrado: avaliação, síntese, chat e verificação ABNT. O
-# gpt-6.1-sol recusa "temperature" (erro 400), então o parâmetro não é
-# enviado.
-MAIN_MODEL = 'gpt-6.1-sol'
+# Uso médio e equilibrado: avaliação, síntese, chat e verificação ABNT. Com
+# reasoning.effort='medium' o modelo recusa "temperature" (erro 400), então
+# o parâmetro não é enviado.
+MAIN_MODEL = 'gpt-6-luna'
 MAIN_REASONING_EFFORT = 'medium'
 
 model = ChatOpenAI(
