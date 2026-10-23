@@ -27,7 +27,9 @@ def extract_raw_markdown_and_pages(  # noqa: PLR0914
     Retorna (full_markdown, page_map, null_bytes, ws_ops, doc_fitz).
     """
     doc = fitz.open(full_path)
-    page_chunks = pymupdf4llm.to_markdown(full_path, page_chunks=True)
+    page_chunks = pymupdf4llm.to_markdown(
+        full_path, page_chunks=True, use_ocr=False
+    )
     page_sizes = [
         {
             'width': p.rect.width,
