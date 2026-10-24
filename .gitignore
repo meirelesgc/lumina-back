@@ -195,3 +195,6 @@ pyrightconfig.json
 # Generated using ignr.py - github.com/Antrikshy/ignr.py
 
 database.db
+
+# Licenças das fontes do design system
+!lumina/assets/design-system/assets/fonts/*.txt
