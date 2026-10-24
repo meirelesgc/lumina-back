@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="841.89" height="595.276" viewBox="0 0 841.89 595.276" role="img" aria-label="Elementos gráficos LUMINA"><defs><clipPath id="clip-0">
+<path clip-rule="nonzero" d="M 0.457031 0 L 841.324219 0 L 841.324219 594.554688 L 0.457031 594.554688 Z M 0.457031 0 "/>
+</clipPath><clipPath id="clip-1">
+<path clip-rule="nonzero" d="M 653 0 L 841.324219 0 L 841.324219 98 L 653 98 Z M 653 0 "/>
+</clipPath><clipPath id="clip-2">
+<path clip-rule="nonzero" d="M 626 97 L 841.324219 97 L 841.324219 223 L 626 223 Z M 626 97 "/>
+</clipPath><clipPath id="clip-3">
+<path clip-rule="nonzero" d="M 0.457031 0 L 841.324219 0 L 841.324219 594.554688 L 0.457031 594.554688 Z M 0.457031 0 "/>
+</clipPath><clipPath id="clip-4">
+<path clip-rule="nonzero" d="M 473 304 L 841.324219 304 L 841.324219 594.554688 L 473 594.554688 Z M 473 304 "/>
+</clipPath><clipPath id="clip-5">
+<path clip-rule="nonzero" d="M 0.457031 0 L 438 0 L 438 594.554688 L 0.457031 594.554688 Z M 0.457031 0 "/>
+</clipPath><clipPath id="clip-6">
+<path clip-rule="nonzero" d="M 71 366 L 468 366 L 468 594.554688 L 71 594.554688 Z M 71 366 "/>
+</clipPath></defs>
+<g clip-path="url(#clip-3)">
+<path fill-rule="nonzero" fill="rgb(97.299194%, 34.498596%, 3.898621%)" fill-opacity="1" d="M 542.914062 847.316406 C 542.914062 383.941406 697.371094 229.484375 1160.746094 229.484375 C 697.371094 229.484375 542.914062 75.027344 542.914062 -388.347656 C 542.914062 75.027344 388.457031 229.484375 -74.917969 229.484375 C 388.457031 229.484375 542.914062 383.941406 542.914062 847.316406 "/>
+</g>
+</svg>

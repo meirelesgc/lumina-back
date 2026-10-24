@@ -1,0 +1,140 @@
+/* LUMINA — layout de PDF para relatórios (A4 retrato)
+   Requer tokens/tokens.css e css/base.css. Renderizado com Chromium (Playwright). */
+
+/* ---------- Página ---------- */
+/* Texto do trilho lateral: troque aqui o nome do documento (ou sobrescreva no HTML, em <style>:root{...}) */
+:root { --titulo-doc: "LUMINA relatório"; }
+
+@page {
+  size: A4;
+  margin: 20mm 16mm 20mm 34mm;
+
+  background: #efefef;
+
+  /* Trilho lateral (assinatura do guia): retângulo vertical de contorno fino,
+     castelo da Fiocruz no topo e o título do documento lido de baixo para cima. */
+  @left-middle {
+    content: var(--titulo-doc);
+    writing-mode: sideways-lr;
+    box-sizing: border-box;
+    width: 11mm;
+    height: 100%;
+    margin: 0 13mm 0 10mm;              /* trilho a 10 mm da borda, 11 mm de largura */
+    border: .25mm solid #f8580a;
+    border-radius: 2mm;
+    background: url("../assets/logos/fiocruz-castelo-laranja.svg") no-repeat center 3mm / 5mm auto;
+    font-family: "Lexend", Arial, sans-serif;
+    font-weight: 300;
+    font-size: 7pt;
+    letter-spacing: .02em;
+    color: #b04406;
+    text-align: center;
+  }
+
+  /* Número de página no estilo do guia (001, 002...), dentro da base do trilho */
+  @left-bottom {
+    content: "0" counter(page, decimal-leading-zero);
+    font-family: "Lexend", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 7pt;
+    color: #f8580a;
+    vertical-align: bottom;
+    text-align: center;
+    margin: 0 13mm 4mm 10mm;
+  }
+}
+
+/* Capa e contracapa: página sem margens, sem trilho nem número */
+@page capa {
+  margin: 0;
+  background: #f8580a;
+  @left-middle { content: none; }
+  @left-bottom { content: none; }
+}
+.capa { page: capa; }
+
+/* ---------- Capa ---------- */
+.capa {
+  position: relative;
+  width: 210mm; height: 297mm;
+  background: var(--lumina-laranja);
+  color: var(--lumina-claro);
+  overflow: hidden;
+  break-after: page;
+  z-index: 5;          /* cobre o trilho fixo */
+}
+.capa__grade { position: absolute; inset: 0; width: 100%; height: 100%; }
+.capa__marca { position: absolute; left: 24mm; top: 26mm; width: 62mm; }
+.capa__titulo {
+  position: absolute; left: 24mm; right: 24mm; bottom: 78mm;
+}
+.capa__titulo h1 {
+  color: var(--lumina-claro);
+  font-size: 54pt; line-height: 1; margin: 0 0 6mm; font-weight: 600;
+}
+.capa__titulo p { font-size: 16pt; font-weight: 300; line-height: 1.3; margin: 0; max-width: 140mm; }
+.capa__titulo p strong { font-weight: 700; }
+.capa__rodape {
+  position: absolute; left: 24mm; right: 24mm; bottom: 22mm;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  font-size: 8.5pt; font-weight: 300; line-height: 1.5;
+}
+.capa__rodape strong { font-weight: 700; display: block; }
+.capa__fiocruz { height: 9mm; }
+
+/* ---------- Conteúdo ---------- */
+.secao { break-before: page; }
+.secao:first-of-type { break-before: auto; }
+.secao__numero {
+  font-family: var(--fonte-corpo); font-weight: 800; font-size: 9pt;
+  color: var(--lumina-teal-texto); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 2mm; display: block;
+}
+.secao > h1 { font-size: 34pt; margin-bottom: var(--esp-4); }
+
+.lead { font-size: 13pt; font-weight: 300; line-height: 1.45; color: var(--lumina-tinta); margin-bottom: var(--esp-5); }
+.lead strong { font-weight: 700; color: var(--lumina-laranja-texto); }
+
+/* Grade de indicadores */
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: var(--esp-4) 0; }
+.kpi { border-radius: var(--raio-lg); padding: 5mm 5mm 4.5mm; break-inside: avoid; }
+.kpi__valor { font-family: var(--fonte-titulo); font-weight: 600; font-size: 30pt; line-height: 1; display: block; }
+.kpi__rotulo { font-size: 8pt; font-weight: 400; margin-top: 2mm; display: block; line-height: 1.35; }
+.kpi--laranja { background: var(--lumina-laranja); color: var(--lumina-claro); }
+.kpi--teal { background: var(--lumina-teal); color: var(--lumina-claro); }
+.kpi--ouro { background: var(--lumina-ouro); color: var(--lumina-tinta); }
+.kpi--claro { background: var(--lumina-papel); color: var(--lumina-tinta); }
+.kpi--claro .kpi__valor { color: var(--lumina-laranja); }
+
+/* Colunas e figuras */
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+figure { margin: var(--esp-4) 0; break-inside: avoid; }
+figure img, figure svg { max-width: 100%; display: block; border-radius: var(--raio-md); }
+figcaption { font-size: 8pt; color: var(--lumina-cinza-4); margin-top: 2mm; }
+
+/* Gráfico de barras simples em HTML/CSS (sem biblioteca) */
+.barras { display: grid; gap: 2.5mm; margin: var(--esp-3) 0; }
+.barra { display: grid; grid-template-columns: 34mm 1fr 14mm; align-items: center; gap: 3mm; font-size: 8.5pt; }
+.barra__trilho { height: 5mm; background: rgba(0,0,0,.07); border-radius: 999px; overflow: hidden; }
+.barra__preenchimento { height: 100%; background: var(--lumina-laranja); border-radius: 999px; }
+.barra:nth-child(3n+2) .barra__preenchimento { background: var(--lumina-teal); }
+.barra:nth-child(3n+3) .barra__preenchimento { background: var(--lumina-ouro); }
+.barra__valor { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Sumário */
+.sumario { list-style: none; padding: 0; margin: var(--esp-4) 0; counter-reset: sec; }
+.sumario li { counter-increment: sec; display: flex; align-items: baseline; gap: 3mm; padding: 2.5mm 0; border-bottom: var(--linha-fina) solid var(--cor-borda); font-size: 11pt; }
+.sumario li::before { content: counter(sec, decimal-leading-zero); font-weight: 800; font-size: 8pt; color: var(--lumina-teal-texto); width: 8mm; }
+.sumario a { color: inherit; text-decoration: none; flex: 1; }
+/* Chromium não suporta target-counter(); para páginas no sumário, escreva o número à mão ou use <span class="pg"> */
+.sumario .pg { font-weight: 600; color: var(--lumina-laranja-texto); font-variant-numeric: tabular-nums; }
+
+/* Contracapa */
+.contracapa {
+  page: capa;
+  position: relative; width: 210mm; height: 297mm; overflow: hidden; break-before: page;
+  background: var(--lumina-laranja); color: var(--lumina-claro); z-index: 5;
+}
+.contracapa__marca { position: absolute; left: 50%; top: 50%; width: 80mm; transform: translate(-50%, -60%); }
+.contracapa__site { position: absolute; left: 0; right: 0; bottom: 26mm; text-align: center; font-size: 11pt; font-weight: 300; }
+.contracapa__site strong { font-weight: 700; }

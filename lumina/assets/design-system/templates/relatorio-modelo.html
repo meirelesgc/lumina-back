@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório LUMINA — Modelo</title>
+  <link rel="stylesheet" href="../tokens/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/report.css">
+  <style>
+    /* Texto vertical do trilho lateral (aparece em todas as páginas internas) */
+    :root { --titulo-doc: "LUMINA relatório — Modelo"; }
+  </style>
+</head>
+<body>
+
+
+  <!-- ===================== CAPA ===================== -->
+  <section class="capa">
+    <img class="capa__grade" src="../assets/elements/grade-cruz-capa.svg" alt=""
+         style="object-fit: cover; object-position: right top;">
+    <img class="capa__marca" src="../assets/logos/lumina-fiocruz-claro.svg" alt="LUMINA — Fiocruz">
+    <div class="capa__titulo">
+      <h1>Título do<br>relatório</h1>
+      <p>Subtítulo ou frase de apoio em uma ou duas linhas, com <strong>destaque</strong> em uma palavra.</p>
+    </div>
+    <div class="capa__rodape">
+      <div>
+        <strong>Nome do setor ou projeto</strong>
+        Outubro de 2026
+      </div>
+      <div style="text-align:right">
+        <strong>Versão 1.0</strong>
+        lumina.fiocruz.br
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SUMÁRIO ===================== -->
+  <section class="secao">
+    <h1>Sumário</h1>
+    <ol class="sumario">
+      <li><a href="#resumo">Resumo executivo</a></li>
+      <li><a href="#resultados">Resultados</a></li>
+      <li><a href="#proximos">Próximos passos</a></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 01 RESUMO ===================== -->
+  <section class="secao" id="resumo">
+    <span class="secao__numero">01</span>
+    <h1>Resumo executivo</h1>
+    <p class="lead">Escreva aqui a mensagem principal do relatório em duas ou três frases. Use <strong>negrito</strong> só nas ideias-chave.</p>
+
+    <div class="kpis">
+      <div class="kpi kpi--laranja"><span class="kpi__valor">1.248</span><span class="kpi__rotulo">Indicador principal do período</span></div>
+      <div class="kpi kpi--teal"><span class="kpi__valor">87%</span><span class="kpi__rotulo">Meta atingida no trimestre</span></div>
+      <div class="kpi kpi--ouro"><span class="kpi__valor">+12%</span><span class="kpi__rotulo">Variação em relação ao ano anterior</span></div>
+    </div>
+
+    <h2>Principais pontos</h2>
+    <ul>
+      <li>Primeiro ponto, em uma frase curta e direta.</li>
+      <li>Segundo ponto, com o dado mais importante.</li>
+      <li>Terceiro ponto, com a decisão ou recomendação.</li>
+    </ul>
+
+    <div class="chamada chamada--laranja">
+      <p><strong>Atenção.</strong> Use a chamada para um alerta, uma decisão pendente ou uma citação importante.</p>
+    </div>
+  </section>
+
+  <!-- ===================== 02 RESULTADOS ===================== -->
+  <section class="secao" id="resultados">
+    <span class="secao__numero">02</span>
+    <h1>Resultados</h1>
+    <p>Texto de abertura da seção. Parágrafos usam Lexend Light a 10 pt, com entrelinha de 1,55 para leitura confortável em papel e na tela.</p>
+
+    <h2>Comparação por área</h2>
+    <div class="barras">
+      <div class="barra"><span>Área A</span><div class="barra__trilho"><div class="barra__preenchimento" style="width:86%"></div></div><span class="barra__valor">86%</span></div>
+      <div class="barra"><span>Área B</span><div class="barra__trilho"><div class="barra__preenchimento" style="width:64%"></div></div><span class="barra__valor">64%</span></div>
+      <div class="barra"><span>Área C</span><div class="barra__trilho"><div class="barra__preenchimento" style="width:47%"></div></div><span class="barra__valor">47%</span></div>
+      <div class="barra"><span>Área D</span><div class="barra__trilho"><div class="barra__preenchimento" style="width:31%"></div></div><span class="barra__valor">31%</span></div>
+    </div>
+    <p class="legenda">Figura 1 — Descreva o que o gráfico mostra e cite a fonte dos dados.</p>
+
+    <h2>Tabela de dados</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Responsável</th><th class="num">Previsto</th><th class="num">Realizado</th></tr></thead>
+      <tbody>
+        <tr><td>Primeira linha</td><td>Equipe 1</td><td class="num">120</td><td class="num">134</td></tr>
+        <tr><td>Segunda linha</td><td>Equipe 2</td><td class="num">80</td><td class="num">71</td></tr>
+        <tr><td>Terceira linha</td><td>Equipe 3</td><td class="num">200</td><td class="num">214</td></tr>
+        <tr><td>Quarta linha</td><td>Equipe 1</td><td class="num">45</td><td class="num">52</td></tr>
+      </tbody>
+      <caption>Tabela 1 — Descrição curta da tabela.</caption>
+    </table>
+  </section>
+
+  <!-- ===================== 03 PRÓXIMOS PASSOS ===================== -->
+  <section class="secao" id="proximos">
+    <span class="secao__numero">03</span>
+    <h1>Próximos passos</h1>
+    <div class="duas-colunas">
+      <div class="cartao">
+        <h3>Curto prazo</h3>
+        <ul><li>Ação 1</li><li>Ação 2</li><li>Ação 3</li></ul>
+      </div>
+      <div class="cartao cartao--contorno">
+        <h3>Médio prazo</h3>
+        <ul><li>Ação 4</li><li>Ação 5</li><li>Ação 6</li></ul>
+      </div>
+    </div>
+
+    <figure>
+      <img src="../assets/elements/composicao-elementos.svg" alt="Composição de formas gráficas da marca" style="height:60mm; width:100%; object-fit:cover;">
+      <figcaption>Figura 2 — Os elementos gráficos podem ilustrar aberturas de seção e páginas de destaque.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== CONTRACAPA ===================== -->
+  <section class="contracapa">
+    <img class="capa__grade" src="../assets/elements/grade-cruz-capa.svg" alt=""
+         style="object-fit: cover; object-position: left bottom; position:absolute; inset:0; width:100%; height:100%;">
+    <img class="contracapa__marca" src="../assets/logos/lumina-fiocruz-claro.svg" alt="LUMINA — Fiocruz">
+    <p class="contracapa__site">Transforme <strong>processos</strong> em resultados<br>lumina.fiocruz.br</p>
+  </section>
+
+</body>
+</html>

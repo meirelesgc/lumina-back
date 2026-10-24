@@ -1,0 +1,58 @@
+/* LUMINA — design tokens (CSS custom properties)
+   Fonte da verdade: tokens.json. Mantenha os dois em sincronia. */
+
+@font-face { font-family: "Lexend"; font-weight: 300; font-style: normal; font-display: swap; src: url("../assets/fonts/lexend-latin-300-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-weight: 400; font-style: normal; font-display: swap; src: url("../assets/fonts/lexend-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-weight: 600; font-style: normal; font-display: swap; src: url("../assets/fonts/lexend-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/lexend-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-weight: 800; font-style: normal; font-display: swap; src: url("../assets/fonts/lexend-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 500; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-700-normal.woff2") format("woff2"); }
+
+:root {
+  /* Cores da marca (guia) */
+  --lumina-laranja: #f8580a;
+  --lumina-ouro: #d9ae21;
+  --lumina-teal: #0e90a0;
+  --lumina-claro: #efefef;
+
+  /* Tons de apoio (guia) */
+  --lumina-laranja-claro: #f77948;
+  --lumina-ouro-escuro: #b58d1d;
+  --lumina-teal-escuro: #0b6970;
+
+  /* Monocromático (guia) */
+  --lumina-cinza-1: #b2b2b2;
+  --lumina-cinza-2: #9d9d9c;
+  --lumina-cinza-3: #878787;
+  --lumina-cinza-4: #706f6f;
+
+  /* Derivados (não constam no guia) */
+  --lumina-tinta: #2b2b2b;
+  --lumina-laranja-texto: #b04406;
+  --lumina-teal-texto: #0b6970;
+  --lumina-papel: #ffffff;
+  --lumina-linha: #d6d6d6;
+
+  /* Papéis semânticos */
+  --cor-fundo: var(--lumina-claro);
+  --cor-superficie: var(--lumina-papel);
+  --cor-texto: var(--lumina-tinta);
+  --cor-titulo: var(--lumina-laranja);
+  --cor-destaque: var(--lumina-laranja);
+  --cor-link: var(--lumina-teal-texto);
+  --cor-borda: var(--lumina-linha);
+
+  /* Tipografia */
+  --fonte-titulo: "Barlow", "Arial Narrow", Arial, sans-serif;
+  --fonte-corpo: "Lexend", Arial, sans-serif;
+  --lh-titulo: 1.05;
+  --lh-corpo: 1.55;
+
+  /* Espaço, raios, linhas */
+  --esp-1: 2mm; --esp-2: 4mm; --esp-3: 6mm; --esp-4: 8mm; --esp-5: 12mm; --esp-6: 16mm; --esp-7: 24mm;
+  --raio-sm: 2mm; --raio-md: 4mm; --raio-lg: 8mm; --raio-xl: 14mm;
+  --linha-fina: 0.25mm;
+  --linha-normal: 0.4mm;
+}

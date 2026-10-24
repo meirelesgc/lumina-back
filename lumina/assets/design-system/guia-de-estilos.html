@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUMINA — Guia de estilos</title>
+  <link rel="stylesheet" href="tokens/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body { font-size: 16px; }
+    .pagina { max-width: 1080px; margin: 0 auto; padding: 48px 24px 96px; }
+    .topo { background: var(--lumina-laranja); color: var(--lumina-claro); border-radius: 0 0 40px 40px; padding: 56px 24px 48px; }
+    .topo__in { max-width: 1080px; margin: 0 auto; }
+    .topo img { width: 260px; max-width: 70%; display: block; margin-bottom: 28px; }
+    .topo p { font-size: 22px; margin: 0; }
+    h1 { font-size: 56px; } h2 { font-size: 36px; margin-top: 72px; } h3 { font-size: 22px; }
+    p, li { font-size: 16px; }
+    .grade { display: grid; gap: 16px; }
+    .cores { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    .amostra { border-radius: 28px; padding: 20px; min-height: 150px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 14px; }
+    .amostra b { font-size: 16px; font-weight: 600; }
+    .amostra code { font-family: var(--fonte-corpo); font-weight: 300; }
+    .amostra--contorno { border: 1px solid var(--lumina-laranja); }
+    .logos { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .logo-cx { border-radius: 28px; padding: 28px; display: flex; align-items: center; justify-content: center; min-height: 140px; }
+    .logo-cx img { max-width: 100%; max-height: 90px; }
+    .logo-cx--laranja { background: var(--lumina-laranja); } .logo-cx--claro { background: #fff; } .logo-cx--teal { background: var(--lumina-teal); }
+    .logo-cx--ouro { background: var(--lumina-ouro); }
+    .icones { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    .icones img { width: 96px; height: 96px; }
+    .tipo { background: #fff; border-radius: 28px; padding: 28px; }
+    .tipo .grande { font-size: 96px; line-height: 1; color: var(--lumina-laranja); margin: 8px 0 12px; }
+    .elementos img { width: 100%; border-radius: 28px; display: block; }
+    code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+    pre { background: #fff; border-radius: 20px; padding: 20px; overflow: auto; }
+    .regras { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 720px) { .regras { grid-template-columns: 1fr; } h1 { font-size: 40px; } }
+    .sim { border-left: 6px solid var(--lumina-teal); } .nao { border-left: 6px solid var(--lumina-laranja); }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="topo__in">
+      <img src="assets/logos/lumina-fiocruz-claro.svg" alt="LUMINA — Fiocruz">
+      <p class="frase">Guia de estilos — Transforme <strong>processos</strong> em resultados</p>
+    </div>
+  </header>
+
+  <main class="pagina">
+    <p>Esta página mostra todos os elementos visuais da marca. A explicação das regras está no <code>DESIGN.md</code>; os valores, em <code>tokens/</code>.</p>
+
+    <h2>Cores</h2>
+    <div class="grade cores">
+      <div class="amostra" style="background:#f8580a;color:#efefef"><b>Laranja</b><code>#f8580a</code></div>
+      <div class="amostra" style="background:#d9ae21;color:#2b2b2b"><b>Ouro</b><code>#d9ae21</code></div>
+      <div class="amostra" style="background:#0e90a0;color:#efefef"><b>Teal</b><code>#0e90a0</code></div>
+      <div class="amostra amostra--contorno" style="background:#efefef;color:#b04406"><b>Claro</b><code>#efefef</code></div>
+    </div>
+    <h3>Tons de apoio (formas gráficas)</h3>
+    <div class="grade cores">
+      <div class="amostra" style="background:#f77948;color:#2b2b2b"><b>Laranja claro</b><code>#f77948</code></div>
+      <div class="amostra" style="background:#b58d1d;color:#efefef"><b>Ouro escuro</b><code>#b58d1d</code></div>
+      <div class="amostra" style="background:#0b6970;color:#efefef"><b>Teal escuro</b><code>#0b6970</code></div>
+    </div>
+    <h3>Derivados para texto e interface (não constam no guia original)</h3>
+    <div class="grade cores">
+      <div class="amostra" style="background:#2b2b2b;color:#efefef"><b>Tinta</b><code>#2b2b2b</code> texto corrido</div>
+      <div class="amostra" style="background:#b04406;color:#efefef"><b>Laranja texto</b><code>#b04406</code> texto laranja pequeno</div>
+      <div class="amostra amostra--contorno" style="background:#fff;color:#2b2b2b"><b>Papel</b><code>#ffffff</code> cartões</div>
+    </div>
+    <h3>Monocromático (logo em cinza)</h3>
+    <div class="grade cores">
+      <div class="amostra" style="background:#b2b2b2"><b>Cinza 1</b><code>#b2b2b2</code></div>
+      <div class="amostra" style="background:#9d9d9c"><b>Cinza 2</b><code>#9d9d9c</code></div>
+      <div class="amostra" style="background:#878787;color:#fff"><b>Cinza 3</b><code>#878787</code></div>
+      <div class="amostra" style="background:#706f6f;color:#fff"><b>Cinza 4</b><code>#706f6f</code></div>
+    </div>
+
+    <h2>Tipografia</h2>
+    <div class="grade" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div class="tipo">
+        <span class="tag">Títulos</span>
+        <p style="margin-top:12px">Barlow Medium · SemiBold</p>
+        <div class="grande" style="font-family:var(--fonte-titulo);font-weight:600">ABCabc</div>
+        <p style="font-family:var(--fonte-titulo);font-weight:600;font-size:26px;line-height:1.1;margin:0">abcdefghijklmn<br>opqrstuvwxyz</p>
+      </div>
+      <div class="tipo">
+        <span class="tag">Corpo, parágrafos, web</span>
+        <p style="margin-top:12px">Lexend Light · Regular · SemiBold · Bold · ExtraBold</p>
+        <div class="grande" style="font-weight:400">ABCabc</div>
+        <p style="font-weight:300;font-size:24px;line-height:1.1;margin:0">abcdefghijklmn<br>opqrstuvwxyz</p>
+      </div>
+    </div>
+    <h3 style="margin-top:32px">Hierarquia</h3>
+    <div class="tipo">
+      <h1 style="margin:0">Título 1 — Barlow 600</h1>
+      <h2 style="margin-top:12px">Título 2 — Barlow 600</h2>
+      <h3>Título 3 — Barlow 600 em teal</h3>
+      <p>Texto corrido em Lexend Light. A ciência, em sua essência, é o ato de iluminar o desconhecido. Use <strong>negrito</strong> apenas para as ideias-chave e <a href="#">links em teal escuro</a>.</p>
+      <p class="frase" style="font-size:28px;margin:0">Transforme <strong>processos</strong> em resultados</p>
+    </div>
+
+    <h2>Logo</h2>
+    <p>Quatro versões: horizontal, vertical, abreviada e símbolo. Cada uma existe em laranja, claro, teal e cinza (arquivos em <code>assets/logos/</code>). Sobre fundos de cor, use a versão clara.</p>
+    <div class="grade logos">
+      <div class="logo-cx logo-cx--claro"><img src="assets/logos/lumina-fiocruz-laranja.svg" alt="Logo com Fiocruz, laranja"></div>
+      <div class="logo-cx logo-cx--laranja"><img src="assets/logos/lumina-fiocruz-claro.svg" alt="Logo com Fiocruz, claro"></div>
+      <div class="logo-cx logo-cx--teal"><img src="assets/logos/lumina-horizontal-claro.svg" alt="Logo horizontal, claro"></div>
+      <div class="logo-cx logo-cx--claro"><img src="assets/logos/lumina-horizontal-cinza.svg" alt="Logo horizontal, cinza"></div>
+      <div class="logo-cx logo-cx--claro"><img src="assets/logos/lumina-vertical-laranja.svg" alt="Logo vertical" style="max-height:130px"></div>
+      <div class="logo-cx logo-cx--ouro"><img src="assets/logos/lumina-abreviada-claro.svg" alt="Logo abreviada"></div>
+    </div>
+    <h3>Ícones de aplicativo</h3>
+    <div class="grade icones" style="background:#fff;border-radius:28px;padding:24px;align-items:center">
+      <img src="assets/logos/icone-app-laranja.svg" alt="Ícone laranja">
+      <img src="assets/logos/icone-app-claro.svg" alt="Ícone claro">
+      <img src="assets/logos/icone-app-teal.svg" alt="Ícone teal">
+      <img src="assets/logos/icone-app-ouro.svg" alt="Ícone ouro">
+    </div>
+
+    <h2>Elementos gráficos</h2>
+    <div class="grade elementos" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <img src="assets/elements/composicao-elementos.svg" alt="Composição de elementos">
+      <img src="assets/elements/grade-cruz-capa.svg" alt="Grade de capa">
+    </div>
+
+    <h2>Componentes</h2>
+    <div class="grade" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+      <div class="cartao"><h3 style="margin-top:0">Cartão</h3><p>Fundo branco, cantos grandes.</p><span class="tag">Tag</span></div>
+      <div class="cartao cartao--laranja"><h3 style="margin-top:0;color:inherit">Cartão laranja</h3><p>Texto claro; use só em texto grande.</p></div>
+      <div class="cartao cartao--teal"><h3 style="margin-top:0;color:inherit">Cartão teal</h3><p>Texto claro; use só em texto grande.</p></div>
+      <div class="cartao cartao--ouro"><h3 style="margin-top:0;color:inherit">Cartão ouro</h3><p>Texto escuro (tinta), nunca claro.</p></div>
+    </div>
+    <p style="margin-top:24px"><a class="botao" href="#">Botão principal</a> &nbsp; <a class="botao botao--contorno" href="#">Botão secundário</a></p>
+    <div class="chamada chamada--teal"><p><strong>Chamada.</strong> Para avisos, definições e citações.</p></div>
+    <table>
+      <thead><tr><th>Coluna</th><th class="num">Valor</th></tr></thead>
+      <tbody><tr><td>Linha 1</td><td class="num">120</td></tr><tr><td>Linha 2</td><td class="num">87</td></tr></tbody>
+    </table>
+
+    <h2>Fazer e evitar</h2>
+    <div class="grade regras">
+      <div class="cartao sim"><h3 style="margin-top:0">Fazer</h3>
+        <ul><li>Texto corrido em tinta (#2b2b2b) sobre claro.</li><li>Laranja em títulos grandes e destaques.</li><li>Texto claro sobre laranja, teal e fundos escuros em tamanho grande.</li><li>Cantos bem arredondados e muito espaço em branco.</li></ul></div>
+      <div class="cartao nao"><h3 style="margin-top:0">Evitar</h3>
+        <ul><li>Parágrafos em laranja, ouro ou teal sobre claro (contraste baixo).</li><li>Texto claro sobre ouro.</li><li>Esticar, girar ou recolorir o logo fora das versões fornecidas.</li><li>Branco puro como fundo de página (use #efefef).</li></ul></div>
+    </div>
+  </main>
+</body>
+</html>
