@@ -17,18 +17,19 @@
 
 ## 4. Anexos de estudo (`study-guide`)
 
-- [ ] 4.1 Escrever testes em `tests/api/check_tree/test_study_attachments_api.py` cobrindo os cenários dos requisitos de cadastro, tipificação, DOI, metadados do Crossref (com `fetch_doi_metadata` substituído por stub), link, listar, editar, reordenar, excluir e tipificação excluída. Confirmar que falham antes da mudança
+- [ ] 4.1 Escrever testes em `tests/api/check_tree/test_study_attachments_api.py` cobrindo os cenários dos requisitos de cadastro, tipificação, DOI, metadados do Crossref (com `fetch_doi_metadata` substituído por stub), link, listar, editar, reordenar, excluir e tipificação excluída. Incluir as recusas da jornada da Helena: tipificação repetida (409), link sem título e link `ftp` (422), DOI repetido com outro prefixo e outra caixa (409) e edição de descrição sem nova consulta ao Crossref. Confirmar que falham antes da mudança
 - [ ] 4.2 Criar os schemas em `lumina/schemas/study_attachment.py`, o repositório `lumina/repositories/study_attachment_repo.py`, o serviço `lumina/services/study_attachment_service.py` e as rotas em `lumina/routers/check_tree/document_groups.py`. Verificar que os testes de 4.1 passam
 
 ## 5. Guia de estudo e progresso do projeto
 
-- [ ] 5.1 Escrever testes em `tests/api/check_tree/test_study_guide_api.py` cobrindo os cenários dos requisitos "Guia de estudo do projeto" e "Marcar anexo como estudado": guia do dono, projeto sem grupo, terceiro sem acesso (403), projeto inexistente (404), marcar, marcar duas vezes, desmarcar, orientador e admin não dono tentando marcar (403), anexo fora do grupo (404), progresso separado por projeto. Confirmar que falham antes da mudança
+- [ ] 5.1 Escrever testes em `tests/api/check_tree/test_study_guide_api.py` cobrindo os cenários dos requisitos "Guia de estudo do projeto" e "Marcar anexo como estudado": guia do dono, orientador e admin lendo o guia (200), projeto sem grupo, terceiro sem acesso (403), projeto inexistente ou excluído (404), marcar, marcar duas vezes, desmarcar, orientador e admin não dono tentando marcar (403), anexo fora do grupo ou oculto por tipificação excluída (404), tipificação excluída e anexo marcado excluído saindo do total e dos estudados, progresso separado por projeto. Confirmar que falham antes da mudança
 - [ ] 5.2 Implementar `lumina/services/study_guide_service.py` e as rotas `GET /project/{project_id}/study-guide` e `PUT`/`DELETE /project/{project_id}/study-guide/attachment/{attachment_id}/studied` em `lumina/routers/check_tree/projects.py`. Verificar que os testes de 5.1 passam
 
-## 6. Jornada e documentação
+## 6. Jornadas e documentação
 
-- [ ] 6.1 Escrever `tests/api/journeys/test_guia_de_estudo.py` com a jornada da decisão 7 do `design.md` (configuradora monta o grupo TCC com cinco anexos, orientanda abre o guia e marca dois, orientador vê 2 de 5 e não consegue marcar), passos numerados nos comentários e Crossref substituído por stub. Verificar que passa
-- [ ] 6.2 Criar `docs/guia-de-estudo.md` com o exemplo do grupo TCC, os tipos de anexo, a consulta ao Crossref e as regras de acesso, e incluir a página na navegação de `mkdocs.yml`. Verificar com `poetry run task docs-build`
+- [ ] 6.1 Escrever `tests/api/journeys/test_trilha_da_helena.py` com a jornada "A trilha da Helena" da decisão 7 do `design.md`, passos numerados nos comentários e Crossref substituído por stub que conta as chamadas. Verificar que passa
+- [ ] 6.2 Escrever `tests/api/journeys/test_semestre_do_pedro.py` com a jornada "O semestre do Pedro" da decisão 7 do `design.md`, com troca explícita de ator entre Pedro e Marina. Verificar que passa
+- [ ] 6.3 Criar `docs/guia-de-estudo.md` com o exemplo do grupo TCC, os tipos de anexo, a consulta ao Crossref e as regras de acesso, e incluir a página na navegação de `mkdocs.yml`. Verificar com `poetry run task docs-build`
 
 ## 7. Verificação final
 
@@ -36,6 +37,5 @@
 
 ## Workflow follow-up
 
-- Abrir as issues "Configurador aceita alterações de qualquer usuário autenticado" e "Guia de estudo personalizado por vínculo de orientação" e citar os números em `proposal.md`.
 - Commitar os artefatos (`docs(openspec): ...`) separados do código e dos testes (`feat(...)`).
 - Arquivar a mudança depois da revisão.

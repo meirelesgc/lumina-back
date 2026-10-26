@@ -36,8 +36,8 @@ Nenhuma.
 
 ## Fora do escopo
 
-- Guia personalizado pelo orientador para um orientando específico. O guia vale para todos os projetos que usam o grupo. Fica para a issue "Guia de estudo personalizado por vínculo de orientação" (a abrir).
-- Exigir admin no configurador. Os anexos seguem a regra atual dos grupos de documentos, que aceita qualquer usuário autenticado. A decisão fica para a issue "Configurador aceita alterações de qualquer usuário autenticado" (a abrir).
+- Guia personalizado pelo orientador para um orientando específico. O guia vale para todos os projetos que usam o grupo. Fica para a issue #34, "Guia de estudo personalizado por vínculo de orientação".
+- Exigir admin no configurador. Os anexos seguem a regra atual dos grupos de documentos, que aceita qualquer usuário autenticado. A decisão fica para a issue #33, "Configurador aceita alterações de qualquer usuário autenticado".
 - Outros tipos de anexo, como fonte normativa (`Source`), arquivo enviado ou vídeo.
 
 ## Impacto

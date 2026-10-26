@@ -102,6 +102,7 @@ O sistema SHALL oferecer `GET /document-group/item/{item_id}/attachments`, que d
 #### Scenario: Exclusão
 - **WHEN** o usuário exclui um anexo
 - **THEN** o anexo some da listagem do item e do guia de estudo dos projetos
+- **THEN** o total de anexos e o de anexos estudados dos projetos que o marcaram deixam de contar esse anexo
 
 ### Requirement: Anexo de tipificação excluída fica oculto
 Quando a tipificação de um anexo `TYPIFICATION` for excluída, o sistema SHALL omitir o anexo da listagem do item, do guia de estudo e da contagem de progresso. A exclusão da tipificação SHALL continuar funcionando como hoje.
@@ -109,7 +110,7 @@ Quando a tipificação de um anexo `TYPIFICATION` for excluída, o sistema SHALL
 #### Scenario: Tipificação excluída depois do cadastro
 - **WHEN** o item tem um anexo para a tipificação X e alguém exclui X
 - **THEN** a listagem do item e o guia de estudo não trazem esse anexo
-- **THEN** o total de anexos do progresso deixa de contar esse anexo
+- **THEN** o total de anexos e o de anexos estudados do progresso deixam de contar esse anexo
 
 ### Requirement: Guia de estudo do projeto
 O sistema SHALL oferecer `GET /project/{project_id}/study-guide`, que devolve o grupo do projeto, os itens ativos em ordem e, em cada item, os anexos ativos em ordem com `studied` e `studied_at` daquele projeto, além do total de anexos e de anexos estudados. Podem ler o guia o dono do projeto, orientador com vínculo ativo com o dono e admin.
@@ -122,6 +123,10 @@ O sistema SHALL oferecer `GET /project/{project_id}/study-guide`, que devolve o 
 #### Scenario: Projeto sem grupo
 - **WHEN** o projeto não tem grupo de documentos
 - **THEN** o sistema retorna 200 com `document_group` nulo, `items` vazio e progresso 0 de 0
+
+#### Scenario: Orientador e admin leem o guia
+- **WHEN** um orientador com vínculo ativo com o dono, ou um admin, abre o guia do projeto
+- **THEN** o sistema retorna 200 com os mesmos itens, anexos e progresso que o dono vê
 
 #### Scenario: Terceiro sem acesso
 - **WHEN** um usuário que não é dono, orientador ativo do dono nem admin pede o guia

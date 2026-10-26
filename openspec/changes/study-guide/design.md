@@ -74,11 +74,15 @@ As consultas de anexos fazem `outerjoin` com `typifications` e descartam linhas 
 
 ### 7. Testes
 
-A jornada fica em `tests/api/journeys/test_guia_de_estudo.py`, diretório novo (o Lumina ainda não tem testes de jornada). Em prosa:
+Duas jornadas ficam em `tests/api/journeys/`, diretório novo (o Lumina ainda não tem testes de jornada). Em prosa:
 
-> A configuradora cria o grupo "TCC" com os itens anteprojeto, TCC e outro documento e confere a ordem. Ela anexa a tipificação X ao anteprojeto; a tipificação X e o artigo Z por DOI ao TCC; a tipificação Y e o livro XPTO por link ao outro documento, cada anexo com uma descrição. O DOI vem preenchido com o título do Crossref. A orientanda cria um projeto do grupo, abre o guia e vê os três entregáveis na ordem, com os anexos e as descrições, progresso 0 de 5. Ela marca a tipificação X do anteprojeto e o artigo Z. O orientador entra, abre o guia do projeto dela e vê 2 de 5; ao tentar marcar um anexo, recebe 403.
+> **A trilha da Helena** (`test_trilha_da_helena.py`). A configuradora Helena cria o grupo "TCC" com os itens outro documento, TCC e anteprojeto, reordena para anteprojeto, TCC e outro documento e confere a ordem. No anteprojeto, ela anexa a tipificação "Artigo científico". Cola um DOI com `https://doi.org/` e letras maiúsculas e vê o DOI limpo, com título, autores e ano do Crossref. Cola um segundo DOI com o Crossref fora do ar e vê o anexo salvo com o título que digitou e `metadata_source` `MANUAL`. Anexa um livro por link. Escreve uma descrição em cada anexo, sem que o Crossref seja consultado de novo, e reordena para o artigo introdutório vir primeiro. Exclui um anexo e confere que a lista ficou exatamente na ordem pedida, sem ele.
 
-O Crossref é substituído por um stub determinístico (monkeypatch de `fetch_doi_metadata`) na jornada e nos testes de rota. O cliente em si é testado com `httpx.MockTransport`. Os desvios (DOI inválido, duplicatas, reordenação inválida, tipificação excluída, terceiro sem acesso, projeto sem grupo, progresso separado por projeto) viram testes focados em `tests/api/check_tree/test_study_attachments_api.py` e `tests/api/check_tree/test_study_guide_api.py`.
+> **O semestre do Pedro** (`test_semestre_do_pedro.py`). O grupo "TCC" tem seis anexos nos três itens. Pedro cria dois projetos do grupo. No primeiro, abre o guia e vê anteprojeto, TCC e outro documento em ordem, 0 de 6. Marca o primeiro artigo e vê 1 de 6 com a data. Marca de novo e a data não muda. Marca outro anexo e desmarca, e o placar volta a 1. No segundo projeto, vê 0 de 6 e o artigo como não estudado. A orientadora Marina, com vínculo ativo, entra, abre o guia do primeiro projeto e vê 1 de 6; ao tentar marcar um anexo, recebe 403.
+
+As recusas do cadastro (tipificação repetida, link sem título ou com `ftp`, DOI repetido com outra escrita) e as situações de acesso e exclusão (terceiro sem acesso, projeto sem grupo, tipificação excluída, marcação de anexo oculto, exclusão de anexo já marcado, admin que lê e não marca, projeto excluído) viram testes focados em `tests/api/check_tree/test_study_attachments_api.py` e `tests/api/check_tree/test_study_guide_api.py`. Cada uma prova um comportamento sozinha e não cabe no caminho de um ator.
+
+O Crossref é substituído por um stub determinístico (monkeypatch de `fetch_doi_metadata`) nas jornadas e nos testes de rota. O stub conta as chamadas, para provar que editar a descrição não consulta o Crossref. O cliente em si é testado com `httpx.MockTransport`.
 
 ## Risks / Trade-offs
 
