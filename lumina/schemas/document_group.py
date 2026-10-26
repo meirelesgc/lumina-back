@@ -33,6 +33,7 @@ class DocumentGroupItemUpdate(DocumentGroupItemSchema):
 class DocumentGroupItemPublic(DocumentGroupItemSchema):
     id: UUID
     group_id: UUID
+    position: int
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -46,6 +47,10 @@ class DocumentGroupPublic(DocumentGroupSchema):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentGroupItemOrder(BaseModel):
+    item_ids: list[UUID]
 
 
 class DocumentGroupList(BaseModel):

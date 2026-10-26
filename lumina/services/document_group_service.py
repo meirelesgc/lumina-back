@@ -10,6 +10,7 @@ from lumina.schemas.document_group import (
     DocumentGroupCreate,
     DocumentGroupFilter,
     DocumentGroupItemCreate,
+    DocumentGroupItemOrder,
     DocumentGroupItemUpdate,
     DocumentGroupPublic,
     DocumentGroupUpdate,
@@ -155,6 +156,9 @@ async def create_item(
         group_id=group_id,
         name=data.name,
         icon_path=data.icon_path,
+        position=await document_group_repo.next_item_position(
+            session, group_id
+        ),
     )
     db_item.set_creation_audit(user_id)
 
@@ -163,6 +167,32 @@ async def create_item(
     await session.commit()
     await session.refresh(db_item)
     return db_item
+
+
+async def reorder_items(
+    session: AsyncSession,
+    user_id: UUID,
+    group_id: UUID,
+    data: DocumentGroupItemOrder,
+) -> DocumentGroup:
+    group = await get_group_by_id(session, group_id)
+    items = await document_group_repo.get_items_by_group(session, group_id)
+
+    items_by_id = {item.id: item for item in items}
+    if len(data.item_ids) != len(items) or set(data.item_ids) != set(
+        items_by_id
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail='item_ids must list every active item of the group once',
+        )
+
+    for position, item_id in enumerate(data.item_ids, start=1):
+        items_by_id[item_id].position = position
+        items_by_id[item_id].set_update_audit(user_id)
+
+    await session.commit()
+    return await document_group_repo.get_by_id(session, group.id)
 
 
 async def update_item(

@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    CheckConstraint,
     Computed,
     ForeignKey,
     Index,
@@ -1333,11 +1334,13 @@ class DocumentGroup(AuditMixin):
 
     items: Mapped[List['DocumentGroupItem']] = relationship(
         'DocumentGroupItem',
-        back_populates='group',
+        primaryjoin='and_(DocumentGroup.id == DocumentGroupItem.group_id, '
+        'DocumentGroupItem.deleted_at.is_(None))',
+        order_by='DocumentGroupItem.position',
+        viewonly=True,
         lazy='selectin',
         default_factory=list,
         init=False,
-        cascade='all, delete-orphan',
     )
 
     __table_args__ = (
@@ -1365,10 +1368,103 @@ class DocumentGroupItem(AuditMixin):
     )
     name: Mapped[str] = mapped_column(nullable=False)
     icon_path: Mapped[Optional[str]] = mapped_column(default=None)
+    position: Mapped[int] = mapped_column(default=0, nullable=False)
 
-    group: Mapped['DocumentGroup'] = relationship(
-        back_populates='items',
+    group: Mapped['DocumentGroup'] = relationship(init=False)
+
+
+@table_registry.mapped_as_dataclass
+class StudyAttachment(AuditMixin):
+    __tablename__ = 'study_attachments'
+
+    id: Mapped[UUID] = mapped_column(
         init=False,
+        primary_key=True,
+        insert_default=uuid4,
+        default_factory=uuid4,
+    )
+    document_group_item_id: Mapped[UUID] = mapped_column(
+        ForeignKey('document_group_items.id', ondelete='CASCADE'),
+    )
+    kind: Mapped[str] = mapped_column(String(20))
+    position: Mapped[int] = mapped_column()
+    description: Mapped[Optional[str]] = mapped_column(Text, default=None)
+    title: Mapped[Optional[str]] = mapped_column(default=None)
+    typification_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey('typifications.id'), default=None
+    )
+    doi: Mapped[Optional[str]] = mapped_column(default=None)
+    authors: Mapped[Optional[list[str]]] = mapped_column(JSONB, default=None)
+    year: Mapped[Optional[int]] = mapped_column(default=None)
+    container_title: Mapped[Optional[str]] = mapped_column(default=None)
+    metadata_source: Mapped[Optional[str]] = mapped_column(
+        String(20), default=None
+    )
+    url: Mapped[Optional[str]] = mapped_column(default=None)
+
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('TYPIFICATION', 'DOI', 'LINK')",
+            name='ck_study_attachments_kind',
+        ),
+        CheckConstraint(
+            "kind <> 'TYPIFICATION' OR typification_id IS NOT NULL",
+            name='ck_study_attachments_typification',
+        ),
+        CheckConstraint(
+            "kind <> 'DOI' OR "
+            '(doi IS NOT NULL AND metadata_source IS NOT NULL)',
+            name='ck_study_attachments_doi',
+        ),
+        CheckConstraint(
+            "kind <> 'LINK' OR (url IS NOT NULL AND title IS NOT NULL)",
+            name='ck_study_attachments_link',
+        ),
+        Index(
+            'ix_uq_study_attachments_item_typification',
+            'document_group_item_id',
+            'typification_id',
+            unique=True,
+            postgresql_where=(
+                column('deleted_at').is_(None)
+                & column('typification_id').isnot(None)
+            ),
+        ),
+        Index(
+            'ix_uq_study_attachments_item_doi',
+            'document_group_item_id',
+            'doi',
+            unique=True,
+            postgresql_where=(
+                column('deleted_at').is_(None) & column('doi').isnot(None)
+            ),
+        ),
+        Index(
+            'ix_uq_study_attachments_item_url',
+            'document_group_item_id',
+            'url',
+            unique=True,
+            postgresql_where=(
+                column('deleted_at').is_(None) & column('url').isnot(None)
+            ),
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class StudyProgress:
+    __tablename__ = 'study_progress'
+
+    project_id: Mapped[UUID] = mapped_column(
+        ForeignKey('projects.id', ondelete='CASCADE'), primary_key=True
+    )
+    study_attachment_id: Mapped[UUID] = mapped_column(
+        ForeignKey('study_attachments.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    studied_by: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
+    studied_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
     )
 
 
