@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     TREE_SUGGESTION_BATCH_CHARS: int = 24000
     TREE_SUGGESTION_MAX_CONCURRENCY: int = 4
     TREE_SUGGESTION_EVIDENCE_MIN_SCORE: int = 90
+    CROSSREF_URL: str = 'https://api.crossref.org'
+    CROSSREF_TIMEOUT_SECONDS: float = 5
+    CROSSREF_MAILTO: Optional[str] = None
 
 
 SETTINGS = Settings()

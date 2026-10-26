@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,6 +16,7 @@ async def get_by_id(
         select(DocumentGroup)
         .where(DocumentGroup.id == group_id)
         .options(selectinload(DocumentGroup.items))
+        .execution_options(populate_existing=True)
     )
     return await session.scalar(stmt)
 
@@ -39,6 +40,7 @@ async def list_all(
         .where(DocumentGroup.deleted_at.is_(None))
         .order_by(DocumentGroup.created_at.desc())
         .options(selectinload(DocumentGroup.items))
+        .execution_options(populate_existing=True)
     )
 
     if filters.q:
@@ -64,10 +66,20 @@ async def get_items_by_group(
             DocumentGroupItem.group_id == group_id,
             DocumentGroupItem.deleted_at.is_(None),
         )
-        .order_by(DocumentGroupItem.created_at.desc())
+        .order_by(DocumentGroupItem.position)
     )
     result = await session.scalars(stmt)
     return result.all()
+
+
+async def next_item_position(session: AsyncSession, group_id: UUID) -> int:
+    stmt = select(
+        func.coalesce(func.max(DocumentGroupItem.position), 0)
+    ).where(
+        DocumentGroupItem.group_id == group_id,
+        DocumentGroupItem.deleted_at.is_(None),
+    )
+    return await session.scalar(stmt) + 1
 
 
 def add_group(session: AsyncSession, group: DocumentGroup) -> None:

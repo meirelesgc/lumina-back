@@ -12,7 +12,8 @@ from lumina.schemas.project import (
     ProjectPublic,
     ProjectUpdate,
 )
-from lumina.services import project_service
+from lumina.schemas.study_guide import StudyGuidePublic
+from lumina.services import project_service, study_guide_service
 
 router = APIRouter(
     prefix='/project',
@@ -99,3 +100,53 @@ async def delete_project(
 ):
     await project_service.delete_project(session, current_user, project_id)
     return {'message': 'Project deleted'}
+
+
+@router.get(
+    '/{project_id}/study-guide',
+    response_model=StudyGuidePublic,
+    summary='Obter guia de estudo do projeto',
+    description='Retorna os itens do grupo do projeto em ordem, com os anexos de estudo e o progresso deste projeto.',
+)
+async def read_study_guide(
+    project_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
+    return await study_guide_service.get_study_guide(
+        session, current_user, project_id
+    )
+
+
+@router.put(
+    '/{project_id}/study-guide/attachment/{attachment_id}/studied',
+    response_model=StudyGuidePublic,
+    summary='Marcar anexo como estudado',
+    description='Marca um anexo do guia como estudado neste projeto. Só o dono do projeto marca.',
+)
+async def mark_studied(
+    project_id: UUID,
+    attachment_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
+    return await study_guide_service.set_studied(
+        session, current_user, project_id, attachment_id, studied=True
+    )
+
+
+@router.delete(
+    '/{project_id}/study-guide/attachment/{attachment_id}/studied',
+    response_model=StudyGuidePublic,
+    summary='Desmarcar anexo estudado',
+    description='Desfaz a marcação de um anexo do guia neste projeto. Só o dono do projeto desmarca.',
+)
+async def unmark_studied(
+    project_id: UUID,
+    attachment_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
+    return await study_guide_service.set_studied(
+        session, current_user, project_id, attachment_id, studied=False
+    )
