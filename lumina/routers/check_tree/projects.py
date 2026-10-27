@@ -82,9 +82,7 @@ async def update_project(
     session: Session,
     current_user: CurrentUser,
 ):
-    return await project_service.update_project(
-        session, current_user, project
-    )
+    return await project_service.update_project(session, current_user, project)
 
 
 @router.delete(
