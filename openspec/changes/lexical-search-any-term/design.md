@@ -1,0 +1,65 @@
+## Context
+
+`retrieve_criteria_payload` monta a consulta léxica como `f'{título}: {descrição}'` e chama `vector_store_sql.lexical_search(session, query_text, source, k)`. A função lê `langchain_pg_embedding` direto pela `AsyncSession`, filtra a coleção `langchain`, o `source` do documento e os chunks sem `record_type` (exclui os resumos de seção), e casa `to_tsvector('portuguese', document)` com `plainto_tsquery('portuguese', query)`. O `plainto_tsquery` liga os termos com `&`.
+
+Medição sem IA, com os chunks dos PDFs anotados indexados pelo caminho de produção e embeddings falsos (146 ramos, 75 com trecho esperado, top 5):
+
+| Variante | Ramos vazios | Trecho esperado no top 5 |
+| :--- | :--- | :--- |
+| AND (hoje) | 146 | 0 |
+| OR | 8 | 17 |
+| OR sem palavras de enunciado | 13 | 16 |
+
+Os 8 ramos vazios com OR são de `smart_tech_microgrids`, documento em inglês ([issue #38](https://github.com/meirelesgc/lumina-back/issues/38)).
+
+## Goals / Non-Goals
+
+**Goals:**
+- Busca léxica que devolve chunks para os ramos com evidência dos documentos em português.
+- Teste na suíte padrão, sem IA, que falha com a combinação AND.
+
+**Non-Goals:**
+- Remover palavras de enunciado ([issue #37](https://github.com/meirelesgc/lumina-back/issues/37)).
+- Escolher a configuração de idioma por documento ([issue #38](https://github.com/meirelesgc/lumina-back/issues/38)).
+- Mudar o RRF, o `k` da busca léxica ou a consulta montada em `retrieval.py`.
+
+## Decisions
+
+### Montagem da `tsquery`
+
+`lexical_search` gera `plainto_tsquery('portuguese', query)`, converte para texto, troca `&` por `|` e converte de volta para `tsquery`, tudo no SQL. O `plainto_tsquery` já tira stopwords, reduz as palavras ao radical e cita cada lexema, então o texto do ramo nunca vira operador. Palavras hifenizadas continuam como frase (`<->`), porque só o `&` muda.
+
+Alternativas descartadas:
+- `to_tsquery` com `' | '.join(palavras)` montado em Python: cada palavra precisaria de escape, e um `!` ou `(` no ramo quebraria a consulta.
+- `websearch_to_tsquery` com as palavras unidas por `or`: uma palavra que comece com `-` vira negação.
+
+A ordenação continua por `ts_rank`, que soma as ocorrências dos termos do ramo no chunk. Chunks com mais termos do ramo sobem.
+
+### Jornada e camada do teste
+
+Jornada: o analista envia uma revisão sistemática para avaliação e espera que o parecer de cada critério se apoie também nos trechos que repetem as palavras do critério, e não só nos trechos parecidos pela busca vetorial.
+
+O teste fica em `tests/integration/test_lexical_search.py` e chama `lexical_search` direto, com a `session` do `conftest.py`. Passar por `POST /release` exigiria LLM falso, embeddings e a árvore no banco, e a fusão RRF esconderia se a lista léxica veio vazia. Os chunks entram pelo caminho de produção: `run_document_ingestion` sobre os PDFs anotados, num `PGVector` ligado ao `engine` do teste com `DeterministicFakeEmbedding`. A busca léxica não usa o vetor, então o embedding falso não muda o resultado. O fixture de ingestão roda uma vez por módulo e apaga a coleção no fim, como `indexed_vectorstore` faz nos testes com IA.
+
+Os cenários da spec viram testes:
+- Ramo da issue #16 sobre `smart_tech_microgrids` não serve, porque o documento está em inglês. O teste usa chunks curtos em português indexados à mão para o ramo de exemplo, com um chunk sobre a justificativa da revisão e outros sobre métodos e critérios.
+- Ramos com evidência dos documentos em português do acervo: um caso parametrizado por documento, que exige resultado não vazio para cada ramo com evidência e aponta os ramos vazios na falha. Hoje falham todos.
+- Outro documento e resumos de seção: guarda, passa antes e depois da mudança.
+- Símbolos de sintaxe no ramo: guarda, passa antes e depois, porque o `plainto_tsquery` já trata os símbolos como texto.
+- Ramo sem termo pesquisável: guarda, passa antes e depois.
+
+O documento em inglês fica fora do caso parametrizado, com um comentário que cita a issue #38.
+
+### Baseline com IA
+
+`poetry run task test-ai -k test_retrieval_baseline` roda antes da mudança, num `git worktree` do commit anterior, e depois dela. Se uma métrica subir, o piso sobe no commit da implementação, arredondado para baixo como os pisos atuais.
+
+## Risks / Trade-offs
+
+- [O OR traz chunks com um só termo genérico do ramo, como "realizada" para "realização"] → `ts_rank` põe esses chunks atrás dos que têm mais termos, e o RRF ainda combina com a busca vetorial. A issue #37 trata de pesar ou tirar termos de enunciado.
+- [A lista léxica não vazia muda a ordem das evidências do avaliador e pode baixar uma métrica do baseline] → o baseline com IA roda antes e depois. Se um piso cair, a implementação para e o usuário decide.
+- [Um lexema com `&` dentro, como parte de uma URL, teria o `&` trocado] → a troca acontece dentro do lexema citado, então a consulta continua válida. O pior caso é perder esse termo.
+
+## Migration Plan
+
+Sem migração. A mudança vale para as próximas avaliações, sem reingestão. Para reverter, volte `lexical_search` ao `plainto_tsquery` puro.
