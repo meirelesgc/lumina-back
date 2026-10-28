@@ -28,14 +28,16 @@
 
 ## 5. Título e descrição como reserva
 
-- [ ] 5.1 Em `tests/unit/services/test_ai_stages.py`, criar o teste em que o espião de `lexical_search` devolve lista vazia para o título e confere a segunda chamada com título e descrição. Trocar, em `tests/integration/test_lexical_search.py`, a chamada do teste parametrizado por `branch_lexical_search`. Verificar que os dois testes falham sem a reserva.
-- [ ] 5.2 Criar `branch_lexical_search` em `lumina/services/ai/stages/retrieval.py`, que busca pelo título e, sem resultado, por título e descrição, e usá-la em `retrieve_criteria_payload`. Verificar que `poetry run pytest tests/integration/test_lexical_search.py tests/unit/services/test_ai_stages.py` passa.
-- [ ] 5.3 Rodar `poetry run task test-ai -k test_retrieval_baseline` e registrar aqui o placar total. Ajustar os pisos gravados na tarefa 4.4 para o valor medido, arredondado para baixo na segunda casa, se ele mudar. Se uma métrica cair abaixo do piso de antes desta mudança (0,44 / 0,48 / 0,18), parar e levar o placar ao usuário. Verificar que o teste passa com os pisos gravados.
+- [x] 5.1 Em `tests/unit/services/test_ai_stages.py`, criar o teste em que o espião de `lexical_search` devolve lista vazia para o título e confere a segunda chamada com título e descrição. Trocar, em `tests/integration/test_lexical_search.py`, a chamada do teste parametrizado por `branch_lexical_search`. Verificar que os dois testes falham sem a reserva.
+- [x] 5.2 Criar `branch_lexical_search` em `lumina/services/ai/stages/retrieval.py`, que busca pelo título e, sem resultado, por título e descrição, e usá-la em `retrieve_criteria_payload`. Verificar que `poetry run pytest tests/integration/test_lexical_search.py tests/unit/services/test_ai_stages.py` passa.
+- [x] 5.3 Rodar `poetry run task test-ai -k test_retrieval_baseline` e registrar aqui o placar total. Ajustar os pisos gravados na tarefa 4.4 para o valor medido, arredondado para baixo na segunda casa, se ele mudar. Se uma métrica cair abaixo do piso de antes desta mudança (0,44 / 0,48 / 0,18), parar e levar o placar ao usuário. Verificar que o teste passa com os pisos gravados.
+  - Resultado (4 passed): recall de trechos 69/129 = 0,53, seção e página 75/129 = 0,58, precisão entre ramos 40/202 = 0,198, roteamento 0/64 = 0,00. Os pisos da tarefa 4.4 continuam valendo. A reserva só mudou o documento em inglês: `achados-interpretados` ganhou o trecho e `etapa-inclusao-apresentada` perdeu.
 
 ## 6. Verificação final
 
-- [ ] 6.1 Rodar `poetry run task test` e registrar aqui o resultado que rodou.
+- [x] 6.1 Rodar `poetry run task test` e registrar aqui o resultado que rodou.
   - Rodada com a correção da 3.1: 494 passed, 12 skipped, cobertura 80%.
+  - Rodada final, com título, `ts_rank` normalizado e reserva: 497 passed, 12 skipped, cobertura 80%.
 
 ## Workflow follow-up
 
