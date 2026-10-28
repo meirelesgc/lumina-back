@@ -19,14 +19,22 @@
 
 ## 4. Consulta pelo título e `ts_rank` normalizado
 
-- [ ] 4.1 Em `tests/integration/test_lexical_search.py`, trocar a consulta do teste parametrizado pelo título do ramo e criar o teste do chunk longo com termos repetidos. Verificar que o teste do chunk longo falha no código da tarefa 3.1 e que o parametrizado passa ou aponta os ramos vazios.
-- [ ] 4.2 Em `tests/unit/services/test_ai_stages.py`, criar o teste de `retrieve_criteria_payload` que espiona `lexical_search` e confere que ele recebe só o título do ramo, enquanto a busca vetorial recebe título e descrição. Verificar que o teste falha no código da tarefa 3.1.
-- [ ] 4.3 Passar `ts_rank` para a normalização 2 em `lexical_search` e o título do ramo para `lexical_search` em `retrieve_criteria_payload`. Verificar que os testes das tarefas 4.1 e 4.2 e o resto de `tests/integration/test_lexical_search.py` passam.
-- [ ] 4.4 Rodar `poetry run task test-ai -k test_retrieval_baseline` e registrar aqui o placar total. Subir cada piso que subiu para o valor medido, arredondado para baixo na segunda casa. Se uma métrica cair abaixo do piso, parar e levar o placar ao usuário. Verificar que o teste passa com os pisos gravados.
+- [x] 4.1 Em `tests/integration/test_lexical_search.py`, trocar a consulta do teste parametrizado pelo título do ramo e criar o teste do chunk longo com termos repetidos. Verificar que o teste do chunk longo falha no código da tarefa 3.1 e que o parametrizado passa ou aponta os ramos vazios.
+  - O teste do chunk longo falhou no código da 3.1. O parametrizado apontou `titulo-claro-e-objetivo`, de título "Título", palavra ausente do anteprojeto. O usuário escolheu a reserva com título e descrição (grupo 5).
+- [x] 4.2 Em `tests/unit/services/test_ai_stages.py`, criar o teste de `retrieve_criteria_payload` que espiona `lexical_search` e confere que ele recebe só o título do ramo, enquanto a busca vetorial recebe título e descrição. Verificar que o teste falha no código da tarefa 3.1.
+- [x] 4.3 Passar `ts_rank` para a normalização 2 em `lexical_search` e o título do ramo para `lexical_search` em `retrieve_criteria_payload`. Verificar que os testes das tarefas 4.1 e 4.2 e o resto de `tests/integration/test_lexical_search.py` passam.
+- [x] 4.4 Rodar `poetry run task test-ai -k test_retrieval_baseline` e registrar aqui o placar total. Subir cada piso que subiu para o valor medido, arredondado para baixo na segunda casa. Se uma métrica cair abaixo do piso, parar e levar o placar ao usuário. Verificar que o teste passa com os pisos gravados.
+  - Resultado (4 passed): recall de trechos 69/129 = 0,53, seção e página 75/129 = 0,58, precisão entre ramos 40/209 = 0,19, roteamento 0/64 = 0,00. O placar repete a medição de `design.md`. Pisos gravados: `MIN_EVIDENCE_RECALL = 0.53`, `MIN_SECTION_PAGE_HIT_RATE = 0.58`, `MIN_BRANCH_PRECISION = 0.19`.
 
-## 5. Verificação final
+## 5. Título e descrição como reserva
 
-- [ ] 5.1 Rodar `poetry run task test` e registrar aqui o resultado que rodou.
+- [ ] 5.1 Em `tests/unit/services/test_ai_stages.py`, criar o teste em que o espião de `lexical_search` devolve lista vazia para o título e confere a segunda chamada com título e descrição. Trocar, em `tests/integration/test_lexical_search.py`, a chamada do teste parametrizado por `branch_lexical_search`. Verificar que os dois testes falham sem a reserva.
+- [ ] 5.2 Criar `branch_lexical_search` em `lumina/services/ai/stages/retrieval.py`, que busca pelo título e, sem resultado, por título e descrição, e usá-la em `retrieve_criteria_payload`. Verificar que `poetry run pytest tests/integration/test_lexical_search.py tests/unit/services/test_ai_stages.py` passa.
+- [ ] 5.3 Rodar `poetry run task test-ai -k test_retrieval_baseline` e registrar aqui o placar total. Ajustar os pisos gravados na tarefa 4.4 para o valor medido, arredondado para baixo na segunda casa, se ele mudar. Se uma métrica cair abaixo do piso de antes desta mudança (0,44 / 0,48 / 0,18), parar e levar o placar ao usuário. Verificar que o teste passa com os pisos gravados.
+
+## 6. Verificação final
+
+- [ ] 6.1 Rodar `poetry run task test` e registrar aqui o resultado que rodou.
   - Rodada com a correção da 3.1: 494 passed, 12 skipped, cobertura 80%.
 
 ## Workflow follow-up

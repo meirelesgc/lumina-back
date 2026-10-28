@@ -54,6 +54,12 @@ A escolha é a consulta léxica só com o título e `ts_rank(tsvector, tsquery, 
 
 `retrieve_criteria_payload` passa o título do ramo para `lexical_search`. A busca vetorial e as expansões continuam com título e descrição.
 
+### Título e descrição como reserva
+
+Um título pode não ter nenhum termo no documento. O ramo `titulo-claro-e-objetivo` do anteprojeto tem o título "Título", e o anteprojeto não usa essa palavra. Nesse caso a busca léxica pelo título volta vazia. Quando isso acontece, a recuperação refaz a busca léxica com título e descrição, o mesmo texto da primeira versão da correção. A reserva fica numa função de `retrieval.py` (`branch_lexical_search`), que o teste de integração chama direto. O documento em inglês cai na reserva em quase todos os ramos, então o baseline com IA roda de novo depois dela.
+
+Alternativa descartada: deixar a busca léxica vazia e registrar o ramo como exceção no teste. O usuário preferiu a reserva.
+
 Alternativas descartadas:
 - Peso menor para a lista léxica no RRF: com 0,5, nenhum chunk léxico entra no top 5 e o resultado fica igual ao AND.
 - `ts_rank_cd`: pior que o AND nas três métricas.
@@ -67,9 +73,10 @@ O teste fica em `tests/integration/test_lexical_search.py` e chama `lexical_sear
 
 Os cenários da spec viram testes:
 - Ramo da issue #16 sobre `smart_tech_microgrids` não serve, porque o documento está em inglês. O teste usa chunks curtos em português indexados à mão para o ramo de exemplo, com um chunk sobre a justificativa da revisão e outros sobre métodos e critérios.
-- Ramos com evidência dos documentos em português do acervo: um caso parametrizado por documento, que consulta com o título do ramo, exige resultado não vazio para cada ramo com evidência e aponta os ramos vazios na falha.
+- Ramos com evidência dos documentos em português do acervo: um caso parametrizado por documento, que chama `branch_lexical_search` como a recuperação, exige resultado não vazio para cada ramo com evidência e aponta os ramos vazios na falha.
 - Chunk longo com termos repetidos: um chunk curto sobre a justificativa e um chunk longo que repete "justificativa" em meio a texto sem relação. Falha com `ts_rank` sem normalização.
 - Descrição fora da consulta léxica: teste unitário em `tests/unit/services/test_ai_stages.py`, no padrão dos testes de `retrieve_criteria_payload` que já existem ali, com `lexical_search` substituído por um espião. Falha enquanto a recuperação passa título e descrição.
+- Título sem termo no documento: teste unitário com o espião devolvendo lista vazia na primeira chamada, que confere a segunda chamada com título e descrição. Falha enquanto não houver reserva.
 - Outro documento e resumos de seção: guarda, passa antes e depois da mudança.
 - Símbolos de sintaxe no ramo: guarda, passa antes e depois, porque o `plainto_tsquery` já trata os símbolos como texto.
 - Ramo sem termo pesquisável: guarda, passa antes e depois.
