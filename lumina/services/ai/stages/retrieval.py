@@ -102,6 +102,22 @@ def format_context(branch_or_chunks: Any) -> str:
     return ''.join(formatted_parts).strip()
 
 
+async def branch_lexical_search(
+    session: AsyncSession, title: str, query_text: str, source: str, k: int
+) -> List[Document]:
+    """
+    Busca léxica de um ramo pelo título. A descrição traz termos genéricos
+    que puxam chunks longos e tiram da fusão os acertos da busca densa,
+    então entra só quando nenhum termo do título aparece no documento.
+    """
+    docs = await vector_store_sql.lexical_search(session, title, source, k)
+    if docs:
+        return docs
+    return await vector_store_sql.lexical_search(
+        session, query_text, source, k
+    )
+
+
 def _chunk_identity(doc: Document) -> str:
     """Identificador estável de um chunk para deduplicação em fusões."""
     return (
@@ -327,8 +343,8 @@ async def retrieve_criteria_payload(  # noqa: PLR0913, PLR0917, PLR0914
         vstore.asimilarity_search(q, k=k_search, filter=chunk_filter)
         for q in queries
     ])
-    lexical_results = await vector_store_sql.lexical_search(
-        session, query_text, source, k=k_search
+    lexical_results = await branch_lexical_search(
+        session, b_title, query_text, source, k=k_search
     )
     fused_candidates = reciprocal_rank_fusion(
         [*dense_lists, lexical_results], top_n=k_search
