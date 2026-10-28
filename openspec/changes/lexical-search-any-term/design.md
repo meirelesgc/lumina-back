@@ -33,7 +33,31 @@ Alternativas descartadas:
 - `to_tsquery` com `' | '.join(palavras)` montado em Python: cada palavra precisaria de escape, e um `!` ou `(` no ramo quebraria a consulta.
 - `websearch_to_tsquery` com as palavras unidas por `or`: uma palavra que comece com `-` vira negação.
 
-A ordenação continua por `ts_rank`, que soma as ocorrências dos termos do ramo no chunk. Chunks com mais termos do ramo sobem.
+### Consulta só com o título e `ts_rank` normalizado
+
+A primeira versão da correção usava título e descrição na consulta léxica e `ts_rank` sem normalização. No baseline com IA, o acerto de seção e página caiu de 0,49 para 0,47, abaixo do piso. O baseline não usa expansões, então o RRF funde só a lista densa e a léxica, com o mesmo peso: o 1º colocado léxico empata com o 1º denso, e os 5 blocos se dividem entre as duas listas. Com a descrição inteira, a busca léxica põe na frente chunks longos que repetem termos genéricos ("resultados", "metodologia", "pesquisa") e tira do top 5 os acertos da busca densa. O ramo `objetivo-analise` caiu de 4/4 para 0/4.
+
+Medição com embeddings reais, as mesmas métricas do baseline e o mesmo índice para todas as variantes:
+
+| Variante | Recall | Seção e página | Precisão |
+| :--- | :--- | :--- | :--- |
+| AND (antes desta mudança, igual a só busca densa) | 0,450 | 0,488 | 0,181 |
+| OR, título e descrição, `ts_rank` | 0,442 | 0,473 | 0,184 |
+| OR, título e descrição, `ts_rank` normalizado | 0,473 | 0,527 | 0,193 |
+| OR, só título, `ts_rank` | 0,496 | 0,535 | 0,176 |
+| OR, só título, `ts_rank(..., 1)` | 0,519 | 0,566 | 0,184 |
+| **OR, só título, `ts_rank(..., 2)`** | **0,535** | **0,581** | **0,191** |
+| OR, título e descrição, peso 0,5 da lista léxica no RRF | 0,450 | 0,488 | 0,181 |
+| OR, título e descrição, `ts_rank_cd(..., 2)` | 0,403 | 0,457 | 0,180 |
+
+A escolha é a consulta léxica só com o título e `ts_rank(tsvector, tsquery, 2)`, que divide a pontuação pelo tamanho do chunk. Contra o AND, ela ganha trechos em 8 ramos e perde 1 trecho em cada um de 3 ramos (`desfechos-definidos`, `formulario-extracao-definido`, `datas-busca-informadas`). Dos 11 trechos ganhos no saldo, 7 vêm de `introducao-contextualizacao`: os chunks trazem o título da seção no texto (`[1. Introdução]`), e o título do ramo casa com eles.
+
+`retrieve_criteria_payload` passa o título do ramo para `lexical_search`. A busca vetorial e as expansões continuam com título e descrição.
+
+Alternativas descartadas:
+- Peso menor para a lista léxica no RRF: com 0,5, nenhum chunk léxico entra no top 5 e o resultado fica igual ao AND.
+- `ts_rank_cd`: pior que o AND nas três métricas.
+- Remover a busca léxica: mantém o resultado do AND e abre mão do ganho medido.
 
 ### Jornada e camada do teste
 
@@ -43,7 +67,9 @@ O teste fica em `tests/integration/test_lexical_search.py` e chama `lexical_sear
 
 Os cenários da spec viram testes:
 - Ramo da issue #16 sobre `smart_tech_microgrids` não serve, porque o documento está em inglês. O teste usa chunks curtos em português indexados à mão para o ramo de exemplo, com um chunk sobre a justificativa da revisão e outros sobre métodos e critérios.
-- Ramos com evidência dos documentos em português do acervo: um caso parametrizado por documento, que exige resultado não vazio para cada ramo com evidência e aponta os ramos vazios na falha. Hoje falham todos.
+- Ramos com evidência dos documentos em português do acervo: um caso parametrizado por documento, que consulta com o título do ramo, exige resultado não vazio para cada ramo com evidência e aponta os ramos vazios na falha.
+- Chunk longo com termos repetidos: um chunk curto sobre a justificativa e um chunk longo que repete "justificativa" em meio a texto sem relação. Falha com `ts_rank` sem normalização.
+- Descrição fora da consulta léxica: teste unitário em `tests/unit/services/test_ai_stages.py`, no padrão dos testes de `retrieve_criteria_payload` que já existem ali, com `lexical_search` substituído por um espião. Falha enquanto a recuperação passa título e descrição.
 - Outro documento e resumos de seção: guarda, passa antes e depois da mudança.
 - Símbolos de sintaxe no ramo: guarda, passa antes e depois, porque o `plainto_tsquery` já trata os símbolos como texto.
 - Ramo sem termo pesquisável: guarda, passa antes e depois.
@@ -56,8 +82,9 @@ O documento em inglês fica fora do caso parametrizado, com um comentário que c
 
 ## Risks / Trade-offs
 
-- [O OR traz chunks com um só termo genérico do ramo, como "realizada" para "realização"] → `ts_rank` põe esses chunks atrás dos que têm mais termos, e o RRF ainda combina com a busca vetorial. A issue #37 trata de pesar ou tirar termos de enunciado.
-- [A lista léxica não vazia muda a ordem das evidências do avaliador e pode baixar uma métrica do baseline] → o baseline com IA roda antes e depois. Se um piso cair, a implementação para e o usuário decide.
+- [O OR traz chunks com um só termo genérico do título] → `ts_rank` põe esses chunks atrás dos que têm mais termos, e o RRF ainda combina com a busca vetorial. A issue #37 trata de pesar ou tirar termos de enunciado.
+- [O ganho medido vem de 3 documentos e se concentra em um ramo] → os pisos sobem com o valor medido e o acervo cresce com novos gabaritos. Uma piora futura aparece no baseline.
+- [Um título genérico, como "Análise", casa com muitos chunks] → a normalização pelo tamanho e o RRF com a busca densa limitam o efeito. O baseline mede o resultado.
 - [Um lexema com `&` dentro, como parte de uma URL, teria o `&` trocado] → a troca acontece dentro do lexema citado, então a consulta continua válida. O pior caso é perder esse termo.
 
 ## Migration Plan
