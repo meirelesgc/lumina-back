@@ -265,6 +265,67 @@ async def test_retrieve_criteria_payload_fuses_expansions_via_rrf():
     assert 'chunk_expansao' in payload['retrieved_chunks']
 
 
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_lexical_search_uses_branch_title(
+    monkeypatch,
+):
+    lexical_spy = AsyncMock(return_value=[])
+    monkeypatch.setattr(
+        'lumina.services.ai.stages.vector_store_sql.lexical_search',
+        lexical_spy,
+    )
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+
+    await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
+        branch={
+            'id': str(uuid4()),
+            'title': 'Contrato Social',
+            'description': 'Apresentar contrato ativo.',
+        },
+        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
+    )
+
+    assert lexical_spy.call_args_list[0].args[1] == 'Contrato Social'
+    dense_query = mock_vstore.asimilarity_search.call_args.args[0]
+    assert 'Contrato Social' in dense_query
+    assert 'Apresentar contrato ativo.' in dense_query
+
+
+@pytest.mark.asyncio
+async def test_retrieve_criteria_payload_lexical_falls_back_to_description(
+    monkeypatch,
+):
+    lexical_spy = AsyncMock(return_value=[])
+    monkeypatch.setattr(
+        'lumina.services.ai.stages.vector_store_sql.lexical_search',
+        lexical_spy,
+    )
+    mock_vstore = MagicMock()
+    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
+
+    await retrieve_criteria_payload(
+        _mock_sql_session(),
+        mock_vstore,
+        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
+        branch={
+            'id': str(uuid4()),
+            'title': 'Contrato Social',
+            'description': 'Apresentar contrato ativo.',
+        },
+        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
+    )
+
+    queries = [c.args[1] for c in lexical_spy.call_args_list]
+    assert queries == [
+        'Contrato Social',
+        'Contrato Social: Apresentar contrato ativo.',
+    ]
+
+
 def test_get_base_filter_excludes_section_summaries_backward_compatible():
     db_release = MagicMock()
     db_release.file_path = 'uploads/doc.pdf'
