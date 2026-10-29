@@ -2,7 +2,6 @@ import asyncio
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import List, Optional
-from uuid import UUID
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel, Field
@@ -60,6 +59,7 @@ class SectionSelection:
     model: Optional[str]
     rounds: List[dict] = field(default_factory=list)
     error: Optional[str] = None
+    expected_section: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {**asdict(self), 'outcome': self.outcome.value}
@@ -135,6 +135,7 @@ async def select_sections(  # noqa: PLR0913, PLR0917
     `MAX_ROUNDS` rodadas.
     """
     scope = scope_of(section_requirement)
+    expected = (section_requirement or {}).get('expected_section')
     by_id = {section.id: section for section in outline}
     model_name = getattr(model, 'model_name', None)
 
@@ -148,6 +149,7 @@ async def select_sections(  # noqa: PLR0913, PLR0917
             model=model_name,
             rounds=rounds,
             error=error,
+            expected_section=expected,
         )
 
     if scope == SectionRequirementScope.ENTIRE_DOCUMENT.value:
@@ -155,7 +157,6 @@ async def select_sections(  # noqa: PLR0913, PLR0917
 
     structured = model.with_structured_output(SelectionStep)
     outline_md = outline_md or outline_markdown(outline)
-    expected = (section_requirement or {}).get('expected_section')
     read: List[OutlineSection] = []
     rounds: List[dict] = []
     outcome, error = SelectionOutcome.SELECTED, None
@@ -253,36 +254,39 @@ async def select_payload(  # noqa: PLR0913, PLR0917
     return build_selection_payload(taxonomy, branch, outline, selection)
 
 
+def section_requirement_of(branch: dict) -> dict:
+    """Marcação de escopo do ramo na forma que `select_sections` recebe."""
+    return {
+        'scope': branch.get('section_scope'),
+        'expected_section': branch.get('expected_section'),
+    }
+
+
 async def select_evaluation_payloads(
     tree: List[Typification] | List[dict],
     outline: List[OutlineSection],
     model: BaseChatModel,
-    section_requirements_by_branch: Optional[dict[UUID, dict]] = None,
 ) -> List[dict]:
     """
     Monta o payload de avaliação de todos os critérios da árvore, com a
     seleção de cada critério em paralelo, limitada por
-    `SELECTION_CONCURRENCY`.
+    `SELECTION_CONCURRENCY`. O escopo de cada critério vem da marcação do
+    ramo.
     """
-    requirements = {
-        str(branch_id): requirement
-        for branch_id, requirement in (
-            section_requirements_by_branch or {}
-        ).items()
-    }
     outline_md = outline_markdown(outline)
     semaphore = asyncio.Semaphore(SELECTION_CONCURRENCY)
 
     async def run(taxonomy: dict, branch: dict) -> dict:
-        requirement = requirements.get(str(branch.get('id')))
         async with semaphore:
             payload = await select_payload(
-                model, outline, taxonomy, branch, requirement, outline_md
+                model,
+                outline,
+                taxonomy,
+                branch,
+                section_requirement_of(branch),
+                outline_md,
             )
         payload['expansion_generation_version'] = None
-        payload['section_requirement_version'] = (
-            requirement.get('generation_version') if requirement else None
-        )
         return payload
 
     return list(

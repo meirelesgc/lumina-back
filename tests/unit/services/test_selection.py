@@ -206,6 +206,8 @@ def tree():
                             'taxonomy_id': taxonomy_id,
                             'title': BRANCH['title'],
                             'description': BRANCH['description'],
+                            'section_scope': SPECIFIC['scope'],
+                            'expected_section': SPECIFIC['expected_section'],
                             'created_at': now,
                         }
                     ],
@@ -216,15 +218,7 @@ def tree():
 
 
 async def payload_for(model):
-    typifications = tree()
-    branch_id = typifications[0]['taxonomies'][0]['branches'][0]['id']
-    requirement = {**SPECIFIC, 'generation_version': 3}
-    payloads = await select_evaluation_payloads(
-        typifications,
-        outline(),
-        model,
-        section_requirements_by_branch={branch_id: requirement},
-    )
+    payloads = await select_evaluation_payloads(tree(), outline(), model)
     return payloads[0]
 
 
@@ -238,8 +232,13 @@ async def test_payload_tem_o_que_a_avaliacao_le():
     ]
     assert 'Objetivo geral' in payload['requirement']
     assert payload['expected_section'] == TAXONOMY['title']
-    assert payload['section_requirement_version'] == 3  # noqa: PLR2004
+    assert 'section_requirement_version' not in payload
     assert payload['context_selection']['outcome'] == 'selected'
+    assert payload['context_selection']['scope'] == SPECIFIC['scope']
+    assert (
+        payload['context_selection']['expected_section']
+        == SPECIFIC['expected_section']
+    )
     assert not payload.get('skip_evaluation')
 
 

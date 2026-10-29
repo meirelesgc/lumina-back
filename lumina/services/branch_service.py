@@ -15,11 +15,8 @@ from lumina.schemas import (
     BranchUpdate,
 )
 from lumina.services import audit_service
-from lumina.services.ai.branch_analyzer import (
-    BranchNormativeContext,
-    run_branch_section_analysis_background,
-)
 from lumina.services.ai.query_expansion_service import (
+    BranchNormativeContext,
     run_branch_query_expansion_background,
 )
 
@@ -57,13 +54,7 @@ def dispatch_branch_enrichment(
     branch_id: UUID,
     context: BranchNormativeContext,
 ) -> None:
-    """Dispara a análise de seção e a expansão de consultas do ramo."""
-    _dispatch_background(
-        background_tasks,
-        run_branch_section_analysis_background,
-        branch_id,
-        context,
-    )
+    """Dispara a expansão de consultas do ramo."""
     _dispatch_background(
         background_tasks,
         run_branch_query_expansion_background,
@@ -115,6 +106,8 @@ async def create_branch(
         title=data.title,
         description=data.description,
         taxonomy_id=data.taxonomy_id,
+        section_scope=data.section_scope.value,
+        expected_section=data.expected_section,
     )
     db_branch.set_creation_audit(user_id)
 
@@ -208,6 +201,9 @@ async def update_branch(
     db_branch.title = data.title
     db_branch.description = data.description
     db_branch.taxonomy_id = data.taxonomy_id
+    if 'section_scope' in data.model_fields_set:
+        db_branch.section_scope = data.section_scope.value
+        db_branch.expected_section = data.expected_section
 
     new_data = BranchPublic.model_validate(db_branch).model_dump(mode='json')
     db_branch.set_update_audit(user_id)

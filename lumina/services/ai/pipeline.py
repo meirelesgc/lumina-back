@@ -15,12 +15,8 @@ from lumina.models import (
     AppliedTaxonomy,
     AppliedTypification,
     DocumentRelease,
-    Typification,
 )
-from lumina.repositories import (
-    branch_section_requirement_repo,
-    release_repo,
-)
+from lumina.repositories import release_repo
 from lumina.schemas.common import WSMessage
 from lumina.schemas.document import DocumentProcessingStatus
 from lumina.schemas.document_release import DocumentReleasePublic
@@ -144,9 +140,6 @@ async def save_applied_snapshot(
             expansion_generation_version=branch_data.get(
                 'expansion_generation_version'
             ),
-            section_requirement_version=branch_data.get(
-                'section_requirement_version'
-            ),
             context_selection=branch_data.get('context_selection'),
         )
         release_repo.add_applied_entity(session, applied_branch)
@@ -193,15 +186,6 @@ async def run_document_ingestion(
     return anonymized
 
 
-def _collect_branch_ids(tree: list[Typification]) -> list[UUID]:
-    return [
-        branch.id
-        for typification in tree
-        for taxonomy in typification.taxonomies
-        for branch in taxonomy.branches
-    ]
-
-
 async def process_release_pipeline(
     session: AsyncSession,
     release_id: UUID,
@@ -229,25 +213,11 @@ async def process_release_pipeline(
     # 2. Seleção de seções e avaliação da árvore normativa
     await ws_update(redis, db_release, 'evaluating')
     tree = await tree_service.get_tree_by_release(session, db_release)
-    active_requirements = (
-        await branch_section_requirement_repo.get_active_grouped(
-            session, _collect_branch_ids(tree)
-        )
-    )
-    section_requirements_by_branch = {
-        branch_id: {
-            'scope': req.scope,
-            'expected_section': req.expected_section,
-            'generation_version': req.generation_version,
-        }
-        for branch_id, req in active_requirements.items()
-    }
     outline = stages.outline.build_outline(chunks)
     simplified_args = await stages.selection.select_evaluation_payloads(
         tree,
         outline,
         stages.selection.get_selector_model(),
-        section_requirements_by_branch=section_requirements_by_branch,
     )
     chain = stages.evaluation.get_evaluation_chain(model)
     await stages.evaluation.evaluate_criteria_batch(chain, simplified_args)

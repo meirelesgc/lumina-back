@@ -443,6 +443,13 @@ class Branch(AuditMixin):
         back_populates='branches', init=False
     )
 
+    section_scope: Mapped[str] = mapped_column(
+        nullable=False, default='UNKNOWN', server_default='UNKNOWN'
+    )
+    expected_section: Mapped[Optional[str]] = mapped_column(
+        nullable=True, default=None
+    )
+
     __table_args__ = (
         Index(
             'ix_uq_branch_taxonomy_title_active',
@@ -484,45 +491,6 @@ class BranchQueryExpansion(AuditMixin):
     __table_args__ = (
         Index(
             'ix_branch_query_expansions_branch_active',
-            'branch_id',
-            'is_active',
-            postgresql_where=(column('deleted_at').is_(None)),
-        ),
-    )
-
-
-@table_registry.mapped_as_dataclass
-class BranchSectionRequirement(AuditMixin):
-    __tablename__ = 'branch_section_requirements'
-
-    id: Mapped[UUID] = mapped_column(
-        init=False,
-        primary_key=True,
-        insert_default=uuid4,
-        default_factory=uuid4,
-    )
-
-    branch_id: Mapped[UUID] = mapped_column(
-        ForeignKey(
-            'branches.id', name='fk_branch_section_requirement_branch_id'
-        ),
-        nullable=False,
-    )
-
-    scope: Mapped[str] = mapped_column(nullable=False)
-    generation_model: Mapped[str] = mapped_column(nullable=False)
-    generation_version: Mapped[int] = mapped_column(nullable=False)
-    expected_section: Mapped[Optional[str]] = mapped_column(
-        nullable=True, default=None
-    )
-    reasoning: Mapped[Optional[str]] = mapped_column(
-        nullable=True, default=None
-    )
-    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
-
-    __table_args__ = (
-        Index(
-            'ix_branch_section_requirements_branch_active',
             'branch_id',
             'is_active',
             postgresql_where=(column('deleted_at').is_(None)),
@@ -1028,9 +996,6 @@ class AppliedBranch:
         JSONB, nullable=True, default_factory=list
     )
     expansion_generation_version: Mapped[Optional[int]] = mapped_column(
-        nullable=True, default=None
-    )
-    section_requirement_version: Mapped[Optional[int]] = mapped_column(
         nullable=True, default=None
     )
     context_selection: Mapped[Optional[dict]] = mapped_column(
