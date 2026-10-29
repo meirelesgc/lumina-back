@@ -34,6 +34,5 @@
 
 ## Workflow follow-up
 
-- Abrir a issue da árvore de seções que usa o nome da capa como título e citar o número em `proposal.md` e `design.md`.
 - Commitar estes artefatos em `docs(openspec): ...`, separados do código e dos testes.
 - Arquivar a change depois da revisão e fechar a issue #22.

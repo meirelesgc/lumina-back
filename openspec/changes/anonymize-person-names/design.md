@@ -20,7 +20,7 @@ Medições feitas no acervo de `tests/fixtures/documents/` durante a exploraçã
 
 **Non-Goals:**
 
-- Corrigir a árvore de seções que usa o nome da capa como título. O título passa a sair mascarado, e a correção da árvore fica na issue a abrir.
+- Corrigir a árvore de seções que usa o nome da capa como título. O título passa a sair mascarado, e a correção da árvore fica na #42.
 - Reconhecer nomes de uma palavra só. Um nome isolado no corpo ("Maria disse") continua visível.
 - Trocar o modelo spaCy ou adicionar dicionário externo de nomes.
 

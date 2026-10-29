@@ -30,5 +30,5 @@ Nenhuma.
 - **Recuperação:** os chunks indexados mudam onde havia nomes. `test_retrieval_answer_keys.py` precisa continuar passando, e os pisos de `test_retrieval_baseline.py` são medidos de novo.
 - **Desempenho:** a ingestão roda o spaCy uma vez a mais por chunk, na coleta.
 - **Documentação:** a seção "Anonimização com Microsoft Presidio" de `docs/ia-plataforma.md`.
-- **Débitos:** a ingestão transforma o nome da capa em título de seção (issue a abrir). Esta change mascara o nome nesse título, mas não corrige a árvore de seções.
+- **Débitos:** a ingestão transforma o nome da capa em título de seção e a folha de rosto em resumo (#42). Esta change mascara o nome nesse título, mas não corrige a árvore de seções.
 - Fecha a issue #22.
