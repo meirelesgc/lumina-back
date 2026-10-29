@@ -16,10 +16,6 @@ from lumina.core.database import get_session
 from lumina.core.llm import set_fast_model_override
 from lumina.core.security import get_password_hash
 from lumina.models import User, table_registry
-from lumina.schemas.branch import (
-    BranchSectionRequirement,
-    SectionRequirementScope,
-)
 
 
 def pytest_addoption(parser):
@@ -50,13 +46,7 @@ def mock_fast_model_for_tests(request):
     if not request.config.getoption('--run-ai'):
         mock_llm = MagicMock()
         mock_structured = MagicMock()
-        mock_structured.ainvoke = AsyncMock(
-            return_value=BranchSectionRequirement(
-                scope=SectionRequirementScope.UNKNOWN,
-                expected_section=None,
-                reasoning='Mock padrão para testes.',
-            )
-        )
+        mock_structured.ainvoke = AsyncMock(return_value=None)
         mock_llm.with_structured_output.return_value = mock_structured
         set_fast_model_override(mock_llm)
         yield mock_llm
@@ -87,7 +77,7 @@ async def _null_async_session():
 def isolate_background_task_db_writes(monkeypatch):
     """
     Impede que tarefas em background disparadas por create_branch/
-    update_branch (análise de seção, geração de expansões de consulta)
+    update_branch (geração de expansões de consulta)
     gravem no banco real configurado em DATABASE_URL quando disparadas
     fora de uma sessão de teste controlada — via `asyncio.create_task`
     ou o `BackgroundTasks` real do FastAPI/TestClient. Mesmo espírito de
@@ -95,10 +85,6 @@ def isolate_background_task_db_writes(monkeypatch):
     colaterais em serviços externos (aqui, o Postgres configurado no
     ambiente local/`.env`, e não o container efêmero de testes).
     """
-    monkeypatch.setattr(
-        'lumina.services.ai.branch_analyzer.async_session',
-        _null_async_session,
-    )
     monkeypatch.setattr(
         'lumina.services.ai.query_expansion_service.async_session',
         _null_async_session,

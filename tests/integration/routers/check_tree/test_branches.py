@@ -112,3 +112,144 @@ async def test_delete_branch_api(client, token, session, user, setup_taxonomy):
         f'/branch/{branch.id}', headers={'Authorization': f'Bearer {token}'}
     )
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+def _create(client, token, taxonomy_id, **marking):
+    return client.post(
+        '/branch',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'title': 'Metodologia descrita',
+            'description': 'O documento descreve a metodologia.',
+            'taxonomy_id': str(taxonomy_id),
+            **marking,
+        },
+    )
+
+
+def _update(client, token, branch, **fields):
+    return client.put(
+        '/branch',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'id': branch['id'],
+            'title': branch['title'],
+            'description': branch['description'],
+            'taxonomy_id': branch['taxonomy_id'],
+            **fields,
+        },
+    )
+
+
+def _marking(branch: dict) -> tuple:
+    return branch['section_scope'], branch['expected_section']
+
+
+@pytest.mark.asyncio
+async def test_configurador_marca_secao_do_ramo_e_edicao_preserva_marcacao(
+    client, token, setup_taxonomy
+):
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # 1. Cria o ramo marcado com a seção "Metodologia"
+    response = _create(
+        client,
+        token,
+        setup_taxonomy.id,
+        section_scope='SPECIFIC_SECTION',
+        expected_section='Metodologia',
+    )
+    assert response.status_code == HTTPStatus.CREATED
+    branch = response.json()
+    assert _marking(branch) == ('SPECIFIC_SECTION', 'Metodologia')
+
+    # 2. Consulta o ramo e vê a mesma marcação
+    response = client.get(f'/branch/{branch["id"]}', headers=headers)
+    assert _marking(response.json()) == ('SPECIFIC_SECTION', 'Metodologia')
+
+    # 3. Edita só o título, como o front-end atual faz
+    response = _update(client, token, {**branch, 'title': 'Metodologia'})
+    assert response.status_code == HTTPStatus.OK
+    branch = response.json()
+    assert branch['title'] == 'Metodologia'
+    assert _marking(branch) == ('SPECIFIC_SECTION', 'Metodologia')
+
+    # 4. Marca o ramo como documento inteiro
+    response = _update(
+        client, token, branch, section_scope='ENTIRE_DOCUMENT'
+    )
+    assert response.status_code == HTTPStatus.OK
+    branch = response.json()
+    assert _marking(branch) == ('ENTIRE_DOCUMENT', None)
+
+    # 5. Remove a marcação
+    response = _update(client, token, branch, section_scope='UNKNOWN')
+    assert response.status_code == HTTPStatus.OK
+    assert _marking(response.json()) == ('UNKNOWN', None)
+
+
+@pytest.mark.asyncio
+async def test_ramo_criado_sem_marcacao_fica_sem_escopo(
+    client, token, setup_taxonomy
+):
+    response = _create(client, token, setup_taxonomy.id)
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert _marking(response.json()) == ('UNKNOWN', None)
+
+
+INVALID_MARKINGS = [
+    pytest.param({'section_scope': 'SPECIFIC_SECTION'}, id='secao-sem-nome'),
+    pytest.param(
+        {'section_scope': 'SPECIFIC_SECTION', 'expected_section': '   '},
+        id='secao-em-branco',
+    ),
+    pytest.param(
+        {'section_scope': 'ENTIRE_DOCUMENT', 'expected_section': 'Métodos'},
+        id='secao-com-documento-inteiro',
+    ),
+    pytest.param(
+        {'section_scope': 'UNKNOWN', 'expected_section': 'Métodos'},
+        id='secao-sem-marcacao',
+    ),
+    pytest.param({'section_scope': 'CAPITULO'}, id='escopo-invalido'),
+]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('marking', INVALID_MARKINGS)
+async def test_criacao_recusa_marcacao_invalida(
+    client, token, setup_taxonomy, marking
+):
+    response = _create(client, token, setup_taxonomy.id, **marking)
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'marking',
+    [
+        *INVALID_MARKINGS,
+        pytest.param({'expected_section': 'Métodos'}, id='secao-sem-escopo'),
+    ],
+)
+async def test_edicao_recusa_marcacao_invalida_sem_alterar_o_ramo(
+    client, token, setup_taxonomy, marking
+):
+    branch = _create(
+        client,
+        token,
+        setup_taxonomy.id,
+        section_scope='SPECIFIC_SECTION',
+        expected_section='Metodologia',
+    ).json()
+
+    response = _update(client, token, branch, **marking)
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    stored = client.get(
+        f'/branch/{branch["id"]}',
+        headers={'Authorization': f'Bearer {token}'},
+    ).json()
+    assert _marking(stored) == ('SPECIFIC_SECTION', 'Metodologia')

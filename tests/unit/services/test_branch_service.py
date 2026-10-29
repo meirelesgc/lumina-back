@@ -144,6 +144,8 @@ async def test_update_branch_dispatches_on_title_change(
         description='Old Desc',
         taxonomy_id=taxonomy_id,
         deleted_at=None,
+        section_scope='UNKNOWN',
+        expected_section=None,
     )
     mock_branch_repo.get_by_id.return_value = db_branch
     mock_branch_repo.get_by_title_and_taxonomy.return_value = None
@@ -183,6 +185,8 @@ async def test_update_branch_skips_dispatch_when_unchanged(
         description='Same Desc',
         taxonomy_id=taxonomy_id,
         deleted_at=None,
+        section_scope='UNKNOWN',
+        expected_section=None,
     )
     mock_branch_repo.get_by_id.return_value = db_branch
     mock_branch_repo.get_by_title_and_taxonomy.return_value = None
@@ -251,6 +255,8 @@ async def test_update_branch_success(
         description='Old Desc',
         taxonomy_id=taxonomy_id,
         deleted_at=None,
+        section_scope='UNKNOWN',
+        expected_section=None,
     )
     mock_branch_repo.get_by_id.return_value = db_branch
     mock_branch_repo.get_by_title_and_taxonomy.return_value = None
@@ -276,6 +282,8 @@ async def test_delete_branch_success(
         description='Desc',
         taxonomy_id=taxonomy_id,
         deleted_at=None,
+        section_scope='UNKNOWN',
+        expected_section=None,
     )
     mock_branch_repo.get_by_id.return_value = db_branch
 
@@ -332,7 +340,7 @@ async def test_update_branch_without_commit_skips_enrichment(
     assert background_tasks.tasks == []
 
 
-def test_dispatch_branch_enrichment_schedules_both_tasks():
+def test_dispatch_branch_enrichment_schedules_only_query_expansion():
     background_tasks = BackgroundTasks()
     branch_id = uuid4()
     context = branch_service.BranchNormativeContext(branch_title='Ramo')
@@ -341,11 +349,7 @@ def test_dispatch_branch_enrichment_schedules_both_tasks():
         background_tasks, branch_id, context
     )
 
-    scheduled = [task.func for task in background_tasks.tasks]
-    assert scheduled == [
-        branch_service.run_branch_section_analysis_background,
-        branch_service.run_branch_query_expansion_background,
+    assert [task.func for task in background_tasks.tasks] == [
+        branch_service.run_branch_query_expansion_background
     ]
-    assert all(
-        task.args == (branch_id, context) for task in background_tasks.tasks
-    )
+    assert background_tasks.tasks[0].args == (branch_id, context)

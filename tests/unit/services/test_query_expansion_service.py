@@ -9,8 +9,8 @@ from lumina.schemas.branch import (
     QueryExpansionItem,
     QueryExpansionList,
 )
-from lumina.services.ai.branch_analyzer import BranchNormativeContext
 from lumina.services.ai.query_expansion_service import (
+    BranchNormativeContext,
     generate_query_expansions,
     persist_branch_expansions,
     run_branch_query_expansion_background,
@@ -78,8 +78,8 @@ async def test_generate_query_expansions_fallback_on_exception():
 
 @pytest.mark.asyncio
 async def test_generate_query_expansions_fallback_on_wrong_type():
-    """Global test fixture mocks with_structured_output returning an
-    unrelated schema (BranchSectionRequirement); must fall back safely."""
+    """The model returns an object of an unrelated type; must fall back
+    safely."""
     mock_llm = MagicMock()
     mock_structured = MagicMock()
     mock_structured.ainvoke = AsyncMock(return_value=object())

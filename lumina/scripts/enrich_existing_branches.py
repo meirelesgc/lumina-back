@@ -10,16 +10,9 @@ from sqlalchemy.orm import joinedload
 from lumina.core.database import async_session
 from lumina.core.llm import get_fast_model
 from lumina.models import Branch, Taxonomy
-from lumina.repositories import (
-    branch_query_expansion_repo,
-    branch_section_requirement_repo,
-)
-from lumina.services.ai.branch_analyzer import (
-    BranchNormativeContext,
-    analyze_branch_section_requirement,
-    persist_branch_section_requirement,
-)
+from lumina.repositories import branch_query_expansion_repo
 from lumina.services.ai.query_expansion_service import (
+    BranchNormativeContext,
     generate_query_expansions,
     persist_branch_expansions,
 )
@@ -65,20 +58,13 @@ async def enrich_branch(  # noqa: PLR0913, PLR0917
     force: bool = False,
 ) -> str:
     """
-    Gera (e persiste, salvo em dry-run) a análise de seção (Fase 2) e as
-    expansões de consulta (Fase 1) de uma branch, pulando o que já
-    estiver ativo salvo com `force=True`. Sessão própria por branch,
+    Gera (e persiste, salvo em dry-run) as expansões de consulta (Fase 1)
+    de uma branch, pulando as que já estiverem ativas salvo com
+    `force=True`. Sessão própria por branch,
     seguindo o mesmo padrão dos jobs de background já existentes.
     """
     actions: list[str] = []
     async with semaphore, async_session() as session:
-        has_requirement = bool(
-            (
-                await branch_section_requirement_repo.get_active_grouped(
-                    session, [branch_id]
-                )
-            ).get(branch_id)
-        )
         has_expansions = bool(
             (
                 await branch_query_expansion_repo.list_active_grouped(
@@ -89,18 +75,6 @@ async def enrich_branch(  # noqa: PLR0913, PLR0917
 
         llm = get_fast_model()
         model_name = getattr(llm, 'model_name', 'unknown')
-
-        if force or not has_requirement:
-            requirement = await analyze_branch_section_requirement(
-                context, model=llm
-            )
-            if not dry_run:
-                await persist_branch_section_requirement(
-                    session, branch_id, requirement, model_name
-                )
-            actions.append(f'section_requirement={requirement.scope.value}')
-        else:
-            actions.append('section_requirement=já ativo (skip)')
 
         if force or not has_expansions:
             expansions = await generate_query_expansions(context, model=llm)
@@ -128,8 +102,8 @@ async def run_enrichment(
     dry_run: bool = False,
     force: bool = False,
 ) -> list[str]:
-    """Enriquece branches ativas com expansões de consulta e análise de
-    seção que ainda não possuem (Fases 1 e 2 do plano de recuperação)."""
+    """Enriquece branches ativas com as expansões de consulta que ainda
+    não possuem (Fase 1 do plano de recuperação)."""
     print('🔍 Buscando branches ativas (deleted_at IS NULL)...')
     async with async_session() as session:
         branches = await _load_active_branches(session, limit)
@@ -168,8 +142,8 @@ async def run_enrichment(
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Enriquece branches ativas já existentes com '
-        'expansões de consulta (Fase 1) e análise de seção esperada '
-        '(Fase 2), pulando as que já possuem dados ativos.'
+        'expansões de consulta (Fase 1), pulando as que já possuem '
+        'expansões ativas.'
     )
     parser.add_argument(
         '--limit',

@@ -20,6 +20,9 @@ from lumina.models import (
 )
 from lumina.schemas import TreeSuggestionItemConfirm
 from lumina.services import tree_suggestion_service as service
+from lumina.services.ai.query_expansion_service import (
+    run_branch_query_expansion_background,
+)
 from lumina.services.ai.tree_suggestion import generate_tree_suggestions
 from lumina.services.ai.tree_suggestion.structures import (
     ConsolidatedBranch,
@@ -318,7 +321,9 @@ async def test_confirm_chain_and_dispatch_branch_enrichment(
 
     created = await session.get(Branch, branch_item.applied_entity_id)
     assert created.taxonomy_id == tax_item.applied_entity_id
-    assert len(background_tasks.tasks) == 2  # noqa: PLR2004
+    assert [task.func for task in background_tasks.tasks] == [
+        run_branch_query_expansion_background
+    ]
 
 
 @pytest.mark.asyncio

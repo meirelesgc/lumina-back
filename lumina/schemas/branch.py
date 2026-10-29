@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from lumina.schemas.common import FilterPage
 
@@ -13,16 +13,54 @@ class BranchFilter(FilterPage):
     q: Optional[str] = None
 
 
+class SectionRequirementScope(str, Enum):
+    SPECIFIC_SECTION = 'SPECIFIC_SECTION'
+    ENTIRE_DOCUMENT = 'ENTIRE_DOCUMENT'
+    UNKNOWN = 'UNKNOWN'
+
+
 class BranchSchema(BaseModel):
     title: str
     description: str
 
 
-class BranchCreate(BranchSchema):
+class BranchSectionMarking(BaseModel):
+    """
+    Marcação do escopo de seção feita pelo configurador. Só
+    `SPECIFIC_SECTION` leva `expected_section`, e ela não pode ser vazia.
+    """
+
+    section_scope: Optional[SectionRequirementScope] = None
+    expected_section: Optional[str] = None
+
+    @model_validator(mode='after')
+    def check_marking(self):
+        if self.expected_section is not None:
+            self.expected_section = self.expected_section.strip() or None
+        if 'section_scope' not in self.model_fields_set:
+            if 'expected_section' in self.model_fields_set:
+                raise ValueError('expected_section exige section_scope')
+            return self
+        specific = (
+            self.section_scope == SectionRequirementScope.SPECIFIC_SECTION
+        )
+        if specific and not self.expected_section:
+            raise ValueError('SPECIFIC_SECTION exige expected_section')
+        if not specific and self.expected_section:
+            raise ValueError(
+                'expected_section só vale com SPECIFIC_SECTION'
+            )
+        return self
+
+
+class BranchCreate(BranchSchema, BranchSectionMarking):
     taxonomy_id: UUID
+    section_scope: SectionRequirementScope = SectionRequirementScope.UNKNOWN
 
 
-class BranchUpdate(BranchSchema):
+class BranchUpdate(BranchSchema, BranchSectionMarking):
+    """Omitir `section_scope` mantém a marcação atual do ramo."""
+
     id: UUID
     taxonomy_id: UUID
 
@@ -30,6 +68,8 @@ class BranchUpdate(BranchSchema):
 class BranchPublic(BranchSchema):
     id: UUID
     taxonomy_id: UUID
+    section_scope: SectionRequirementScope = SectionRequirementScope.UNKNOWN
+    expected_section: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -38,31 +78,6 @@ class BranchPublic(BranchSchema):
 
 class BranchList(BaseModel):
     branches: list[BranchPublic]
-
-
-class SectionRequirementScope(str, Enum):
-    SPECIFIC_SECTION = 'SPECIFIC_SECTION'
-    ENTIRE_DOCUMENT = 'ENTIRE_DOCUMENT'
-    UNKNOWN = 'UNKNOWN'
-
-
-class BranchSectionRequirement(BaseModel):
-    scope: SectionRequirementScope = Field(
-        description=(
-            'Escopo de busca: SPECIFIC_SECTION, ENTIRE_DOCUMENT ou UNKNOWN.'
-        )
-    )
-    expected_section: Optional[str] = Field(
-        default=None,
-        description=(
-            'Nome sugerido da seção específica '
-            '(se scope for SPECIFIC_SECTION).'
-        ),
-    )
-    reasoning: Optional[str] = Field(
-        default=None,
-        description='Justificativa técnica concisa do modelo.',
-    )
 
 
 class ExpansionType(str, Enum):

@@ -31,7 +31,7 @@ Em `tests/conftest.py`:
 - `mock_fast_model_for_tests` (`autouse`) troca o modelo rápido por um mock
   com resposta fixa, a menos que a suíte rode com `--run-ai`.
 - `isolate_background_task_db_writes` (`autouse`) dá uma sessão nula às
-  tarefas em segundo plano de `branch_analyzer`, `query_expansion_service` e
+  tarefas em segundo plano de `query_expansion_service` e
   `tree_suggestion_service`. Para observar o efeito delas, chame a função
   diretamente no teste.
 - `mock_db_time` fixa `created_at` e `updated_at` de um modelo.

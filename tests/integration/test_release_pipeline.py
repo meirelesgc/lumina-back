@@ -74,10 +74,14 @@ class RuleSelector:
 
     model_name = 'seletor-falso'
 
+    def __init__(self):
+        self.prompts: list[str] = []
+
     def with_structured_output(self, schema):
         return self
 
-    async def ainvoke(self, prompt: str) -> SelectionStep:  # noqa: PLR6301
+    async def ainvoke(self, prompt: str) -> SelectionStep:
+        self.prompts.append(prompt)
         first_round = 'Seções já lidas\nNenhuma.' in prompt
         missing = MISSING in prompt
         return SelectionStep(
@@ -90,8 +94,9 @@ class RuleSelector:
 
 @pytest.fixture
 def selector():
-    set_fast_model_override(RuleSelector())
-    yield
+    rule_selector = RuleSelector()
+    set_fast_model_override(rule_selector)
+    yield rule_selector
     set_fast_model_override(None)
 
 
@@ -103,7 +108,7 @@ async def persist(session, *entities):
         await session.refresh(entity)
 
 
-async def release_with_tree(session, user):
+async def release_with_tree(session, user, branches_kwargs=None):
     document = Document(
         name='Anteprojeto',
         identifier='ANT-1',
@@ -119,8 +124,9 @@ async def release_with_tree(session, user):
     taxonomy = TaxonomyFactory(typification_id=typification.id)
     await persist(session, taxonomy)
     branches = [
-        BranchFactory(taxonomy_id=taxonomy.id, title=title)
-        for title in (FOUND, MISSING)
+        BranchFactory(taxonomy_id=taxonomy.id, **kwargs)
+        for kwargs in branches_kwargs
+        or [{'title': FOUND}, {'title': MISSING}]
     ]
     link = DocumentTypification(
         document_id=document.id, typification_id=typification.id
@@ -155,3 +161,47 @@ async def test_todo_criterio_recebe_veredito_com_a_selecao_gravada(
     assert 'Seções inspecionadas' in missing.feedback
     assert len(model.evaluator_prompts()) == 1
     assert FOUND in model.evaluator_prompts()[0]
+
+
+@pytest.mark.asyncio
+async def test_avaliacao_segue_a_marcacao_de_escopo_do_ramo(
+    session, user, selector
+):
+    """
+    Jornada: o configurador marcou um critério como documento inteiro e
+    outro com a seção "Objetivos" (OpenSpec: manual-branch-section-scope).
+    """
+    whole = 'Redação clara'
+    release = await release_with_tree(
+        session,
+        user,
+        [
+            {'title': whole, 'section_scope': 'ENTIRE_DOCUMENT'},
+            {
+                'title': FOUND,
+                'section_scope': 'SPECIFIC_SECTION',
+                'expected_section': 'Objetivos',
+            },
+        ],
+    )
+    model = RecordingModel(responses=[VERDICT, VERDICT, 'Síntese.'])
+    vstore = MagicMock(aadd_documents=AsyncMock())
+
+    await pipeline.process_release_pipeline(
+        session, release.id, model, vstore, AsyncMock()
+    )
+
+    applied = (await session.scalars(select(AppliedBranch))).all()
+    by_title = {branch.title: branch.context_selection for branch in applied}
+
+    assert by_title[whole]['outcome'] == 'entire_document'
+    assert by_title[whole]['scope'] == 'ENTIRE_DOCUMENT'
+    assert by_title[whole]['expected_section'] is None
+    assert by_title[FOUND]['scope'] == 'SPECIFIC_SECTION'
+    assert by_title[FOUND]['expected_section'] == 'Objetivos'
+    assert selector.prompts
+    assert all(whole not in prompt for prompt in selector.prompts)
+    assert all(
+        'Seção esperada pelo analista: Objetivos' in prompt
+        for prompt in selector.prompts
+    )

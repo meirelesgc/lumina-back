@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
@@ -11,9 +12,20 @@ from lumina.core.llm import get_fast_model
 from lumina.models import BranchQueryExpansion
 from lumina.repositories import branch_query_expansion_repo
 from lumina.schemas.branch import QueryExpansionItem, QueryExpansionList
-from lumina.services.ai.branch_analyzer import BranchNormativeContext
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BranchNormativeContext:
+    """Contexto normativo da tríade (Tipificação, Taxonomia, Ramo)."""
+
+    branch_title: str
+    branch_description: Optional[str] = None
+    taxonomy_title: Optional[str] = None
+    taxonomy_description: Optional[str] = None
+    typification_name: Optional[str] = None
+
 
 MIN_EXPANSIONS = 2
 MAX_EXPANSIONS = 4
