@@ -74,10 +74,13 @@ Os testes do cleaner (issue #20) usam páginas sintéticas e cobrem cada regra d
 ## Risks / Trade-offs
 
 - [A árvore de seções muda quando os títulos falsos vindos de cabeçalhos somem, e o placar de identificação pode cair] → `test_ingestion_sections.py` e `test_retrieval_answer_keys.py` rodam como guarda antes e depois. Se algum cair, a implementação para e a decisão volta para o usuário.
+  - Ocorreu na implementação: o placar caiu de 63/63 para 62/63. No recuperando, "REFERÊNCIAS" é a última linha da página 23 e só o rodapé vinha depois dela. Sem o rodapé, o primeiro chunk da seção cai na página 24, e a métrica lê a página pelo primeiro chunk. Nenhum texto se perdeu. O usuário decidiu baixar `MIN_SECTION_IDENTIFICATION_RATE` de 1.0 para 0.98, o placar medido arredondado para baixo.
+- [O layout junta uma linha corrida com outro texto numa caixa só, e a chave dessa caixa não se repete] → Na página 1 do recuperando, o rodapé vem com a URL da revista e fica no texto. O usuário aceitou o caso, e o gabarito mantém o rodapé nessa página (`keep_on_pages: [1]`). A regra de detecção não compara prefixos de chave.
 - [Os `chunk_id` mudam de índice nas páginas onde um chunk só tinha cabeçalho] → Os `chunk_id` vivem só dentro de uma avaliação, porque a ingestão roda de novo a cada uma.
 - [Um documento com poucas páginas e cabeçalho marcado como `text` não chega a 3 repetições] → Fica no texto, como hoje. Um documento novo no acervo com esse caso pede um ajuste dos limiares em outra mudança.
 - [Um parágrafo real que comece no topo de várias páginas com o mesmo texto seria apagado] → A regra pede o mesmo texto, com dígitos normalizados, em 30% das páginas. O acervo não tem esse caso.
 - [As métricas de recuperação com IA podem mudar] → Uma tarefa roda `tests/ai/evaluation/retrieval` e registra o placar. Abaixo do piso, a implementação para e o usuário decide.
+  - Ocorreu na implementação: contra `main`, o recall subiu de 69/129 para 71/129 e a precisão entre ramos de 40/202 para 42/199, e o acerto de seção e página caiu de 75/129 para 73/129. Os ramos `implicacoes-praticas-discutidas` e `justificativa-revisao`, da dengue, perderam blocos da seção anotada. O usuário aceitou a troca: `MIN_SECTION_PAGE_HIT_RATE` baixou de 0.58 para 0.56, o valor medido arredondado para baixo, e `MIN_EVIDENCE_RECALL` subiu para 0.55 e `MIN_BRANCH_PRECISION` para 0.21.
 
 ## Migration Plan
 
