@@ -5,6 +5,7 @@ from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
 
+from lumina.services.ai.stages.sentences import remap_sentences
 from lumina.utils.InstanceCounterAnonymizer import InstanceCounterAnonymizer
 
 PERSON_RECOGNIZER = 'PersonNameRecognizer'
@@ -39,6 +40,22 @@ def person_recognizer(names: list[str]) -> PatternRecognizer:
         ],
         supported_language='pt',
     )
+
+
+def entity_changes(items: list, replaced_sizes: list[int]) -> list[tuple]:
+    """
+    Posições de cada entidade no texto original e no anonimizado, em ordem
+    de leitura. O Presidio só informa as posições finais, e o operador
+    registra o tamanho original na mesma ordem dos itens.
+    """
+    changes = []
+    delta = 0
+    pairs = sorted(zip(items, replaced_sizes), key=lambda p: p[0].start)
+    for item, size in pairs:
+        old_start = item.start - delta
+        changes.append((old_start, old_start + size, item.start, item.end))
+        delta += item.end - item.start - size
+    return changes
 
 
 class PresidioAnonymizer:
@@ -238,7 +255,9 @@ class PresidioAnonymizer:
 
         return analyzer
 
-    def _anonymize_text(self, text, verbose=False, existing_mapping=None):
+    def _anonymize_text(
+        self, text, verbose=False, existing_mapping=None, changes=None
+    ):
         """
         Anonimiza o texto usando Presidio.
 
@@ -246,6 +265,8 @@ class PresidioAnonymizer:
             text (str): Texto a ser anonimizado
             verbose (bool): Se True, imprime informações de debug
             existing_mapping (dict): Mapeamento existente para manter consistência
+            changes (list): Quando informada, recebe as posições de cada
+                entidade no texto original e no anonimizado
 
         Returns:
             tuple: (texto_anonimizado, mapeamento_entidades)
@@ -259,15 +280,25 @@ class PresidioAnonymizer:
             existing_mapping.copy() if existing_mapping else dict()
         )
 
+        replaced_sizes = []
         anonymization_result = self.engine.anonymize(
             text=text,
             analyzer_results=results_portuguese,
             operators={
                 'DEFAULT': OperatorConfig(
-                    'entity_counter', {'entity_mapping': entity_mapping}
+                    'entity_counter',
+                    {
+                        'entity_mapping': entity_mapping,
+                        'replaced_sizes': replaced_sizes,
+                    },
                 )
             },
         )
+
+        if changes is not None:
+            changes.extend(
+                entity_changes(anonymization_result.items, replaced_sizes)
+            )
 
         if verbose:
             print(f'Texto anonimizado: {anonymization_result.text}')
@@ -352,11 +383,19 @@ class PresidioAnonymizer:
             if verbose:
                 print(f'Anonimizando chunk {index}')
 
+            changes = []
             anonymized_text, entity_mapping = self._anonymize_text(
-                chunk.page_content, verbose, self.existing_presidio_mapping
+                chunk.page_content,
+                verbose,
+                self.existing_presidio_mapping,
+                changes,
             )
             self.existing_presidio_mapping.update(entity_mapping)
             chunk.page_content = anonymized_text
+            if 'sentences' in chunk.metadata:
+                chunk.metadata['sentences'] = remap_sentences(
+                    chunk.metadata['sentences'], changes
+                )
 
             if 'section_title' in chunk.metadata and isinstance(
                 chunk.metadata['section_title'], str

@@ -43,3 +43,14 @@ def test_nenhum_chunk_anonimizado_traz_nome_de_autoria(answer_key):
     ]
 
     assert not leaks, 'Nomes sem anonimização:\n' + '\n'.join(leaks)
+
+
+@pytest.mark.parametrize('answer_key', SECTIONS_KEYS, ids=doc_id)
+def test_frases_cabem_no_texto_anonimizado_sem_nome_de_autoria(answer_key):
+    names = person_names(answer_key)
+
+    for chunk in anonymized(pdf_for(answer_key)):
+        sentences = chunk.metadata['sentences']
+        assert sentences[-1]['end'] <= len(chunk.page_content)
+        for name in names:
+            assert normalize(name) not in normalize(str(sentences))

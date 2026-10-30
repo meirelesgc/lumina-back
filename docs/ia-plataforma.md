@@ -137,6 +137,8 @@ Para viabilizar a auditoria visual do documento, cada chunk precisa estar vincul
 * **Fusão de Linhas Visuais**:
   Palavras alinhadas que compartilham a mesma linha física são agrupadas, calculando-se o retângulo envolvente de cada linha:
   `[x0, y0, x1, y1]` *(onde x0, y0 é o canto superior esquerdo e x1, y1 é o canto inferior direito)*.
+* **Frases Citáveis**:
+  `enrich_chunks_with_line_rects` também divide o corpo de cada chunk em frases numeradas (`stages/sentences.py`) e grava `metadata['sentences']`, com `n`, `start`, `end` e `rects`. As posições apontam para `page_content`, e a anonimização as recalcula. Os metadados não guardam o texto das frases. Frases de cabeçalho e rodapé corrido ficam sem retângulos, porque esses blocos não têm coordenadas de conteúdo.
 * **Retrocompatibilidade de Citação**:
   A lista resultante de retângulos (`rects`) é gravada nos metadados do chunk. Esse contrato é consumido diretamente pelo validador de citações (`resolve_citations`) e pelo visualizador de PDF no frontend para desenhar as caixas de realce (*highlights*).
 
@@ -155,7 +157,7 @@ Antes de qualquer vetorização ou envio para a OpenAI, o `PresidioAnonymizer` i
 ### Embeddings & PGVector
 * **Modelo**: OpenAI `text-embedding-3-small` (1536 dimensões).
 * **Armazenamento**: Extensão `pgvector` no PostgreSQL 17 (tabela `langchain_pg_embedding`).
-* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role`, `section_index` (posição da seção na árvore achatada), `chunk_index_in_section` (posição do chunk dentro da seção naquela página) e `presidio_mapping`.
+* **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role`, `section_index` (posição da seção na árvore achatada), `chunk_index_in_section` (posição do chunk dentro da seção naquela página), `sentences` e `presidio_mapping`.
 * **Resumos de Seção**: A ingestão grava na mesma coleção um registro por seção, com `record_type = section_summary`. O texto do resumo é o título da seção seguido dos primeiros 500 caracteres do primeiro chunk dela (`build_section_summary_documents`). Nenhum LLM participa. A recuperação usa esses registros só no roteamento por seção e os exclui das buscas de chunks.
 * **Métrica**: Distância por cosseno (`<=>`).
 
@@ -182,7 +184,7 @@ Implementada em `lumina/services/ai/stages/outline.py` e `selection.py`. O conte
 1. **Sumário**: `build_outline` agrupa os chunks anonimizados que a ingestão devolve por seção, na ordem de leitura. Cada seção recebe um id (`s01`, `s02`…), as páginas, os tokens estimados (caracteres ÷ 4) e os primeiros 200 caracteres do texto. `outline_markdown` gera o sumário em Markdown, indentado pelo caminho de títulos.
 2. **Escopo do critério**: o requisito de seção (`section_requirement`) decide o caminho. `ENTIRE_DOCUMENT` recebe todas as seções sem chamar o seletor. `SPECIFIC_SECTION`, `UNKNOWN` e critério sem requisito passam pelo seletor, que recebe o `expected_section` como dica.
 3. **Seletor** (`select_sections`, modelo rápido `gpt-6-luna`): em cada rodada, recebe o sumário, o critério e o texto das seções já lidas, e devolve uma saída estruturada (`SelectionStep`) com os ids que faltam ler, se o que leu basta e se o conteúdo não existe no documento. São no máximo 3 rodadas (`MAX_ROUNDS`). "Basta" e "não existe" só valem depois de ao menos uma leitura. Ids fora do sumário são ignorados e registrados. Uma saída fora do schema é repetida 2 vezes e depois cai no documento inteiro; o mesmo vale quando a primeira rodada não traz nenhum id válido.
-4. **Payload**: as seções escolhidas vão ao avaliador com os marcadores `[FONTE] chunk_id: {id}` de cada chunk, então as citações e o destaque no PDF funcionam como antes. Os critérios rodam em paralelo, limitados a 8 (`SELECTION_CONCURRENCY`), e o sumário vem antes do critério no prompt, para aproveitar o cache de prompt.
+4. **Payload**: as seções escolhidas vão ao avaliador com os marcadores `[FONTE] chunk_id: {id}` de cada chunk e `[s1]`, `[s2]` em cada frase, então as citações e o destaque no PDF funcionam como antes. Os critérios rodam em paralelo, limitados a 8 (`SELECTION_CONCURRENCY`), e o sumário vem antes do critério no prompt, para aproveitar o cache de prompt.
 5. **Conteúdo inexistente**: quando o seletor conclui que o conteúdo não existe, o critério recebe "não contempla", nota 0 e um parecer padrão (`NOT_FOUND_FEEDBACK`) com as seções inspecionadas, sem chamar o avaliador.
 6. **Registro**: cada veredito guarda a seleção em `AppliedBranch.context_selection` (escopo, resultado, seções, rodadas, tokens, modelo e falha, se houve). Com `DEBUG_INGESTION_AUDIT=True`, o sumário vai para `05_outline/<documento>.md` e a seleção de cada critério, com o contexto enviado e o veredito, para `06_selection/<documento>/<critério>.md`.
 
@@ -200,7 +202,7 @@ O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com bas
 
 ### Diretrizes Inegociáveis da Avaliação:
 * **Fato sobre Opinião**: O modelo considera exclusivamente o que está escrito nas seções enviadas. Se a exigência não constar nelas, ela não é considerada atendida.
-* **Citação Obrigatória de Chunks**: Cada afirmação deve obrigatoriamente referenciar o `chunk_id` de origem. É expressamente vedado inventar identificadores.
+* **Citação Obrigatória de Chunks**: Cada afirmação deve obrigatoriamente referenciar o `chunk_id` de origem e, em `sentences`, os números das frases que a sustentam. É expressamente vedado inventar identificadores.
 * **Parecer Objetivo**: O campo `feedback` é curto e em Markdown (no máximo 4 itens, até 25 palavras por item), sem parágrafos longos, listas numeradas, emojis, saudação ou autoapresentação.
 * **Sugestões Apenas em Lacunas**: Critério atendido integralmente não recebe sugestão. Critério parcial ou não atendido recebe no máximo uma ação curta por lacuna identificada.
 
@@ -233,7 +235,7 @@ Todos os critérios da árvore são avaliados em paralelo através de chamadas e
 Quando a saída de um critério não respeita o schema JSON, apenas esse critério recebe nota 0 e `fulfilled = false`, com o erro no parecer; os demais critérios do lote seguem normalmente.
 
 ### Resolução de Coordenadas Visuais (`resolve_citations`):
-Para cada citação retornada, o backend cruza o `chunk_id` com os metadados de chunk armazenados e extrai os retângulos `rects: [{x1, y1, x2, y2}]` e a página, salvando no campo `references` do modelo `AppliedBranch`.
+Para cada citação retornada, o backend cruza o `chunk_id` com os metadados de chunk armazenados e extrai os retângulos `rects: [{x1, y1, x2, y2}]` das frases citadas e a página, salvando no campo `references` do modelo `AppliedBranch`. O texto das frases vai em `text_snippet`. Chunks sem frases, como os indexados antes dessa mudança, e citações sem frase válida ou sem retângulo usam os retângulos do chunk inteiro. Referências já salvas não mudam.
 
 ### Síntese Executiva da Release (Persona OiacIA):
 Ao final da avaliação de todos os ramos:
@@ -265,7 +267,7 @@ Permite dialogar com o documento com retorno de coordenadas visuais para destaqu
        citations: List[Citation]
    ```
 4. **Resolução no PDF**:
-   A função `resolve_citations` converte os `chunk_id` em coordenadas físicas `rects` que são enviadas na resposta JSON. O frontend desenha as caixas delimitadoras sobre a página do PDF correspondente.
+   A função `resolve_citations` converte os `chunk_id` e as frases citadas em coordenadas físicas `rects` que são enviadas na resposta JSON. O frontend desenha as caixas delimitadoras sobre a página do PDF correspondente.
 
 ### Endpoint: Assistente Geral (`POST /doc/{doc_id}/assistant/chat`)
 Atua como assistente contínuo sobre o arquivo:

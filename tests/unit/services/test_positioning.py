@@ -108,6 +108,61 @@ def test_enrich_chunks_with_line_rects_legacy_format():
     assert rects[1] == [10.0, 112.0, 170.0, 122.0]
 
 
+def test_frase_recebe_os_retangulos_do_proprio_trecho():
+    # clean_whitespace troca os \n\n\n do Markdown por \n\n no chunk
+    first = 'O fornecedor deve apresentar certidao negativa.'
+    second = 'Segunda frase com tamanho suficiente para valer sozinha.'
+    markdown = f'{first}\n\n\n{second}'
+    words = [
+        (10.0, 100.0, 300.0, 110.0, token, 0, 0, index)
+        for index, token in enumerate(first.split())
+    ] + [
+        (10.0, 112.0, 300.0, 122.0, token, 1, 0, index)
+        for index, token in enumerate(second.split())
+    ]
+    page = MagicMock()
+    page.get_text.return_value = words
+    pdf_doc = MagicMock()
+    pdf_doc.__len__.return_value = 1
+    pdf_doc.__getitem__.return_value = page
+    pages = [
+        {
+            'page': 0,
+            'char_start': 0,
+            'boxes': [
+                {
+                    'class': 'text',
+                    'bbox': [5.0, 95.0, 305.0, 111.0],
+                    'pos': [0, len(first)],
+                },
+                {
+                    'class': 'text',
+                    'bbox': [5.0, 111.0, 305.0, 125.0],
+                    'pos': [len(first) + 3, len(markdown)],
+                },
+            ],
+        }
+    ]
+    chunk = Document(
+        page_content=f'[Corpo] {first}\n\n{second}',
+        metadata={
+            'section_title': 'Corpo',
+            'page': 0,
+            'char_start': 0,
+            'char_end': len(markdown),
+        },
+    )
+
+    enrich_chunks_with_line_rects([chunk], pdf_doc, pages, markdown)
+
+    one, two = chunk.metadata['sentences']
+    content = chunk.page_content
+    assert content[one['start'] : one['end']] == first
+    assert content[two['start'] : two['end']] == second
+    assert [rect[1] for rect in one['rects']] == [100.0]
+    assert [rect[1] for rect in two['rects']] == [112.0]
+
+
 def test_caixa_corrida_apagada_fica_fora_dos_retangulos():
     # Linha de autores corrida: a extração troca o texto por quebras de
     # linha e marca a caixa com 'running'.

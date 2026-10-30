@@ -16,6 +16,7 @@ from lumina.services.ai.stages.criteria import (
     merge_presidio_mappings,
 )
 from lumina.services.ai.stages.sections import SECTION_SUMMARY_RECORD_TYPE
+from lumina.services.ai.stages.sentences import mark_sentences
 
 SETTINGS = Settings()
 
@@ -77,8 +78,9 @@ def format_context(branch_or_chunks: Any) -> str:
 
     for doc in chunks_list:
         section_title = doc.metadata.get('section_title', '').strip()
-        content = getattr(
-            doc, 'page_content', getattr(doc, 'content', str(doc))
+        content = mark_sentences(
+            getattr(doc, 'page_content', getattr(doc, 'content', str(doc))),
+            doc.metadata.get('sentences'),
         )
         header_pattern = f'SECTION: {section_title}\n\n'
 
@@ -388,7 +390,9 @@ def build_chunk_prompts(chunks: List[Document]) -> List[str]:
     for chunk in chunks:
         chunk_id = chunk.metadata.get('chunk_id', 'unknown_id')
         section = chunk.metadata.get('section_title', '')
-        conteudo = chunk.page_content
+        conteudo = mark_sentences(
+            chunk.page_content, chunk.metadata.get('sentences')
+        )
 
         if '\n\n' in conteudo and conteudo.startswith('SECTION:'):
             conteudo = conteudo.split('\n\n', 1)[1]

@@ -28,6 +28,7 @@ from lumina.models import (
 )
 from lumina.schemas.document import DocumentProcessingStatus
 from lumina.services.ai import pipeline
+from lumina.services.ai.stages.extraction import extract_pdf_chunks
 from lumina.services.ai.stages.selection import SelectionStep
 from tests.factories.branch_factory import (
     BranchFactory,
@@ -205,3 +206,62 @@ async def test_avaliacao_segue_a_marcacao_de_escopo_do_ramo(
         'Seção esperada pelo analista: Objetivos' in prompt
         for prompt in selector.prompts
     )
+
+
+def citable_chunk():
+    """Chunk em que uma frase ocupa menos linhas que o chunk inteiro."""
+    chunks, *_ = extract_pdf_chunks(str(PDF), 'fonte')
+    return next(
+        chunk
+        for chunk in chunks
+        if any(
+            0 < len(sentence['rects']) < len(chunk.metadata['rects'])
+            for sentence in chunk.metadata['sentences']
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_analista_ve_destacada_so_a_frase_citada(
+    session, user, selector
+):
+    """
+    Jornada: o analista envia o anteprojeto e abre a evidência de um critério.
+    O modelo cita uma frase, e a referência traz os retângulos dessa frase, em
+    vez de todas as linhas do chunk (OpenSpec: sentence-level-citations).
+    """
+    chunk = citable_chunk()
+    sentence = next(
+        s
+        for s in chunk.metadata['sentences']
+        if 0 < len(s['rects']) < len(chunk.metadata['rects'])
+    )
+    verdict = json.dumps({
+        'feedback': '**Veredito:** Atende.',
+        'fulfilled': True,
+        'score': 9,
+        'citations': [
+            {
+                'chunk_id': chunk.metadata['chunk_id'],
+                'sentences': [sentence['n']],
+            }
+        ],
+    })
+    release = await release_with_tree(
+        session, user, [{'title': FOUND, 'section_scope': 'ENTIRE_DOCUMENT'}]
+    )
+    model = RecordingModel(responses=[verdict, 'Síntese.'])
+    vstore = MagicMock(aadd_documents=AsyncMock())
+
+    await pipeline.process_release_pipeline(
+        session, release.id, model, vstore, AsyncMock()
+    )
+
+    [applied] = (await session.scalars(select(AppliedBranch))).all()
+    [reference] = applied.references
+
+    assert f'[s{sentence["n"]}]' in model.evaluator_prompts()[0]
+    assert reference['chunk_id'] == chunk.metadata['chunk_id']
+    assert reference['page'] == chunk.metadata['page']
+    assert len(reference['rects']) == len(sentence['rects'])
+    assert reference['text_snippet']
