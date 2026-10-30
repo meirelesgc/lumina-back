@@ -1,0 +1,18 @@
+# Cabeçalhos e rodapés corridos de dengue_no_brasil.pdf
+# Salvar como dengue_no_brasil.running.yaml ao lado de dengue_no_brasil.pdf
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Rodapé "Revista Foco": todas as 24 páginas.
+# Título: páginas pares (2 a 24); na página 1 é o título do artigo.
+# Autores: páginas ímpares (1 a 23); a página 1 guarda a primeira ocorrência.
+# O bloco real de autores da página 1 ("Robson Lopes Cardoso1 ...") fica
+# fora da faixa e tem outro texto.
+
+running_lines:
+  - text: 'Revista Foco |Curitiba (PR)| v.17.n.3|e4640| p.01-24 |2024'
+  - text: 'DENGUE NO BRASIL: UMA REVISÃO SISTEMÁTICA'
+    keep_on_pages: [1]
+  - text: 'Robson Lopes Cardoso, Níbia Sales Damasceno Corioletti, Lourenço Faria Costa, José Henrique da Silva Taveira, Claudia Peixoto Bueno, Sidinei Corioletti, Pedro Rogério Giongo, Rosemeire Terezinha Da Silva'
+    keep_on_pages: [1]
+
+keep_lines: []

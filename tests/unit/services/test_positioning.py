@@ -106,3 +106,42 @@ def test_enrich_chunks_with_line_rects_legacy_format():
     assert len(rects) == 2
     assert rects[0] == [10.0, 100.0, 120.0, 110.0]
     assert rects[1] == [10.0, 112.0, 170.0, 122.0]
+
+
+def test_caixa_corrida_apagada_fica_fora_dos_retangulos():
+    # Linha de autores corrida: a extração troca o texto por quebras de
+    # linha e marca a caixa com 'running'.
+    offset = len('Autores do artigo\n\n')
+    md = '\n' * offset + MD
+    start = offset + MD.index('O fornecedor')
+    end = offset + MD.index('negativa.') + len('negativa.')
+    header_bbox = [5.0, 20.0, 175.0, 30.0]
+    pages = [
+        {
+            'page': 0,
+            'char_start': 0,
+            'boxes': [
+                {
+                    'class': 'text',
+                    'bbox': header_bbox,
+                    'pos': [0, offset],
+                    'running': True,
+                },
+                {
+                    'class': 'text',
+                    'bbox': [5.0, 95.0, 175.0, 125.0],
+                    'pos': [start, end],
+                },
+            ],
+        }
+    ]
+
+    blocks = char_range_to_blocks(pages, 0, end)
+    rects = locate_range(pages, md, 0, end, lambda p: WORDS)
+
+    assert [b['bbox'] for b in blocks] == [(5.0, 95.0, 175.0, 125.0)]
+    assert tuple(header_bbox) not in rects
+    assert rects == [
+        (10.0, 100.0, 120.0, 110.0),
+        (10.0, 112.0, 170.0, 122.0),
+    ]

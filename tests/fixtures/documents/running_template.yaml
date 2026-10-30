@@ -1,0 +1,31 @@
+# Expected running headers and footers for one PDF.
+#
+# Save as <name>.running.yaml next to <name>.pdf. Example:
+#   systematic_review/dengue_no_brasil.pdf
+#   systematic_review/dengue_no_brasil.running.yaml
+#
+# running_lines: lines that repeat at the top or bottom of the pages and
+#   must not reach the chunks.
+#   text:          short, distinctive excerpt of the line, copied from the
+#                  PDF. The test compares only its letters and digits,
+#                  ignoring case, markup, punctuation and whitespace.
+#                  Wrap it in single quotes.
+#   keep_on_pages: pages where the line stays in the chunks
+#                  (1 = first page of the PDF). Omit when it leaves every page.
+#   Leave page numbers out: a substring check cannot tell "3" from body text.
+#
+# keep_lines: text near the top or bottom of a page that must stay in the
+#   chunks, such as a figure caption the layout model marks as a footer.
+#   text: excerpt copied from the PDF, as above.
+#   page: page where it appears.
+#
+# Use an empty list when the document has none of them.
+
+running_lines:
+  - text: '<excerpt of the running header>'
+  - text: '<excerpt of a running line that is also content on its first page>'
+    keep_on_pages: [1]
+
+keep_lines:
+  - text: '<figure caption near the bottom of the page>'
+    page: 9
