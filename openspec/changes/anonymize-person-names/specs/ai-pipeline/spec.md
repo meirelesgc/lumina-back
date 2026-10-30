@@ -24,5 +24,5 @@ O sistema SHALL mascarar informações de dados pessoais sensíveis (PII) nos bl
 - **THEN** o nome do autor permanece no texto do chunk
 
 #### Scenario: Expressões capitalizadas que não são nomes
-- **WHEN** o modelo de linguagem marca como pessoa uma expressão de uma palavra, uma expressão cujas palavras o documento também usa em minúsculas ou uma expressão igual a um título de seção
+- **WHEN** o modelo de linguagem marca como pessoa uma expressão de uma palavra, uma expressão cujas palavras o documento também usa em minúsculas ou uma expressão igual a um título numerado de seção
 - **THEN** a expressão permanece no texto do chunk

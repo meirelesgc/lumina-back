@@ -32,9 +32,11 @@ Medições feitas no acervo de `tests/fixtures/documents/` durante a exploraçã
 
 Alternativa descartada: registrar o `SpacyRecognizer` e deixar o Presidio decidir chunk a chunk. Um nome marcado como `PER` num chunk e como `ORG` no título da seção vazaria no título, e cada falso positivo do modelo viraria máscara sem filtro.
 
-### 2. Normalização de caixa por sequência em maiúsculas
+### 2. Coleta por item de lista, com caixa normalizada
 
-Antes da coleta, cada sequência de duas ou mais palavras em maiúsculas passa para caixa de título (`str.title()`). O texto normalizado só alimenta a coleta: os nomes coletados voltam ao texto original pelo mascaramento sem distinção de caixa, então os offsets do texto normalizado não importam.
+A coleta analisa cada linha do chunk separada nas vírgulas, nos pontos e vírgulas e nos conectivos " and " e " e ". Com o chunk inteiro, o spaCy junta numa só entidade linhas vizinhas da capa ("Universidade Do Estado\n\nMariana Souza Lima\n\nEstratégias..." sai como um `LOC`) e perde nomes de listas de autores ("Hugo Saba and Aloísio Santos Nascimento Filho"). Antes da análise, cada item perde as tags HTML (o conteúdo de `<sup>` sai junto, para "Jorge<sup>a</sup>" não virar "Jorgea") e os marcadores `*`, `#`, `_` e `` ` ``.
+
+Depois, cada sequência de duas ou mais palavras em maiúsculas passa para caixa de título (`str.title()`). O texto normalizado só alimenta a coleta: os nomes coletados voltam ao texto original pelo mascaramento sem distinção de caixa, então os offsets do texto normalizado não importam.
 
 ### 3. Filtro de candidatos
 
@@ -43,9 +45,9 @@ Um span `PER` vira nome do documento quando passa por todas as regras:
 1. O span é cortado no primeiro caractere que não é letra, espaço, hífen, apóstrofo ou ponto, e na primeira quebra de linha. Isso remove o resíduo de Markdown e de HTML.
 2. Sobram duas ou mais palavras, todas capitalizadas, exceto os conectivos `de`, `da`, `do`, `das`, `dos` e `e`.
 3. Pelo menos uma palavra, fora os conectivos, não aparece em minúsculas no texto do documento. "Energias Renováveis" sai porque o documento escreve "energias" e "renováveis".
-4. O candidato não é igual, sem distinção de caixa e sem a numeração, ao título de uma seção do documento. "Aplicações Correlatadas" sai porque é o título "3 APLICAÇÕES CORRELATADAS".
+4. O candidato não é igual, sem distinção de caixa e sem a numeração, a um título numerado de seção do documento. "Aplicações Correlatadas" sai porque é o título "3 APLICAÇÕES CORRELATADAS". A regra ignora títulos sem numeração porque, no anteprojeto, a folha de rosto vira uma seção de título "ALANA CAROLINA PEREIRA ABREU" (#42), e a regra descartaria a autora.
 
-Coleta medida no acervo com as regras 1 a 3:
+Com a coleta por item de lista e as quatro regras, os 25 nomes de `person_names` do acervo ficam cobertos. Coleta medida no acervo com a primeira versão (chunk inteiro, regras 1 a 3):
 
 | Documento | Mantidos | Descartados pela regra 3 |
 | :--- | :--- | :--- |
@@ -84,6 +86,7 @@ A jornada é a do proponente que envia o anteprojeto: o texto que chega ao prove
 
 - [Autor citado com duas palavras no corpo ("Gonzalez e Lima", "Benjamin Rush") é mascarado] → Aceito. Conta como nome de pessoa do documento, e a avaliação dos critérios não depende do nome do autor citado.
 - [Falso positivo que passa no filtro ("Glaxo Smith Kline", "Rua Prof", "Regarding ANN") vira máscara em todo o documento] → Os testes focados fixam as regras. O placar de recuperação com IA, medido de novo, mostra se a perda afeta a busca.
+- [O spaCy reconhece só parte do nome ("Gesil Sampaio Amarante" sem "Segundo", "Tarso Nascimento" sem "Paulo de")] → O mascaramento quebra o nome inteiro, mas a parte não reconhecida fica visível ao lado do marcador. O teste do acervo verifica o nome completo.
 - [Nome partido entre dois chunks] → O spaCy não vê o nome inteiro no chunk que o corta. A coleta roda sobre todo o documento, e o nome inteiro costuma aparecer em outro lugar (capa, cabeçalho). A parte cortada fica visível.
 - [Ingestão mais lenta] → A coleta roda o pipeline spaCy uma vez por chunk, além da análise do Presidio. A tarefa de verificação mede o tempo de `test_ingestion_sections.py` antes e depois.
 - [`presidio_mapping` já gravado no banco] → Documentos ingeridos antes da mudança mantêm o mapa antigo, sem `PERSON`. A reversão continua funcionando para eles. Reprocessar o acervo de produção fica fora desta change.
