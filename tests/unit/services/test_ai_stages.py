@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
+from lumina.services.ai.stages import retrieval
 from lumina.services.ai.stages import retrieval as retrieval_module
 from lumina.services.ai.stages.evaluation import (
     evaluate_criteria_batch as apply_tree,
@@ -514,3 +515,34 @@ async def test_retrieve_criteria_payload_reranking_flag_elevates_k(
     call_kwargs = mock_vstore.asimilarity_search.call_args.kwargs
     assert call_kwargs['k'] == retrieval_module.RERANK_CANDIDATE_K
     assert payload['retrieved_chunks'] == ['chunk_reranked']
+
+
+def test_contextos_marcam_as_frases_do_chunk():
+    chunk = Document(
+        page_content='[Método] Primeira frase. Segunda frase.',
+        metadata={
+            'chunk_id': 'chunk_0_0',
+            'section_title': 'Método',
+            'sentences': [
+                {'n': 1, 'start': 9, 'end': 24, 'rects': []},
+                {'n': 2, 'start': 25, 'end': 39, 'rects': []},
+            ],
+        },
+    )
+
+    assert '[s1] Primeira frase. [s2] Segunda frase.' in (
+        retrieval.format_context([chunk])
+    )
+    assert '[s1] Primeira frase. [s2] Segunda frase.' in (
+        retrieval.build_chunk_prompts([chunk])[0]
+    )
+
+
+def test_contextos_nao_marcam_chunk_indexado_antes_das_frases():
+    chunk = Document(
+        page_content='[Método] Primeira frase. Segunda frase.',
+        metadata={'chunk_id': 'chunk_0_0', 'section_title': 'Método'},
+    )
+
+    assert '[s1]' not in retrieval.format_context([chunk])
+    assert '[s1]' not in retrieval.build_chunk_prompts([chunk])[0]

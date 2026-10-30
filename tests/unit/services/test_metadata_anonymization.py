@@ -147,3 +147,74 @@ async def test_expressao_igual_a_titulo_de_secao_continua():
 
     assert 'APLICAÇÕES CORRELATADAS' in anonymized.page_content
     assert anonymized.metadata['section_title'] == '3 APLICAÇÕES CORRELATADAS'
+
+
+def chunk_com_frases(text: str, sentences: list[dict]) -> Document:
+    return Document(
+        page_content=text,
+        metadata={
+            'chunk_id': 'chunk_0_0',
+            'section_title': 'Corpo',
+            'section_path': 'Corpo',
+            'sentences': sentences,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_frases_acompanham_o_texto_anonimizado():
+    first = 'O servidor CPF 123.456.789-00 assinou o documento.'
+    second = 'O contrato entra em vigor na data da assinatura.'
+    text = f'{first} {second}'
+    chunk = chunk_com_frases(
+        text,
+        [
+            {'n': 1, 'start': 0, 'end': len(first), 'rects': []},
+            {
+                'n': 2,
+                'start': len(first) + 1,
+                'end': len(text),
+                'rects': [[1.0, 2.0, 3.0, 4.0]],
+            },
+        ],
+    )
+
+    [doc] = await anonymize_chunks([chunk])
+
+    one, two = doc.metadata['sentences']
+    assert doc.page_content[one['start'] : one['end']].startswith(
+        'O servidor CPF <CPF_'
+    )
+    assert doc.page_content[two['start'] : two['end']] == second
+    assert two['rects'] == [[1.0, 2.0, 3.0, 4.0]]
+
+
+@pytest.mark.asyncio
+async def test_varias_entidades_mantem_as_frases_no_lugar():
+    first = 'CPF 123.456.789-00 e CPF 987.654.321-00 assinaram.'
+    second = 'O prazo de validade do documento é de um ano.'
+    text = f'{first} {second}'
+    chunk = chunk_com_frases(
+        text,
+        [
+            {'n': 1, 'start': 0, 'end': len(first), 'rects': []},
+            {'n': 2, 'start': len(first) + 1, 'end': len(text), 'rects': []},
+        ],
+    )
+
+    [doc] = await anonymize_chunks([chunk])
+
+    _, two = doc.metadata['sentences']
+    assert doc.page_content[two['start'] : two['end']] == second
+
+
+@pytest.mark.asyncio
+async def test_metadados_das_frases_nao_guardam_texto():
+    text = 'O servidor CPF 123.456.789-00 assinou o documento.'
+    chunk = chunk_com_frases(
+        text, [{'n': 1, 'start': 0, 'end': len(text), 'rects': []}]
+    )
+
+    [doc] = await anonymize_chunks([chunk])
+
+    assert '123.456.789-00' not in str(doc.metadata['sentences'])

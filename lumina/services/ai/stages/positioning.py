@@ -4,6 +4,8 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from langchain_core.documents import Document
 
+from lumina.services.ai.stages.sentences import split_sentences
+
 # Classes de box do pymupdf4llm que nao carregam texto de conteudo principal
 IGNORED_BOX_CLASSES = frozenset({'page-header', 'page-footer', 'picture'})
 
@@ -183,6 +185,62 @@ def locate_range(
     return result
 
 
+def format_rects(rects: List[Rect]) -> List[List[float]]:
+    return [[round(float(v), 2) for v in r] for r in rects]
+
+
+def locate_sentences(
+    chunk: Document,
+    pages: List[Dict[str, Any]],
+    markdown: str,
+    words_provider: WordsProvider,
+) -> List[Dict[str, Any]]:
+    """
+    Frases do corpo do chunk com a posicao em `page_content` e os retangulos
+    no PDF. O texto do chunk e o Markdown diferem so em espacos, entao os
+    tokens dos dois se correspondem pela ordem.
+    """
+    content = chunk.page_content
+    prefix = f'[{chunk.metadata.get("section_title", "")}] '
+    body_start = len(prefix) if content.startswith(prefix) else 0
+    chunk_end = chunk.metadata['char_end']
+
+    chunk_tokens = tokenize_with_offsets(content[body_start:], body_start)
+    md_tokens = tokenize_with_offsets(
+        markdown[chunk.metadata['char_start'] : chunk_end],
+        chunk.metadata['char_start'],
+    )
+    aligned = len(chunk_tokens) == len(md_tokens)
+
+    sentences = []
+    spans = split_sentences(content[body_start:])
+    for number, (span_start, span_end) in enumerate(spans, start=1):
+        start = body_start + span_start
+        end = body_start + span_end
+        indexes = [
+            i for i, (_, off) in enumerate(chunk_tokens) if start <= off < end
+        ]
+        rects: List[Rect] = []
+        if aligned and indexes:
+            following = indexes[-1] + 1
+            rects = locate_range(
+                pages,
+                markdown,
+                md_tokens[indexes[0]][1],
+                md_tokens[following][1]
+                if following < len(md_tokens)
+                else chunk_end,
+                words_provider,
+            )
+        sentences.append({
+            'n': number,
+            'start': start,
+            'end': end,
+            'rects': format_rects(rects),
+        })
+    return sentences
+
+
 def enrich_chunks_with_line_rects(
     chunks: List[Document],
     pdf_doc: Any,
@@ -192,6 +250,7 @@ def enrich_chunks_with_line_rects(
     """
     Enriquece cada chunk com seus retangulos por linha no formato legado:
     metadata['rects'] = [[x0, y0, x1, y1], ...]
+    e com as frases citaveis em metadata['sentences'].
     """
     cache: Dict[int, List[Word]] = {}
 
@@ -217,15 +276,9 @@ def enrich_chunks_with_line_rects(
             page_blocks, full_markdown, c_start, c_end, provider
         )
 
-        formatted_rects = [
-            [
-                round(float(r[0]), 2),
-                round(float(r[1]), 2),
-                round(float(r[2]), 2),
-                round(float(r[3]), 2),
-            ]
-            for r in raw_rects
-        ]
-        chunk.metadata['rects'] = formatted_rects
+        chunk.metadata['rects'] = format_rects(raw_rects)
+        chunk.metadata['sentences'] = locate_sentences(
+            chunk, page_blocks, full_markdown, provider
+        )
 
     return chunks

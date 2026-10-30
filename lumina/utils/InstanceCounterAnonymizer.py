@@ -11,6 +11,9 @@ class InstanceCounterAnonymizer(Operator):
 
         entity_mapping: Dict[Dict:str] = params['entity_mapping']
 
+        if 'replaced_sizes' in params:
+            params['replaced_sizes'].append(len(text))
+
         entity_mapping_for_type = entity_mapping.get(entity_type)
         if not entity_mapping_for_type:
             new_text = self.REPLACING_FORMAT.format(

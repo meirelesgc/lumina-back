@@ -113,3 +113,54 @@ async def test_create_ai_response_structured():
     assert len(response['references']) == 1
     assert response['references'][0]['chunk_id'] == 'real_chunk'
     assert response['references'][0]['rects'][0]['x1'] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_chat_com_chunk_antigo_destaca_o_chunk_inteiro():
+    """
+    Jornada: o analista pergunta sobre um documento indexado antes das frases
+    numeradas. A resposta traz a evidência com as linhas do chunk.
+    """
+    chunk = Document(
+        page_content='Texto antigo.',
+        metadata={'chunk_id': 'old', 'page': 2, 'rects': [[0, 0, 10, 10]]},
+    )
+    vstore = MagicMock(asimilarity_search=AsyncMock(return_value=[chunk]))
+    structured = MagicMock()
+    structured.invoke.return_value = AnswerWithCitations(
+        answer='Resposta',
+        citations=[Citation(chunk_id='old', sentences=[1])],
+    )
+    model = MagicMock()
+    model.with_structured_output.return_value = structured
+    session = AsyncMock()
+    session.execute = AsyncMock(
+        return_value=MagicMock(all=MagicMock(return_value=[]))
+    )
+
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr(
+            'lumina.services.release_service.get_releases_by_document',
+            AsyncMock(return_value=[MagicMock(id=1)]),
+        )
+        m.setattr(
+            'lumina.services.release_service.get_release_with_details',
+            AsyncMock(return_value=MagicMock(spec=DocumentRelease)),
+        )
+        m.setattr(
+            'lumina.services.ai.chat.get_document_auto_context',
+            AsyncMock(return_value=[]),
+        )
+
+        response = await create_ai_response(
+            session=session,
+            user_id='uuid',
+            doc_id='uuid',
+            data=MagicMock(content='Pergunta'),
+            model=model,
+            vstore=vstore,
+            recent_messages=[],
+        )
+
+    [reference] = response['references']
+    assert reference['rects'] == [{'x1': 0, 'y1': 0, 'x2': 10, 'y2': 10}]
