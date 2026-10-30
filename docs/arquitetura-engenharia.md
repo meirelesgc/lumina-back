@@ -122,6 +122,12 @@ A ingestão (extração do PDF, árvore de seções e fatiamento) não chama mod
 
 **Piso.** O piso é o placar medido depois da última mudança, arredondado para baixo, e só sobe. Quem melhora a heurística sobe o piso no mesmo commit. O valor vigente fica no próprio teste. A regra completa está na seção "Extração determinística" de `.agents/skills/testing-methodology/references/05-ia.md`.
 
+**Cabeçalhos e rodapés corridos.** A extração apaga do texto, antes da árvore de seções, as caixas de layout que se repetem no topo e na base das páginas. Uma caixa `page-header` ou `page-footer` sai quando o texto dela, sem marcação e com os dígitos trocados por `#`, aparece em 2 páginas ou mais. Outra caixa nos 12% de cima ou de baixo da página sai quando o texto aparece em pelo menos 3 páginas e em 30% delas, e a primeira ocorrência fica. A máscara troca o texto por quebras de linha antes de juntar os espaços, então os deslocamentos não mudam, e os retângulos das citações ignoram as caixas apagadas. O gabarito `<nome>.running.yaml` lista as linhas que não podem chegar aos chunks e as que precisam ficar, e `tests/unit/services/test_ingestion_running_lines.py` confere os dois casos com tolerância zero, por documento:
+
+```bash
+poetry run pytest tests/unit/services/test_ingestion_running_lines.py
+```
+
 ### Validação da Recuperação sobre Acervo Anotado
 A recuperação de evidências decide quais trechos chegam ao avaliador de cada critério. O time mede o comportamento atual contra o mesmo acervo, com um segundo gabarito por documento.
 

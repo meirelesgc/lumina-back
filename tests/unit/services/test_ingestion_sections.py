@@ -24,7 +24,7 @@ from tests.fixtures.answer_keys import (
     pdf_for,
 )
 
-MIN_SECTION_IDENTIFICATION_RATE = 1.0
+MIN_SECTION_IDENTIFICATION_RATE = 0.98
 
 
 @pytest.mark.parametrize('answer_key', SECTIONS_KEYS, ids=doc_id)

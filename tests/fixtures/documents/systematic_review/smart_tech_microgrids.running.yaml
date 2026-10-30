@@ -1,0 +1,13 @@
+# Cabeçalhos e rodapés corridos de smart_tech_microgrids.pdf
+# Salvar como smart_tech_microgrids.running.yaml ao lado de smart_tech_microgrids.pdf
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# "Energies 2025, 18, 2676": todas as 20 páginas (rodapé na 1, cabeçalho nas demais).
+# O contador "N of 20" das páginas 2 a 20 fica de fora, como número de página.
+# Na página 1, a linha também aparece no bloco "Citation:", que é conteúdo.
+
+running_lines:
+  - text: 'Energies 2025, 18, 2676'
+    keep_on_pages: [1]
+
+keep_lines: []

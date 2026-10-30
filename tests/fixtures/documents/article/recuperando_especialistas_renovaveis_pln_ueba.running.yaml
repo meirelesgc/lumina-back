@@ -1,0 +1,23 @@
+# Cabeçalhos e rodapés corridos de recuperando_especialistas_renovaveis_pln_ueba.pdf
+# Salvar como recuperando_especialistas_renovaveis_pln_ueba.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Rodapé "Inf. Inf., Londrina": todas as 27 páginas. Na página 1 o layout
+# junta o rodapé e a URL da revista numa caixa só, que não se repete; o
+# rodapé fica nessa página.
+# Autores e título: páginas 2 a 27, no topo. A página 1 traz o bloco real de
+# autores fora da faixa; a página 2 guarda a primeira ocorrência na faixa.
+# As legendas das figuras 2 e 3 ficam na base da página e o layout as marca
+# como page-footer, mas são conteúdo.
+
+running_lines:
+  - text: 'Inf. Inf., Londrina, v. 30, n. 2, p. 242 – 268, abr./jun. 2025.'
+    keep_on_pages: [1]
+  - text: 'Eduardo Manuel Freitas Jorge, Gleidson Meireles Costa, Victor Hugo Jesus Oliveira, Alex Álisson Bandeira Santos, Gesil Sampaio Amarante Segundo Recuperando especialistas em energias renováveis por meio de taxonomia facetada e técnicas de processamento de linguagem natural: um experimento de mineração de dados acadêmicos aplicados por pesquisadores das universidades estaduais da Bahia'
+    keep_on_pages: [1, 2]
+
+keep_lines:
+  - text: 'Figura 2 – Busca do SIMCC'
+    page: 9
+  - text: 'Figura 3 – Perfil detalhado do pesquisador'
+    page: 10

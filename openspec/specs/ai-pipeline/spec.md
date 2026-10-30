@@ -79,8 +79,40 @@ O sistema SHALL reconhecer como título de seção, além dos títulos do Markdo
 - **WHEN** o título "1.0. DO OBJETO:" vem seguido, sem texto entre eles, do título sem numeração "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA"
 - **THEN** o sistema junta os dois em um único título "1.0. DO OBJETO: CONTRATAÇÃO DE EMPRESA ESPECIALIZADA"
 
+### Requirement: Remoção de Cabeçalhos e Rodapés Corridos
+O sistema SHALL tirar do texto dos chunks as linhas que se repetem no topo ou na base das páginas do PDF, como título corrido, autores, nome do periódico e número de página. O sistema SHALL manter o texto que aparece perto do topo ou da base de uma única página, como legenda de figura, e SHALL manter a primeira ocorrência de uma linha corrida que o layout não marca como cabeçalho ou rodapé. Os deslocamentos dos chunks no texto extraído SHALL continuar os mesmos.
+
+#### Scenario: Título corrido nas páginas pares
+- **WHEN** um PDF repete o título "DENGUE NO BRASIL: UMA REVISÃO SISTEMÁTICA" no cabeçalho das páginas 2 a 24
+- **THEN** nenhum chunk dessas páginas contém o título
+- **AND** o título do artigo continua no chunk da página 1
+
+#### Scenario: Rodapé com número de página que muda
+- **WHEN** um PDF repete o rodapé "Revista Foco |Curitiba (PR)| v.17.n.3|e4640| p.01-24 |2024" seguido do número da página em todas as páginas
+- **THEN** nenhum chunk contém o rodapé nem o número de página
+
+#### Scenario: Linha de autores marcada como texto comum
+- **WHEN** um PDF repete a linha de autores no topo das páginas 2 a 27 e o layout a marca como texto comum
+- **THEN** só os chunks da página 2, a primeira ocorrência, contêm a linha
+
+#### Scenario: Legenda de figura marcada como rodapé
+- **WHEN** a legenda "Figura 2 – Busca do SIMCC" aparece na base da página 9 e o layout a marca como rodapé
+- **THEN** a legenda continua no chunk da página 9
+
+#### Scenario: Linha repetida no meio da página
+- **WHEN** a linha "Fonte: Criada pelos autores (2023)" se repete abaixo de várias figuras, longe do topo e da base
+- **THEN** a linha continua nos chunks de cada página
+
+#### Scenario: Documento sem linhas corridas
+- **WHEN** um PDF de 6 páginas não repete nenhuma linha no topo nem na base
+- **THEN** o sistema gera os mesmos chunks, com o mesmo texto, que gerava antes desta mudança
+
+#### Scenario: Citação de um chunk do topo da página
+- **WHEN** a avaliação cita o primeiro chunk de uma página que tinha cabeçalho corrido
+- **THEN** os retângulos da citação cobrem o texto do chunk e não cobrem o cabeçalho
+
 ### Requirement: Critério de Aceite da Ingestão sobre Acervo Anotado
-O sistema SHALL ser validado contra um acervo versionado de PDFs, em que cada PDF tem um gabarito com as seções e subseções esperadas (título, página e primeiras palavras do texto). A validação SHALL rodar sem chamadas a modelos de linguagem.
+O sistema SHALL ser validado contra um acervo versionado de PDFs, em que cada PDF tem um gabarito com as seções e subseções esperadas (título, página e primeiras palavras do texto) e um gabarito com as linhas corridas que não podem chegar aos chunks e as linhas perto do topo ou da base que precisam ficar. A validação SHALL rodar sem chamadas a modelos de linguagem.
 
 #### Scenario: Texto de seção anotada ausente dos chunks
 - **WHEN** as primeiras palavras de uma seção anotada não aparecem no texto dos chunks do documento
@@ -93,6 +125,14 @@ O sistema SHALL ser validado contra um acervo versionado de PDFs, em que cada PD
 #### Scenario: Identificação de seções no piso ou acima
 - **WHEN** essa fração atinge o piso registrado
 - **THEN** a validação passa e informa o placar por documento, mesmo com seções individuais não identificadas
+
+#### Scenario: Linha corrida anotada nos chunks
+- **WHEN** uma linha corrida do gabarito aparece no texto dos chunks de uma página fora das páginas em que o gabarito a mantém
+- **THEN** a validação falha e aponta o documento, a linha e as páginas
+
+#### Scenario: Linha a manter ausente dos chunks
+- **WHEN** uma linha que o gabarito manda manter não aparece no texto dos chunks da página anotada
+- **THEN** a validação falha e aponta o documento, a linha e a página
 
 ### Requirement: Critério de Aceite da Recuperação sobre Acervo Anotado
 O sistema SHALL ter a recuperação de evidências validada contra um acervo versionado de PDFs. Cada PDF anotado SHALL ter um gabarito que reúne a árvore de critérios a avaliar e, para cada critério, os trechos esperados entre as evidências, com página, um trecho do texto do documento e, quando o trecho pertence a uma seção anotada, a seção. A validação SHALL usar o mesmo caminho de ingestão e de recuperação de uma avaliação real, com os mesmos embeddings. As métricas SHALL somar os resultados de todo o acervo e falhar abaixo de um piso registrado, que só sobe.

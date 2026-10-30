@@ -41,12 +41,13 @@ def char_range_to_blocks(
 ) -> List[Dict[str, Any]]:
     """
     Boxes de conteudo que intersectam [start, end) do markdown consolidado.
+    Ignora as boxes de cabecalho e rodape corridos que a extracao apagou.
     """
     blocks: List[Dict[str, Any]] = []
     for page in pages:
         base = page.get('char_start', 0)
         for box in page.get('boxes', []):
-            if box.get('class') in IGNORED_BOX_CLASSES:
+            if box.get('class') in IGNORED_BOX_CLASSES or box.get('running'):
                 continue
             box_start = base + box['pos'][0]
             box_end = base + box['pos'][1]

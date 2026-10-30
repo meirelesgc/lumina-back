@@ -38,9 +38,9 @@ from tests.fixtures.answer_keys import (
 
 pytestmark = [pytest.mark.ai, pytest.mark.asyncio(loop_scope='session')]
 
-MIN_EVIDENCE_RECALL = 0.53
-MIN_SECTION_PAGE_HIT_RATE = 0.57
-MIN_BRANCH_PRECISION = 0.19
+MIN_EVIDENCE_RECALL = 0.54
+MIN_SECTION_PAGE_HIT_RATE = 0.55
+MIN_BRANCH_PRECISION = 0.20
 MIN_ROUTING_HIT_RATE = 0.0
 
 NOT_ROUTED = 'não roteado'

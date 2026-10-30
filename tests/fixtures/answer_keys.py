@@ -1,7 +1,8 @@
 """
 Leitura dos gabaritos de `tests/fixtures/documents/`: `<nome>.sections.yaml`
-(seções esperadas) e `<nome>.retrieval.yaml` (árvore de critérios e trechos
-esperados por ramo). Ver `tests/fixtures/documents/README.md`.
+(seções esperadas), `<nome>.retrieval.yaml` (árvore de critérios e trechos
+esperados por ramo) e `<nome>.running.yaml` (cabeçalhos e rodapés corridos).
+Ver `tests/fixtures/documents/README.md`.
 """
 
 import asyncio
@@ -18,14 +19,17 @@ from lumina.services.ai.stages.extraction import extract_pdf_chunks
 DOCUMENTS_DIR = Path(__file__).parent / 'documents'
 SECTIONS_SUFFIX = '.sections.yaml'
 RETRIEVAL_SUFFIX = '.retrieval.yaml'
+RUNNING_SUFFIX = '.running.yaml'
 SECTIONS_KEYS = sorted(DOCUMENTS_DIR.rglob(f'*{SECTIONS_SUFFIX}'))
 RETRIEVAL_KEYS = sorted(DOCUMENTS_DIR.rglob(f'*{RETRIEVAL_SUFFIX}'))
+RUNNING_KEYS = sorted(DOCUMENTS_DIR.rglob(f'*{RUNNING_SUFFIX}'))
 
 CHUNK_PREFIX = re.compile(r'^\[[^\]]*\]\s*', re.MULTILINE)
 HTML_TAG = re.compile(r'<[^>]+>')
 MARKDOWN_MARK = re.compile(r'[*_#`]')
 SPACE_BEFORE_PUNCTUATION = re.compile(r'\s+([:;,.!?])')
 TYPOGRAPHY = str.maketrans('“”‘’‐–—', '""\'\'---')
+NOT_LETTER_OR_DIGIT = re.compile(r'[\W_]+')
 
 
 def normalize(text: str) -> str:
@@ -48,6 +52,29 @@ def chunk_text(page_content: str) -> str:
     vizinhos unidos traz um prefixo no início de cada linha.
     """
     return normalize(CHUNK_PREFIX.sub('', page_content))
+
+
+def letters_and_digits(text: str) -> str:
+    """
+    Só as letras e os dígitos do texto, sem diferença de caixa. O
+    pymupdf4llm separa a pontuação de um negrito (`**Inf. Inf.** ,`) e
+    mantém o `|` dos rodapés, então o gabarito de linhas corridas ignora
+    tudo o que não é letra nem dígito.
+    """
+    return NOT_LETTER_OR_DIGIT.sub('', text).casefold()
+
+
+def page_texts(chunks: list) -> dict[int, str]:
+    """
+    Texto dos chunks de cada página (1 = primeira), sem os prefixos
+    `[título]`, só com letras e dígitos. Os chunks da página entram juntos
+    porque uma linha longa pode cair na divisa entre dois chunks.
+    """
+    pages: dict[int, list[str]] = {}
+    for chunk in chunks:
+        text = CHUNK_PREFIX.sub('', chunk.page_content)
+        pages.setdefault(chunk.metadata['page'] + 1, []).append(text)
+    return {page: letters_and_digits(' '.join(t)) for page, t in pages.items()}
 
 
 def section_titles(chunk) -> list[str]:
@@ -73,7 +100,7 @@ def doc_id(answer_key: Path) -> str:
 
 
 def pdf_for(answer_key: Path) -> Path:
-    for suffix in (SECTIONS_SUFFIX, RETRIEVAL_SUFFIX):
+    for suffix in (SECTIONS_SUFFIX, RETRIEVAL_SUFFIX, RUNNING_SUFFIX):
         if answer_key.name.endswith(suffix):
             stem = answer_key.name.removesuffix(suffix)
             return answer_key.with_name(f'{stem}.pdf')
@@ -91,6 +118,16 @@ def expected_sections(answer_key: Path) -> list[dict]:
         sections.append(section)
         sections.extend(section.get('subsections', []))
     return sections
+
+
+def expected_running_lines(running_key: Path) -> list[dict]:
+    data = yaml.safe_load(running_key.read_text(encoding='utf-8'))
+    return data['running_lines']
+
+
+def expected_keep_lines(running_key: Path) -> list[dict]:
+    data = yaml.safe_load(running_key.read_text(encoding='utf-8'))
+    return data['keep_lines']
 
 
 def person_names(answer_key: Path) -> list[str]:

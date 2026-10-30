@@ -1,6 +1,8 @@
 import logging
+import math
 import re
-from typing import Any, Dict, List, Tuple
+from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Set, Tuple
 
 import fitz
 import pymupdf4llm
@@ -17,6 +19,88 @@ from lumina.services.ai.stages.sections import (
 logger = logging.getLogger(__name__)
 SETTINGS = Settings()
 
+# Cabecalhos e rodapes corridos: caixas que se repetem no topo ou na base
+LAYOUT_RUNNING_CLASSES = frozenset({'page-header', 'page-footer'})
+RUNNING_BAND = 0.12
+MIN_LAYOUT_RUNNING_PAGES = 2
+MIN_TEXT_RUNNING_PAGES = 3
+MIN_TEXT_RUNNING_RATIO = 0.3
+
+_KEY_MARKUP_RE = re.compile(r'<[^>]+>|[*_`#|>\\]+')
+_DIGITS_RE = re.compile(r'\d+')
+
+BoxRef = Tuple[int, int]
+
+
+def running_key(text: str) -> str:
+    """
+    Chave de comparacao de uma caixa: sem markup, digitos trocados por '#'
+    (numero de pagina muda), espacos juntos e sem diferenca de caixa.
+    """
+    text = _KEY_MARKUP_RE.sub(' ', text)
+    text = _DIGITS_RE.sub('#', text)
+    return ' '.join(text.split()).casefold()
+
+
+def _in_band(bbox: List[float], height: float) -> bool:
+    center = (bbox[1] + bbox[3]) / 2 / height
+    return center <= RUNNING_BAND or center >= 1 - RUNNING_BAND
+
+
+def find_running_boxes(pages: List[Dict[str, Any]]) -> Set[BoxRef]:
+    """
+    Caixas (pagina, indice da caixa) que repetem cabecalho ou rodape.
+    Cada pagina traz 'text' (markdown bruto), 'boxes' e 'height'.
+    - page-header/page-footer: sai se a chave aparece em 2 paginas ou mais.
+    - outra caixa na faixa do topo ou da base: sai se a chave aparece em
+      3 paginas e em 30% delas; a primeira ocorrencia fica.
+    """
+    candidates: List[Tuple[BoxRef, str, bool]] = []
+    pages_by_key: Dict[str, Set[int]] = defaultdict(set)
+
+    for page_idx, page in enumerate(pages):
+        height = page.get('height') or 0
+        for box_idx, box in enumerate(page['boxes']):
+            cls = box.get('class')
+            if cls == 'picture':
+                continue
+            is_layout = cls in LAYOUT_RUNNING_CLASSES
+            if not is_layout and not (
+                height and _in_band(box['bbox'], height)
+            ):
+                continue
+            key = running_key(page['text'][box['pos'][0] : box['pos'][1]])
+            if not key:
+                continue
+            candidates.append(((page_idx, box_idx), key, is_layout))
+            pages_by_key[key].add(page_idx)
+
+    min_text_pages = max(
+        MIN_TEXT_RUNNING_PAGES,
+        math.ceil(MIN_TEXT_RUNNING_RATIO * len(pages)),
+    )
+    running: Set[BoxRef] = set()
+    for (page_idx, box_idx), key, is_layout in candidates:
+        key_pages = pages_by_key[key]
+        if is_layout:
+            if len(key_pages) >= MIN_LAYOUT_RUNNING_PAGES:
+                running.add((page_idx, box_idx))
+        elif len(key_pages) >= min_text_pages and page_idx != min(key_pages):
+            running.add((page_idx, box_idx))
+    return running
+
+
+def mask_ranges(text: str, ranges: Iterable[Tuple[int, int]]) -> str:
+    """
+    Troca cada intervalo [inicio, fim) por quebras de linha do mesmo
+    tamanho. Os deslocamentos do texto nao mudam, e o espaco que sobra
+    nao se junta ao normalizar espacos e tabulacoes.
+    """
+    chars = list(text)
+    for start, end in ranges:
+        chars[start:end] = '\n' * (end - start)
+    return ''.join(chars)
+
 
 def extract_raw_markdown_and_pages(  # noqa: PLR0914
     full_path: str,
@@ -24,6 +108,9 @@ def extract_raw_markdown_and_pages(  # noqa: PLR0914
     """
     Extrai markdown bruto e lista de chunks por pagina em memoria via
     pymupdf4llm. Garante page: int (0-based) e sanitizacao de bytes nulos.
+    Apaga os cabecalhos e rodapes corridos no texto bruto de cada pagina,
+    antes de juntar espacos, porque o 'pos' das caixas aponta para esse
+    texto; as caixas apagadas saem com 'running': True no page_map.
     Retorna (full_markdown, page_map, null_bytes, ws_ops, doc_fitz).
     """
     doc = fitz.open(full_path)
@@ -38,6 +125,16 @@ def extract_raw_markdown_and_pages(  # noqa: PLR0914
         }
         for p in doc
     ]
+    running = find_running_boxes([
+        {
+            'text': chunk.get('text', ''),
+            'boxes': chunk.get('page_boxes', []),
+            'height': page_sizes[idx]['height']
+            if idx < len(page_sizes)
+            else None,
+        }
+        for idx, chunk in enumerate(page_chunks)
+    ])
 
     page_map: List[Dict[str, Any]] = []
     text_parts: List[str] = []
@@ -47,7 +144,15 @@ def extract_raw_markdown_and_pages(  # noqa: PLR0914
     ws_ops = 0
 
     for idx, chunk in enumerate(page_chunks):
-        raw_text = chunk.get('text', '')
+        raw_boxes = chunk.get('page_boxes', [])
+        raw_text = mask_ranges(
+            chunk.get('text', ''),
+            [
+                tuple(raw_boxes[box_idx]['pos'])
+                for page_idx, box_idx in running
+                if page_idx == idx
+            ],
+        )
         if '\x00' in raw_text:
             null_bytes += raw_text.count('\x00')
             raw_text = raw_text.replace('\x00', '')
@@ -69,8 +174,9 @@ def extract_raw_markdown_and_pages(  # noqa: PLR0914
                 'class': b.get('class', 'text'),
                 'bbox': list(b.get('bbox', [0, 0, 0, 0])),
                 'pos': list(b.get('pos', [0, 0])),
+                'running': (idx, box_idx) in running,
             }
-            for b in chunk.get('page_boxes', [])
+            for box_idx, b in enumerate(raw_boxes)
         ]
 
         page_map.append({
