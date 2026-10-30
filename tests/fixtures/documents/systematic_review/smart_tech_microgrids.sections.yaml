@@ -2,6 +2,19 @@
 # Salvar como smart_tech_microgrids.sections.yaml ao lado do PDF
 # Páginas conferidas contra o PDF (1 = primeira página).
 
+# Autores e editores acadêmicos da página 1.
+person_names:
+  - Toni Alex Reis Borges
+  - Filipe Cardoso Brito
+  - Rafael Guimarães Oliveira dos Santos
+  - Paulo de Tarso Nascimento
+  - Celso Barreto da Silva
+  - Roberta Mota Panizio
+  - Hugo Saba
+  - Aloísio Santos Nascimento Filho
+  - Antonio Cano-Ortega
+  - Daniel Morinigo-Sotelo
+
 sections:
   - title: Abstract
     page: 1

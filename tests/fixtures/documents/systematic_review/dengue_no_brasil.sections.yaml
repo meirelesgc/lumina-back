@@ -2,6 +2,17 @@
 # Salvar como dengue_no_brasil.sections.yaml ao lado de dengue_no_brasil.pdf
 # Páginas conferidas contra o PDF (1 = primeira página).
 
+# Autores da página 1, repetidos no cabeçalho das páginas ímpares.
+person_names:
+  - Robson Lopes Cardoso
+  - Níbia Sales Damasceno Corioletti
+  - Lourenço Faria Costa
+  - José Henrique da Silva Taveira
+  - Claudia Peixoto Bueno
+  - Sidinei Corioletti
+  - Pedro Rogério Giongo
+  - Rosemeire Terezinha da Silva
+
 sections:
   - title: Resumo
     page: 1

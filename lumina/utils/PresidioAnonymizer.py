@@ -1,9 +1,44 @@
+import re
+
 from langchain_core.documents import Document
 from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine, OperatorConfig
 
 from lumina.utils.InstanceCounterAnonymizer import InstanceCounterAnonymizer
+
+PERSON_RECOGNIZER = 'PersonNameRecognizer'
+MIN_NAME_WORDS = 2
+NAME_CONNECTIVES = {'de', 'da', 'do', 'das', 'dos', 'e'}
+SUPERSCRIPT = re.compile(r'<sup>.*?</sup>')
+MARKUP = re.compile(r'<[^>]+>|[*#_`]')
+LIST_SEPARATOR = re.compile(r'[,;]|\s(?:and|e)\s')
+UPPERCASE_RUN = re.compile(
+    r"\b[A-ZÀ-Ý][A-ZÀ-Ý'-]+(?:[ \t]+[A-ZÀ-Ý][A-ZÀ-Ý'-]*)+\b"
+)
+NAME_END = re.compile(r"[^\w\s'.-]|\n")
+LOWERCASE_WORD = re.compile(r'\b[a-zà-ÿ][\w-]*')
+SECTION_NUMBER = re.compile(r'^\s*\d+(?:\.\d+)*\.?\s+')
+
+
+def person_recognizer(names: list[str]) -> PatternRecognizer:
+    """
+    Reconhece os nomes coletados em qualquer caixa (o PatternRecognizer
+    ignora caixa por padrão) e com qualquer espaço entre as palavras. A
+    lista vem do mais longo para o mais curto, para o nome completo vencer
+    o parcial na mesma posição.
+    """
+    regex = '|'.join(
+        r'\s+'.join(re.escape(word) for word in name.split()) for name in names
+    )
+    return PatternRecognizer(
+        supported_entity='PERSON',
+        name=PERSON_RECOGNIZER,
+        patterns=[
+            Pattern(name='person_name', regex=rf'\b(?:{regex})\b', score=1)
+        ],
+        supported_language='pt',
+    )
 
 
 class PresidioAnonymizer:
@@ -240,15 +275,79 @@ class PresidioAnonymizer:
 
         return anonymization_result.text, entity_mapping
 
+    def _collect_person_names(self, chunks: list[Document]) -> list[str]:
+        """
+        Coleta os nomes de pessoa do documento com o spaCy, fora das
+        referências. Cada item de lista é analisado sozinho, sem marcação e
+        com as sequências em maiúsculas em caixa de título, porque o modelo
+        não reconhece nomes em caixa alta.
+        """
+        text = ' '.join(chunk.page_content for chunk in chunks)
+        lowercase_words = set(LOWERCASE_WORD.findall(text))
+        numbered_titles = {
+            SECTION_NUMBER.sub('', title).casefold()
+            for chunk in chunks
+            if isinstance(title := chunk.metadata.get('section_title'), str)
+            and SECTION_NUMBER.match(title)
+        }
+        items = [
+            UPPERCASE_RUN.sub(
+                lambda match: match.group(0).title(),
+                MARKUP.sub(' ', SUPERSCRIPT.sub(' ', item)),
+            )
+            for chunk in chunks
+            if chunk.metadata.get('section_role') != 'references'
+            for line in chunk.page_content.splitlines()
+            for item in LIST_SEPARATOR.split(line)
+            if item.strip()
+        ]
+
+        names = set()
+        nlp = self.analyzer.nlp_engine.nlp['pt']
+        for doc in nlp.pipe(items):
+            for ent in doc.ents:
+                if ent.label_ != 'PER':
+                    continue
+                name = ' '.join(
+                    NAME_END.split(ent.text)[0].strip(" .-'").split()
+                )
+                core = [
+                    word
+                    for word in name.split()
+                    if word.lower() not in NAME_CONNECTIVES
+                ]
+                if (
+                    len(core) >= MIN_NAME_WORDS
+                    and all(word[0].isupper() for word in core)
+                    and any(
+                        word.lower() not in lowercase_words for word in core
+                    )
+                    and name.casefold() not in numbered_titles
+                ):
+                    names.add(name)
+
+        return sorted(names, key=len, reverse=True)
+
     def anonymize_chunks(
         self,
         chunks: list[Document],
         verbose=False,
     ):
         """
-        Anonimiza os chunks usando Presidio.
+        Anonimiza os chunks usando Presidio. Os nomes de pessoa coletados no
+        documento inteiro são mascarados em todos os chunks.
         """
+        names = self._collect_person_names(chunks)
+        if not names:
+            return self._anonymize_each_chunk(chunks, verbose)
 
+        self.analyzer.registry.add_recognizer(person_recognizer(names))
+        try:
+            return self._anonymize_each_chunk(chunks, verbose)
+        finally:
+            self.analyzer.registry.remove_recognizer(PERSON_RECOGNIZER)
+
+    def _anonymize_each_chunk(self, chunks: list[Document], verbose=False):
         for index, chunk in enumerate(chunks):
             if verbose:
                 print(f'Anonimizando chunk {index}')

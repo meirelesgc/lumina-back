@@ -93,6 +93,12 @@ def expected_sections(answer_key: Path) -> list[dict]:
     return sections
 
 
+def person_names(answer_key: Path) -> list[str]:
+    """Nomes de quem assina o documento, que a anonimização mascara."""
+    data = yaml.safe_load(answer_key.read_text(encoding='utf-8'))
+    return data.get('person_names', [])
+
+
 def expected_branches(retrieval_key: Path) -> list[tuple[dict, dict]]:
     """Pares (taxonomia, ramo) da árvore do gabarito, em ordem de leitura."""
     data = yaml.safe_load(retrieval_key.read_text(encoding='utf-8'))

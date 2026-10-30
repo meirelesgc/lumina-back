@@ -15,6 +15,14 @@
 #                Wrap it in single quotes when it contains ': '.
 #                Type hyphenated line breaks as whole words.
 #   subsections: same fields, one level down. Omit when there are none.
+#
+# person_names: full names of the people who sign the document (authors,
+#               advisors, editors), as written in the PDF. No anonymized
+#               chunk may contain them. Leave out authors that appear only
+#               in the references.
+
+person_names:
+  - <full name of the first author>
 
 sections:
   - title: Resumo
