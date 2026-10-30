@@ -47,7 +47,7 @@ Alternativa descartada: ID global por frase, como `chunk_3_1.s2`. Ele custa mais
 
 Um módulo novo em `stages/sentences.py` divide o corpo do chunk em fim de frase seguido de maiúscula, número ou marcador, em linha em branco e em início de item de lista ou tabela. Uma lista de abreviações impede cortes em casos como `et al.`, `Art.`, `Dr.`, `p.` e `Fig.`. Fragmentos com menos de 40 caracteres se juntam à frase seguinte.
 
-O limite de 40 é ponto de partida: a tarefa de medição confirma o valor antes de registrar os pisos.
+O limite de 40 ficou confirmado: a mediana das frases subiu de 12 a 112 caracteres para 85 a 152, e os marcadores caíram para 6,1 a 8,5 por 1000 caracteres.
 
 Alternativa descartada: spaCy. Ele acrescenta processamento por chunk, e a segmentação ficaria presa à versão do modelo. O acervo tem documentos em português e em inglês. Os testes do acervo medem o resultado da regex.
 
@@ -67,7 +67,7 @@ O chunk ganha:
 
 Na extração, depois de `run_chunk_pipeline`, o sistema segmenta o corpo limpo. Ele mapeia cada frase para o Markdown comparando os tokens com `tokenize_with_offsets`, porque `clean_whitespace` altera deslocamentos. Em seguida chama `locate_range` com o PDF ainda aberto.
 
-Na anonimização, `_anonymize_text` expõe as posições de cada entidade no texto original e no texto final, vindas do `analyzer` e de `EngineResult.items`. `_anonymize_each_chunk` recalcula `start` e `end` com esse mapeamento. Uma fronteira dentro de uma entidade passa para o fim do marcador.
+Na anonimização, `_anonymize_text` devolve as posições de cada entidade no texto original e no final. `EngineResult.items` informa só as posições finais, e os conflitos entre entidades mudam o que o `analyzer` encontrou, então `InstanceCounterAnonymizer` registra o tamanho original de cada entidade. `_anonymize_each_chunk` recalcula `start` e `end` com esse mapeamento. Uma fronteira dentro de uma entidade passa para o fim do marcador.
 
 Alternativa descartada: anonimizar cada frase isolada. Isso multiplica as chamadas ao NER e tira o contexto que o reconhecimento de nomes usa.
 
@@ -86,8 +86,8 @@ Regras de segmentação, mapeamento de anonimização e resolução de citaçõe
 ## Risks / Trade-offs
 
 - [O modelo omite `sentences` e cita só o chunk] → O sistema cai no comportamento atual. O prompt exige os números e a avaliação com IA mede a taxa de citações por frase.
-- [Mais tokens por avaliação] → A junção de fragmentos reduz os marcadores. A tarefa de medição registra o acréscimo real.
-- [Frases sem retângulo, 1% a 16% no protótipo] → A referência cai nos retângulos do chunk, e o piso impede regressão. A tarefa de medição investiga os casos e não presume a causa.
+- [Mais tokens por avaliação] → A junção de fragmentos reduz os marcadores para 6,1 a 8,5 por 1000 caracteres. Com cerca de 3 tokens por marcador e 4 caracteres por token, o acréscimo estimado fica entre 7% e 10%. Esse número é uma estimativa, sem medição de consumo antes e depois.
+- [Frases sem retângulo: 4,1% no acervo, 68 de 1652] → As amostras inspecionadas são cabeçalhos e rodapés corridos, como `Energies 2025, 18, 2676 2 of 20`, que caem em blocos ignorados. A referência cai nos retângulos do chunk, e o piso de 0,95 impede regressão.
 - [Regex corta frase em abreviação desconhecida] → O dano é um destaque menor que o ideal. O texto não se perde, porque a cobertura tem tolerância zero.
 - [Modelo cita a frase errada] → A posição fica precisa, mas o usuário vê um erro mais fino. A avaliação com IA compara as frases com os trechos anotados.
 - [Tooltip com `<PERSON_n>`] → `text_snippet` já podia trazer marcadores. Reverter a anonimização nele fica fora desta mudança.
@@ -95,3 +95,15 @@ Regras de segmentação, mapeamento de anonimização e resolução de citaçõe
 ## Migration Plan
 
 Não há migração de banco nem reindexação. O campo `sentences` é aditivo no JSONB. Reverter o código devolve o comportamento anterior, e o campo fica ignorado nos chunks já gravados.
+
+## Resultados medidos
+
+Pisos do acervo em `test_sentences_corpus.py`: fração de frases com retângulos de 0,95 (medida: 0,959) e mediana de linhas da frase em relação ao chunk de até 0,3 (medida por documento: 0,22 a 0,29).
+
+Avaliação com o modelo real sobre os 3 PDFs com gabarito de recuperação, em `tests/ai/evaluation/citations/test_citation_precision.py`:
+
+- O modelo citou frases em 245 de 248 citações.
+- As referências destacaram 1513 linhas, contra 2287 linhas dos chunks citados (66%). A conta soma o chunk uma vez por referência e pode contar a mesma linha em duas frases, então serve como ordem de grandeza.
+- 97 de 129 trechos anotados (75%) apareceram nas frases citadas. A comparação exige que um texto contenha o outro, então paráfrases e citações parciais de outro ponto do trecho contam como erro.
+
+Esta mudança não registra piso para essas métricas. O ganho real por citação fica abaixo do ganho por frase isolada, porque o modelo costuma citar várias frases.
