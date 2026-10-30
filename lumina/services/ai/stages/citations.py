@@ -1,49 +1,78 @@
+import logging
 from typing import Any, Dict, List
 
 from lumina.schemas.ai import Citation
 
+logger = logging.getLogger(__name__)
+
 RECT_COORDS_COUNT = 4
+
+
+def cited_sentences(citation: Citation, meta: Dict) -> List[Dict]:
+    """
+    Frases citadas que existem no chunk, em ordem de leitura. Números
+    inexistentes ficam de fora e vão para o log.
+    """
+    by_number = {s['n']: s for s in meta.get('sentences') or []}
+    numbers = sorted(set(citation.sentences))
+    invalid = [n for n in numbers if n not in by_number]
+    if invalid:
+        logger.warning(
+            'Frases inexistentes citadas em %s: %s',
+            citation.chunk_id,
+            invalid,
+        )
+    return [by_number[n] for n in numbers if n in by_number]
 
 
 def resolve_citations(
     citations: List[Citation], retrieved_chunks: List[Any]
 ) -> List[Dict]:
     """
-    Resolve identificadores de chunks em retângulos físicos
-    (rects: x1, y1, x2, y2) e número de página para destaque no PDF.
+    Resolve citações em retângulos físicos (rects: x1, y1, x2, y2) e número
+    de página para destaque no PDF. Usa os retângulos das frases citadas e,
+    sem eles, os do chunk inteiro.
     """
     resolved = []
     chunk_map = {
-        chunk.metadata.get('chunk_id'): chunk.metadata
+        chunk.metadata.get('chunk_id'): chunk
         for chunk in retrieved_chunks
         if hasattr(chunk, 'metadata') and chunk.metadata.get('chunk_id')
     }
 
     seen = set()
     for citation in citations:
-        if citation.chunk_id in seen:
+        if citation.chunk_id not in chunk_map:
             continue
 
-        if citation.chunk_id in chunk_map:
-            meta = chunk_map[citation.chunk_id]
-            raw_rects = meta.get('rects', [])
-            mapped_rects = []
-            for r in raw_rects:
-                if len(r) == RECT_COORDS_COUNT:
-                    mapped_rects.append({
-                        'x1': r[0],
-                        'y1': r[1],
-                        'x2': r[2],
-                        'y2': r[3],
-                    })
+        chunk = chunk_map[citation.chunk_id]
+        meta = chunk.metadata
+        sentences = cited_sentences(citation, meta)
+        key = (citation.chunk_id, tuple(s['n'] for s in sentences))
+        if key in seen:
+            continue
 
-            resolved.append({
-                'chunk_id': citation.chunk_id,
-                'text_snippet': citation.text_snippet,
-                'page': meta.get('page'),
-                'rects': mapped_rects,
-            })
-            seen.add(citation.chunk_id)
+        raw_rects = [r for s in sentences for r in s['rects']]
+        mapped_rects = []
+        for r in raw_rects or meta.get('rects', []):
+            if len(r) == RECT_COORDS_COUNT:
+                mapped_rects.append({
+                    'x1': r[0],
+                    'y1': r[1],
+                    'x2': r[2],
+                    'y2': r[3],
+                })
+
+        snippet = ' '.join(
+            chunk.page_content[s['start'] : s['end']] for s in sentences
+        )
+        resolved.append({
+            'chunk_id': citation.chunk_id,
+            'text_snippet': snippet or citation.text_snippet,
+            'page': meta.get('page'),
+            'rects': mapped_rects,
+        })
+        seen.add(key)
 
     return resolved
 
