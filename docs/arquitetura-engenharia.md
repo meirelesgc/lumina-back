@@ -108,6 +108,8 @@ A ingestão (extração do PDF, árvore de seções e fatiamento) não chama mod
 | As primeiras palavras de cada seção anotada aparecem no texto dos chunks | Crítica: texto fora dos chunks nunca é recuperado | Zero falhas, por documento |
 | A seção aparece no caminho de títulos dos chunks com o título e a página anotados | Métrica da heurística | Piso sobre o acervo inteiro (`MIN_SECTION_IDENTIFICATION_RATE`), com placar impresso por documento |
 
+**Anonimização.** O mesmo gabarito lista em `person_names` quem assina o documento (autores, orientadores, editores). `tests/unit/services/test_anonymization_corpus.py` falha se algum desses nomes aparecer em `page_content`, `section_title` ou `section_path` de um chunk anonimizado. É uma verificação crítica, com tolerância zero por documento.
+
 **Fluxo para um documento novo:**
 
 1. Coloque o PDF em `tests/fixtures/documents/<tipo>/` e escreva o gabarito a partir de `section_template.yaml`. Use aspas simples nos trechos que contêm `: `.

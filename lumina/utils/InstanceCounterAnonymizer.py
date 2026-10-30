@@ -19,8 +19,12 @@ class InstanceCounterAnonymizer(Operator):
             entity_mapping[entity_type] = {}
 
         else:
-            if text in entity_mapping_for_type:
-                return entity_mapping_for_type[text]
+            # Variantes de caixa do mesmo texto recebem o mesmo marcador, e o
+            # mapa guarda só a primeira forma: o desanonimizador cria uma
+            # entidade por par do mapa.
+            for known, identifier in entity_mapping_for_type.items():
+                if known.casefold() == text.casefold():
+                    return identifier
 
             previous_index = self._get_last_index(entity_mapping_for_type)
             new_text = self.REPLACING_FORMAT.format(
