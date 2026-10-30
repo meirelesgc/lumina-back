@@ -81,6 +81,7 @@ Os testes do cleaner (issue #20) usam páginas sintéticas e cobrem cada regra d
 - [Um parágrafo real que comece no topo de várias páginas com o mesmo texto seria apagado] → A regra pede o mesmo texto, com dígitos normalizados, em 30% das páginas. O acervo não tem esse caso.
 - [As métricas de recuperação com IA podem mudar] → Uma tarefa roda `tests/ai/evaluation/retrieval` e registra o placar. Abaixo do piso, a implementação para e o usuário decide.
   - Ocorreu na implementação: contra `main`, o recall subiu de 69/129 para 71/129 e a precisão entre ramos de 40/202 para 42/199, e o acerto de seção e página caiu de 75/129 para 73/129. Os ramos `implicacoes-praticas-discutidas` e `justificativa-revisao`, da dengue, perderam blocos da seção anotada. O usuário aceitou a troca: `MIN_SECTION_PAGE_HIT_RATE` baixou de 0.58 para 0.56, o valor medido arredondado para baixo, e `MIN_EVIDENCE_RECALL` subiu para 0.55 e `MIN_BRANCH_PRECISION` para 0.21.
+  - Depois do merge da `anonymize-person-names`, que levou `main` a 69/129, 74/129 e 40/196, a mudança mediu 70/129, 72/129 e 41/196. O usuário aceitou os pisos pelo valor medido, arredondado para baixo: `MIN_EVIDENCE_RECALL` 0.54, `MIN_SECTION_PAGE_HIT_RATE` 0.55 e `MIN_BRANCH_PRECISION` 0.20. A sessão de investigação mediu sem o chunk do título os mesmos números da mudança, antes do merge, e atribuiu as duas perdas a chunks só de cabeçalho que acertavam por acidente.
 
 ## Migration Plan
 
