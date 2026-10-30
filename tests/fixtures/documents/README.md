@@ -26,6 +26,9 @@ systematic_review/
 Start from `section_template.yaml`. The file describes the document, so any
 test can reuse it.
 
+The same file lists in `person_names` the people who sign the document
+(authors, advisors, editors). No anonymized chunk may contain them.
+
 ## Adding a document
 
 1. Add the PDF, its `<name>.sections.yaml` and its `<name>.running.yaml` to

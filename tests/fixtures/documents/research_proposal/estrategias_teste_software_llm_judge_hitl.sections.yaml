@@ -2,6 +2,11 @@
 # Salvar como estrategias_teste_software_llm_judge_hitl.sections.yaml ao lado do PDF
 # Páginas relativas ao PDF (1 = primeira página, a capa; 2 = folha de rosto).
 
+# Autora na capa e na folha de rosto, em maiúsculas; orientador na folha de rosto.
+person_names:
+  - Alana Carolina Pereira Abreu
+  - Eduardo Manuel de Freitas Jorge
+
 sections:
   - title: 1. Introdução
     page: 3

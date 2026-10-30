@@ -3,6 +3,14 @@
 # Páginas relativas ao PDF (1 = primeira página, numerada 242 na revista).
 # Conversão: página do PDF = página da revista - 241.
 
+# Autores da página 1, repetidos no cabeçalho das páginas pares.
+person_names:
+  - Eduardo Manuel Freitas Jorge
+  - Gleidson Meireles Costa
+  - Victor Hugo Jesus Oliveira
+  - Alex Álisson Bandeira Santos
+  - Gesil Sampaio Amarante Segundo
+
 sections:
   - title: RESUMO
     page: 1
