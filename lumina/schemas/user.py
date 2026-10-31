@@ -19,7 +19,6 @@ class UserSchema(BaseModel):
     username: str
     email: EmailStr
     phone_number: str
-    access_level: AccessType = AccessType.DEFAULT
 
 
 class UserCreate(UserSchema):
@@ -37,6 +36,7 @@ class UserImagePublic(BaseModel):
 
 class UserPublic(UserSchema):
     id: UUID
+    access_level: AccessType = AccessType.DEFAULT
     created_at: datetime
     updated_at: Optional[datetime] = None
     icon: Optional[UserImagePublic] = None
@@ -60,6 +60,7 @@ class UserPublicMessage(BaseModel):
 
 class UserUpdate(UserSchema):
     id: UUID
+    access_level: AccessType = AccessType.DEFAULT
 
 
 class UserPasswordChange(BaseModel):

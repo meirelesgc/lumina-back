@@ -1,6 +1,16 @@
 from http import HTTPStatus
 
-from lumina.schemas import UserPublic
+import pytest
+import pytest_asyncio
+
+from lumina.schemas import AccessType, UserPublic
+
+
+@pytest_asyncio.fixture
+async def admin(session, user):
+    user.access_level = AccessType.ADMIN
+    await session.commit()
+    return user
 
 
 def test_create_user(client):
@@ -18,6 +28,52 @@ def test_create_user(client):
     assert response.json()['username'] == 'alice'
     assert response.json()['email'] == 'alice@example.com'
     assert response.json()['phone_number'] == '5501999999999'
+
+
+def test_visitante_nao_se_cadastra_como_admin(client):
+    response = client.post(
+        '/user',
+        json={
+            'username': 'mallory',
+            'email': 'mallory@example.com',
+            'phone_number': '5501966666666',
+            'password': 'secret',
+            'access_level': 'ADMIN',
+        },
+    )
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['access_level'] == AccessType.DEFAULT
+
+
+def test_visitante_se_cadastra_como_default(client):
+    response = client.post(
+        '/user',
+        json={
+            'username': 'carol',
+            'email': 'carol@example.com',
+            'phone_number': '5501955555555',
+            'password': 'secret',
+        },
+    )
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['access_level'] == AccessType.DEFAULT
+
+
+@pytest.mark.asyncio
+async def test_admin_promove_outra_conta(client, admin, other_user, token):
+    response = client.put(
+        '/user',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'id': str(other_user.id),
+            'username': other_user.username,
+            'email': other_user.email,
+            'phone_number': other_user.phone_number,
+            'access_level': 'ADMIN',
+        },
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['access_level'] == AccessType.ADMIN
 
 
 def test_read_users_unauthorized(client):
@@ -92,6 +148,33 @@ def test_delete_user(client, user, token):
     )
 
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+def test_usuario_comum_nao_remove_outra_conta(client, other_user, token):
+    response = client.delete(
+        f'/user/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+    users = client.get(
+        '/user', headers={'Authorization': f'Bearer {token}'}
+    ).json()['users']
+    assert any(u['id'] == str(other_user.id) for u in users)
+
+
+@pytest.mark.asyncio
+async def test_admin_remove_outra_conta(client, admin, other_user, token):
+    response = client.delete(
+        f'/user/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.NO_CONTENT
+
+    users = client.get(
+        '/user', headers={'Authorization': f'Bearer {token}'}
+    ).json()['users']
+    assert all(u['id'] != str(other_user.id) for u in users)
 
 
 def test_update_user_with_wrong_user(client, other_user, token):
