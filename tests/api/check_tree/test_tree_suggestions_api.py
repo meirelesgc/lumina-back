@@ -18,6 +18,8 @@ from tests.factories.tree_suggestion_factory import (
     default_create_responses,
 )
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 
 class FakeStorage:
     def __init__(self):

@@ -36,6 +36,8 @@ preservada numa segunda marcação.
 
 from http import HTTPStatus
 
+import pytest
+
 from tests.api.journeys.helpers import (
     accept_invitation,
     attach,
@@ -44,6 +46,7 @@ from tests.api.journeys.helpers import (
     create_typification,
     invite_advisee,
     log_in,
+    make_admin,
     sign_up,
 )
 
@@ -125,9 +128,13 @@ def _marcar(client, headers, project_id, attachment_id, method='PUT'):
     )
 
 
-def test_orientando_estuda_pelo_guia_e_orientadora_acompanha(client, crossref):
-    for name in ('helena', 'pedro', 'marina'):
-        sign_up(client, name)
+@pytest.mark.asyncio
+async def test_orientando_estuda_pelo_guia_e_orientadora_acompanha(
+    client, session, crossref
+):
+    await make_admin(session, sign_up(client, 'helena'))
+    sign_up(client, 'pedro')
+    await make_admin(session, sign_up(client, 'marina'))
     group, anexos = _configurar_grupo_tcc(client, log_in(client, 'helena'))
     artigo, outro_anexo = anexos[0]['id'], anexos[3]['id']
 

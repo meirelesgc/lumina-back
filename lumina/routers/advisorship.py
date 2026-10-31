@@ -5,7 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas.advisorship import (
+    AdvisorCandidateList,
     AdviseeListPublic,
     AdvisorListPublic,
     AdvisorshipCreate,
@@ -22,6 +24,7 @@ from lumina.services import advisorship_service
 router = APIRouter(
     prefix='/advisorship',
     tags=['orientação, orientadores e orientandos'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -57,6 +60,12 @@ async def list_advisorships(
         session, current_user, filters
     )
     return {'advisorships': items}
+
+
+@router.get('/advisors', response_model=AdvisorCandidateList)
+async def list_advisors(session: Session):
+    advisors = await advisorship_service.list_advisors(session)
+    return {'advisors': advisors}
 
 
 @router.get(

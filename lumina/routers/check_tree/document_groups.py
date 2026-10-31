@@ -4,7 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas.document_group import (
     DocumentGroupCreate,
     DocumentGroupFilter,
@@ -27,6 +28,7 @@ from lumina.services import document_group_service, study_attachment_service
 router = APIRouter(
     prefix='/document-group',
     tags=['configurador, grupos de documentos'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -40,7 +42,7 @@ router = APIRouter(
 async def create_group(
     group: DocumentGroupCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await document_group_service.create_group(
         session, current_user.id, group
@@ -80,7 +82,7 @@ async def read_group(group_id: UUID, session: Session):
 async def update_group(
     group: DocumentGroupUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await document_group_service.update_group(
         session, current_user.id, group
@@ -96,7 +98,7 @@ async def update_group(
 async def delete_group(
     group_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await document_group_service.delete_group(
         session, current_user.id, group_id
@@ -115,7 +117,7 @@ async def create_item(
     group_id: UUID,
     item: DocumentGroupItemCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await document_group_service.create_item(
         session, current_user.id, group_id, item
@@ -144,7 +146,7 @@ async def reorder_items(
     group_id: UUID,
     order: DocumentGroupItemOrder,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await document_group_service.reorder_items(
         session, current_user.id, group_id, order
@@ -160,7 +162,7 @@ async def reorder_items(
 async def update_item(
     item: DocumentGroupItemUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await document_group_service.update_item(
         session, current_user.id, item
@@ -176,7 +178,7 @@ async def update_item(
 async def delete_item(
     item_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await document_group_service.delete_item(session, current_user.id, item_id)
     return {'message': 'Document group item deleted'}
@@ -193,7 +195,7 @@ async def create_attachment(
     item_id: UUID,
     attachment: StudyAttachmentCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await study_attachment_service.create_attachment(
         session, current_user.id, item_id, attachment
@@ -220,7 +222,7 @@ async def reorder_attachments(
     item_id: UUID,
     order: StudyAttachmentOrder,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await study_attachment_service.reorder_attachments(
         session, current_user.id, item_id, order
@@ -236,7 +238,7 @@ async def reorder_attachments(
 async def update_attachment(
     attachment: StudyAttachmentUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await study_attachment_service.update_attachment(
         session, current_user.id, attachment
@@ -252,7 +254,7 @@ async def update_attachment(
 async def delete_attachment(
     attachment_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await study_attachment_service.delete_attachment(
         session, current_user.id, attachment_id

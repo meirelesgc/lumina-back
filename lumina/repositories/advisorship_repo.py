@@ -27,13 +27,14 @@ async def get_by_id(
     return await session.scalar(stmt)
 
 
-async def get_active_pair(
+async def get_pair(
     session: AsyncSession,
     advisor_id: UUID,
     advisee_id: UUID,
     project_id: Optional[UUID] = None,
     role_type: str = 'MAIN_ADVISOR',
 ) -> Optional[Advisorship]:
+    # Ignora o status porque o índice único vale para vínculos encerrados.
     stmt = select(Advisorship).where(
         Advisorship.deleted_at.is_(None),
         Advisorship.advisor_id == advisor_id,
@@ -46,6 +47,19 @@ async def get_active_pair(
         stmt = stmt.where(Advisorship.project_id.is_(None))
 
     return await session.scalar(stmt)
+
+
+async def get_active_pair(
+    session: AsyncSession,
+    advisor_id: UUID,
+    advisee_id: UUID,
+    project_id: Optional[UUID] = None,
+    role_type: str = 'MAIN_ADVISOR',
+) -> Optional[Advisorship]:
+    pair = await get_pair(
+        session, advisor_id, advisee_id, project_id, role_type
+    )
+    return pair if pair and pair.status == 'ACTIVE' else None
 
 
 def add_advisorship(session: AsyncSession, advisorship: Advisorship) -> None:

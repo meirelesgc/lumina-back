@@ -46,6 +46,7 @@ def mock_project_repo(mocker):
     repo.get_by_id = AsyncMock()
     repo.has_project_access = AsyncMock(return_value=True)
     repo.update_document_project_names = AsyncMock()
+    mocker.patch('lumina.services.access_service.project_repo', repo)
     return repo
 
 

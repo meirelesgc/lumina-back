@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.dependencies import CurrentUser
-from lumina.models import AccessType, Document
+from lumina.models import Document
 from lumina.repositories import doc_repo, project_document_repo, release_repo
 from lumina.schemas import (
     DocumentCreate,
@@ -16,12 +16,21 @@ from lumina.schemas import (
 )
 from lumina.schemas.typification import TypificationList
 from lumina.schemas.user import UserList
-from lumina.services import audit_service
+from lumina.services import access_service, audit_service, project_service
 
 
 async def create_doc(
     session: AsyncSession, current_user: CurrentUser, data: DocumentCreate
 ) -> Document:
+    if data.project_document_id:
+        project_doc = await project_document_repo.get_by_id(
+            session, data.project_document_id
+        )
+        if project_doc and not project_doc.deleted_at:
+            await project_service.get_project_by_id(
+                session, current_user, project_doc.project_id
+            )
+
     # Validação de unicidade
     existing_doc = await doc_repo.get_by_identifier(session, data.identifier)
     if existing_doc:
@@ -91,7 +100,9 @@ async def get_doc_by_id(
             detail='Document not found',
         )
 
-    has_access = await doc_repo.has_document_access(session, current_user, doc)
+    has_access = await access_service.can_read_document(
+        session, current_user, doc
+    )
     if not has_access:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
@@ -115,7 +126,9 @@ async def get_doc_by_project_document_id(
             detail='Document not found for this project document',
         )
 
-    has_access = await doc_repo.has_document_access(session, current_user, doc)
+    has_access = await access_service.can_read_document(
+        session, current_user, doc
+    )
     if not has_access:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
@@ -130,11 +143,7 @@ async def update_doc(
 ) -> Document:
     db_doc = await get_doc_by_id(session, current_user, data.id)
 
-    is_admin = current_user.access_level == AccessType.ADMIN
-    is_author = db_doc.created_by == current_user.id
-    is_editor = any(e.id == current_user.id for e in db_doc.editors)
-
-    if not (is_admin or is_author or is_editor):
+    if not access_service.can_edit_document(current_user, db_doc):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail=(
@@ -223,11 +232,7 @@ async def toggle_archive(
 ) -> Document:
     db_doc = await get_doc_by_id(session, current_user, doc_id)
 
-    is_admin = current_user.access_level == AccessType.ADMIN
-    is_author = db_doc.created_by == current_user.id
-    is_editor = any(e.id == current_user.id for e in db_doc.editors)
-
-    if not (is_admin or is_author or is_editor):
+    if not access_service.can_edit_document(current_user, db_doc):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail=(
@@ -262,10 +267,7 @@ async def delete_doc(
 ) -> None:
     db_doc = await get_doc_by_id(session, current_user, doc_id)
 
-    is_admin = current_user.access_level == AccessType.ADMIN
-    is_author = db_doc.created_by == current_user.id
-
-    if not (is_admin or is_author):
+    if not access_service.can_delete_document(current_user, db_doc):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail=(

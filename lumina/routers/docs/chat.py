@@ -1,18 +1,24 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, true
 from sqlalchemy.orm import aliased
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.models import (
     ChatConversation,
     Document,
     DocumentRelease,
 )
 from lumina.repositories import chat_repo
+from lumina.services import doc_service
 
-router = APIRouter(prefix='/chat', tags=['Chat'])
+router = APIRouter(
+    prefix='/chat',
+    tags=['Chat'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post('/conversations')
@@ -24,6 +30,9 @@ async def create_conversation(
     document_id = body.get('document_id')
     if not document_id:
         raise HTTPException(status_code=422, detail='document_id is required')
+    await doc_service.get_doc_by_id(
+        session, current_user, UUID(document_id)
+    )
     conversation = await chat_repo.create_conversation(
         session, UUID(document_id), current_user.id
     )

@@ -25,6 +25,7 @@ def mock_advisorship_repo(mocker):
     repo = mocker.patch('lumina.services.advisorship_service.advisorship_repo')
     repo.get_by_id = AsyncMock()
     repo.get_active_pair = AsyncMock()
+    repo.get_pair = AsyncMock()
     repo.add_advisorship = MagicMock()
     repo.list_all = AsyncMock()
     repo.list_by_advisor = AsyncMock()
@@ -63,7 +64,7 @@ async def test_create_advisorship_success(
     mock_audit_service,
 ):
     current_user = MagicMock(
-        spec=User, id=uuid4(), access_level=AccessType.DEFAULT
+        spec=User, id=uuid4(), access_level=AccessType.ADMIN
     )
     advisor = MagicMock(spec=User, id=uuid4(), deleted_at=None)
     advisee = MagicMock(spec=User, id=uuid4(), deleted_at=None)
@@ -71,7 +72,7 @@ async def test_create_advisorship_success(
     mock_user_repo.get_by_id.side_effect = (
         lambda s, uid: advisor if uid == advisor.id else advisee
     )
-    mock_advisorship_repo.get_active_pair.return_value = None
+    mock_advisorship_repo.get_pair.return_value = None
 
     data = AdvisorshipCreate(
         advisor_id=advisor.id,
@@ -111,15 +112,17 @@ async def test_create_advisorship_self_advisor_error(session):
 async def test_create_advisorship_conflict(
     session, mock_advisorship_repo, mock_user_repo
 ):
-    current_user = MagicMock(spec=User, id=uuid4())
+    current_user = MagicMock(
+        spec=User, id=uuid4(), access_level=AccessType.ADMIN
+    )
     advisor = MagicMock(spec=User, id=uuid4(), deleted_at=None)
     advisee = MagicMock(spec=User, id=uuid4(), deleted_at=None)
 
     mock_user_repo.get_by_id.side_effect = (
         lambda s, uid: advisor if uid == advisor.id else advisee
     )
-    mock_advisorship_repo.get_active_pair.return_value = MagicMock(
-        spec=Advisorship
+    mock_advisorship_repo.get_pair.return_value = MagicMock(
+        spec=Advisorship, status='ACTIVE'
     )
 
     data = AdvisorshipCreate(

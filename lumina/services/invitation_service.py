@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.settings import SETTINGS
-from lumina.models import AccessType, Advisorship, Invitation, User
+from lumina.models import Advisorship, Invitation, User
 from lumina.repositories import (
     advisorship_repo,
     invitation_repo,
@@ -25,7 +25,13 @@ from lumina.schemas.invitation import (
     InvitationRegisterAndAccept,
 )
 from lumina.schemas.user import UserCreate, UserPublic
-from lumina.services import audit_service, auth_service, user_service
+from lumina.services import (
+    access_service,
+    advisorship_service,
+    audit_service,
+    auth_service,
+    user_service,
+)
 
 
 def is_expired(expires_at: datetime) -> bool:
@@ -37,6 +43,8 @@ def is_expired(expires_at: datetime) -> bool:
 async def create_invitation(
     session: AsyncSession, current_user: User, data: InvitationCreate
 ) -> Invitation:
+    access_service.ensure_admin(current_user)
+
     clean_email = data.email.strip().lower()
 
     if current_user.email and current_user.email.lower() == clean_email:
@@ -184,13 +192,18 @@ async def accept_invitation(
             detail='Este convite foi emitido para outro e-mail.',
         )
 
-    advisorship = await advisorship_repo.get_active_pair(
+    advisorship = await advisorship_repo.get_pair(
         session=session,
         advisor_id=invitation.inviter_id,
         advisee_id=current_user.id,
         project_id=invitation.project_id,
         role_type=invitation.role_type,
     )
+
+    if advisorship and advisorship.status != 'ACTIVE':
+        await advisorship_service.reactivate_advisorship(
+            session, current_user, advisorship
+        )
 
     if not advisorship:
         advisorship = Advisorship(
@@ -230,7 +243,7 @@ async def accept_invitation(
     await session.commit()
     await session.refresh(invitation)
     if advisorship:
-        await session.refresh(advisorship)
+        await advisorship_service.reload_advisorship(session, advisorship)
 
     return InvitationAcceptResponse(
         message='Convite aceito com sucesso.',
@@ -315,7 +328,7 @@ async def register_and_accept_invitation(
 
     await session.commit()
     await session.refresh(invitation)
-    await session.refresh(advisorship)
+    await advisorship_service.reload_advisorship(session, advisorship)
 
     auth_data = await auth_service.login(session, new_user)
 
@@ -375,7 +388,7 @@ async def cancel_invitation(
             detail='Convite não encontrado.',
         )
 
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     is_inviter = invitation.inviter_id == current_user.id
 
     if not is_admin and not is_inviter:
@@ -393,7 +406,7 @@ async def cancel_invitation(
 async def list_invitations(
     session: AsyncSession, current_user: User, filters: InvitationFilter
 ) -> Sequence[Invitation]:
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     if not is_admin:
         filters.inviter_id = current_user.id
 

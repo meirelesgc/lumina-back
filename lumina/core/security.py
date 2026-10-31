@@ -3,7 +3,15 @@ from http import HTTPStatus
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import Depends, HTTPException, Request, Security
+from fastapi import (
+    Depends,
+    HTTPException,
+    Request,
+    Security,
+    WebSocket,
+    WebSocketException,
+    status,
+)
 from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, ExpiredSignatureError, decode, encode
 from pwdlib import PasswordHash
@@ -46,34 +54,49 @@ def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
 
+async def _user_from_token(token: str, session: AsyncSession) -> User | None:
+    try:
+        payload = decode(
+            token, SETTINGS.SECRET_KEY, algorithms=[SETTINGS.ALGORITHM]
+        )
+    except (DecodeError, ExpiredSignatureError):
+        return None
+
+    subject_id = payload.get('sub')
+    if not subject_id:
+        return None
+
+    user = await session.scalar(select(User).where(User.id == subject_id))
+    if not user or user.deleted_at:
+        return None
+    return user
+
+
 async def get_current_user(
     request: Request,
     token: str | None = Security(oauth2_scheme),
     session: AsyncSession = Depends(get_session),
 ):
-    credentials_exception = HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail='Could not validate credentials',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-
     token = token or request.cookies.get(SETTINGS.ACCESS_TOKEN_COOKIE_NAME)
+    user = await _user_from_token(token, session) if token else None
 
-    if not token:
-        raise credentials_exception
-
-    try:
-        payload = decode(
-            token, SETTINGS.SECRET_KEY, algorithms=[SETTINGS.ALGORITHM]
-        )
-        subject_id = payload.get('sub')
-        if not subject_id:
-            raise credentials_exception
-    except (DecodeError, ExpiredSignatureError):
-        raise credentials_exception
-
-    user = await session.scalar(select(User).where(User.id == subject_id))
     if not user:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+
+    return user
+
+
+async def get_current_ws_user(
+    websocket: WebSocket, session: AsyncSession = Depends(get_session)
+):
+    token = websocket.cookies.get(SETTINGS.ACCESS_TOKEN_COOKIE_NAME)
+    user = await _user_from_token(token, session) if token else None
+
+    if not user:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     return user

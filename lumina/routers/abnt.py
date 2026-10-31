@@ -13,6 +13,7 @@ from fastapi import (
 )
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.features import abnt_conformity_service
 from lumina.features.schemas import (
     ConformityFilter,
@@ -21,7 +22,11 @@ from lumina.features.schemas import (
     ProcessingResultList,
 )
 
-router = APIRouter(prefix='/abnt', tags=['conformidade com abnt'])
+router = APIRouter(
+    prefix='/abnt',
+    tags=['conformidade com abnt'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get('/results', response_model=ProcessingResultList)
@@ -30,8 +35,12 @@ async def list_abnt_compliance_results(
     current_user: CurrentUser,
     filters: Annotated[ConformityFilter, Depends()],
 ):
-    results = await abnt_conformity_service.list_results(session, filters)
-    total = await abnt_conformity_service.count_results(session, filters)
+    results = await abnt_conformity_service.list_results(
+        session, current_user, filters
+    )
+    total = await abnt_conformity_service.count_results(
+        session, current_user, filters
+    )
     return {'count': total, 'results': results}
 
 
@@ -42,7 +51,7 @@ async def get_abnt_compliance_result_by_id(
     current_user: CurrentUser,
 ):
     return await abnt_conformity_service.get_result_by_id(
-        session, result_id
+        session, current_user, result_id
     )
 
 
@@ -55,7 +64,7 @@ async def delete_abnt_compliance_result(
     current_user: CurrentUser,
 ):
     await abnt_conformity_service.delete_result(
-        session, current_user.id, result_id
+        session, current_user, result_id
     )
 
 
@@ -89,5 +98,7 @@ async def get_abnt_result(
     current_user: CurrentUser,
 ):
     filters = ConformityFilter(doc_id=doc_id)
-    results = await abnt_conformity_service.list_results(session, filters)
+    results = await abnt_conformity_service.list_results(
+        session, current_user, filters
+    )
     return {'count': len(results), 'results': results}

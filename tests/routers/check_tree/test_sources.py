@@ -1,4 +1,7 @@
+import pytest
 from http import HTTPStatus
+
+pytestmark = pytest.mark.usefixtures('user_is_admin')
 
 
 def test_create_source_api(client, token):

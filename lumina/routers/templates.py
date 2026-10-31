@@ -13,7 +13,8 @@ from fastapi import (
     UploadFile,
 )
 
-from lumina.core.dependencies import CurrentUser, Session, TemplateStorage
+from lumina.core.dependencies import AdminUser, CurrentUser, Session, TemplateStorage
+from lumina.core.security import get_current_user
 from lumina.features import template_conformity_service
 from lumina.features.schemas import (
     ConformityFilter,
@@ -29,7 +30,11 @@ from lumina.schemas.publication_template import (
 )
 from lumina.services import publication_template_service
 
-router = APIRouter(prefix='/templates', tags=['conformidade com template'])
+router = APIRouter(
+    prefix='/templates',
+    tags=['conformidade com template'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # Rotas de CRUD de resultados declaradas antes de /{template_id} para evitar colisao de UUID
@@ -41,8 +46,12 @@ async def list_template_compliance_results(
     current_user: CurrentUser,
     filters: Annotated[ConformityFilter, Depends()],
 ):
-    results = await template_conformity_service.list_results(session, filters)
-    total = await template_conformity_service.count_results(session, filters)
+    results = await template_conformity_service.list_results(
+        session, current_user, filters
+    )
+    total = await template_conformity_service.count_results(
+        session, current_user, filters
+    )
     return {'count': total, 'results': results}
 
 
@@ -53,7 +62,7 @@ async def get_template_compliance_result_by_id(
     current_user: CurrentUser,
 ):
     return await template_conformity_service.get_result_by_id(
-        session, result_id
+        session, current_user, result_id
     )
 
 
@@ -66,7 +75,7 @@ async def delete_template_compliance_result(
     current_user: CurrentUser,
 ):
     await template_conformity_service.delete_result(
-        session, current_user.id, result_id
+        session, current_user, result_id
     )
 
 
@@ -106,7 +115,9 @@ async def get_template_result(
     current_user: CurrentUser,
 ):
     filters = ConformityFilter(doc_id=doc_id)
-    results = await template_conformity_service.list_results(session, filters)
+    results = await template_conformity_service.list_results(
+        session, current_user, filters
+    )
     return {'count': len(results), 'results': results}
 
 
@@ -132,7 +143,7 @@ async def list_templates(
 )
 async def create_template(
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     storage: TemplateStorage,
     name: Annotated[str, Form()],
     file: UploadFile = File(...),
@@ -157,7 +168,7 @@ async def get_template(
 async def update_template(
     template_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     storage: TemplateStorage,
     name: Annotated[str | None, Form()] = None,
     file: UploadFile | None = File(None),
@@ -172,7 +183,7 @@ async def update_template(
 async def delete_template(
     template_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await publication_template_service.delete_template(
         session, current_user.id, template_id

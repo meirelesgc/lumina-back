@@ -6,6 +6,8 @@ from sqlalchemy import select
 
 from lumina.models import Advisorship, Invitation, User
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 EXPECTED_MIN_DAYS = 6
 EXPECTED_MAX_DAYS = 7
 MIN_INVITATIONS = 2

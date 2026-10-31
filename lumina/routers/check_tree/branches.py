@@ -4,7 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     BranchCreate,
     BranchFilter,
@@ -17,6 +18,7 @@ from lumina.services import branch_service
 router = APIRouter(
     prefix='/branch',
     tags=['árvore de verificação, branches'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -28,7 +30,7 @@ router = APIRouter(
 async def create_branch(
     branch: BranchCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await branch_service.create_branch(session, current_user.id, branch)
 
@@ -50,7 +52,7 @@ async def read_branch(branch_id: UUID, session: Session):
 async def update_branch(
     branch: BranchUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await branch_service.update_branch(session, current_user.id, branch)
 
@@ -62,7 +64,7 @@ async def update_branch(
 async def delete_branch(
     branch_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await branch_service.delete_branch(session, current_user.id, branch_id)
     return {'message': 'Branch deleted'}

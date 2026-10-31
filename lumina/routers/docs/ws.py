@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
 from lumina.core.cache import WebSocketManager, get_socket_manager
+from lumina.core.dependencies import CurrentWSUser
 from lumina.schemas import WSMessage
 
 router = APIRouter(prefix='/ws', tags=['websockets'])
@@ -12,6 +13,7 @@ router = APIRouter(prefix='/ws', tags=['websockets'])
 async def websocket_endpoint(
     websocket: WebSocket,
     subscriber_id: UUID,
+    current_user: CurrentWSUser,
     socket_manager: WebSocketManager = Depends(get_socket_manager),
 ):
     channel_id = 'ws:broadcast'

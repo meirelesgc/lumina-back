@@ -2,6 +2,8 @@ import pytest
 
 from tests.factories.typification_factory import TypificationFactory
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 
 def test_create_typification_endpoint(client, token):
     headers = {'Authorization': f'Bearer {token}'}

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.dependencies import Storage
 from lumina.core.security import get_password_hash, verify_password
-from lumina.models import AccessType, PasswordReset, User, UserImage
+from lumina.models import PasswordReset, User, UserImage
 from lumina.repositories import user_repo
 from lumina.schemas import (
     ForgotPasswordRequest,
@@ -23,7 +23,7 @@ from lumina.schemas import (
     UserUpdate,
 )
 from lumina.schemas.common import Message
-from lumina.services import audit_service, notification_service
+from lumina.services import access_service, audit_service, notification_service
 
 
 def normalize_phone(phone):
@@ -156,12 +156,15 @@ async def get_users(session: AsyncSession, filters: UserFilter) -> list[User]:
     return await user_repo.list_all(session, filters)
 
 
-async def get_user_by_id(session: AsyncSession, user_id: UUID) -> User:
+async def get_user_by_id(
+    session: AsyncSession, current_user: User, user_id: UUID
+) -> User:
     user = await user_repo.get_by_id(session, user_id)
     if not user or user.deleted_at:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
+    access_service.ensure_owner_or_admin(current_user, user.id)
     return user
 
 
@@ -176,7 +179,7 @@ async def update_user(
         )
 
     is_owner = db_user.id == current_user.id
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
 
     if not is_owner and not is_admin:
         raise HTTPException(
@@ -201,7 +204,7 @@ async def update_user(
     db_user.email = data.email
     db_user.phone_number = norm_phone
 
-    if is_admin:
+    if is_admin and data.access_level is not None:
         db_user.access_level = data.access_level
 
     new_data = UserPublic.model_validate(db_user).model_dump(mode='json')
@@ -234,7 +237,7 @@ async def change_password(
         )
 
     is_owner = db_user.id == current_user.id
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
 
     if not is_owner and not is_admin:
         raise HTTPException(
@@ -301,13 +304,7 @@ async def delete_user(
             status_code=HTTPStatus.FORBIDDEN, detail='User not found'
         )
 
-    is_owner = db_user.id == current_user.id
-    is_admin = current_user.access_level == AccessType.ADMIN
-
-    if not is_owner and not is_admin:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Unauthorized'
-        )
+    access_service.ensure_owner_or_admin(current_user, db_user.id)
 
     old_data = UserPublic.model_validate(db_user).model_dump(mode='json')
     db_user.set_deletion_audit(current_user.id)
@@ -378,13 +375,7 @@ async def test_whatsapp(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
 
-    if (
-        db_user.id != current_user.id
-        and current_user.access_level != AccessType.ADMIN
-    ):
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Access denied'
-        )
+    access_service.ensure_owner_or_admin(current_user, db_user.id)
 
     if not db_user.phone_number:
         raise HTTPException(

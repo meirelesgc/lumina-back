@@ -50,6 +50,8 @@ O relacionamento entre orientador e orientando é gerenciado pela entidade `Advi
 * `COMPLETED`: Trabalho acadêmico concluído e defendido.
 * `CANCELLED`: Vínculo interrompido.
 
+**Alcance do Nível `ADMIN`**: No Lumina, o orientador é uma conta `ADMIN`, e esse nível lê todos os documentos do sistema. O isolamento abaixo vale entre contas `DEFAULT`.
+
 **Regra de Bloqueio Imediato**: Quando um vínculo de orientação é alterado para `CANCELLED` ou `COMPLETED`, o ex-orientador perde imediatamente o acesso aos novos documentos do pesquisador. Qualquer tentativa de consulta subsequente retorna `403 Forbidden`.
 
 ---
@@ -81,7 +83,17 @@ O vínculo de orientação concede permissão de **leitura, auditoria e colabora
 ```http
 POST /advisorship
 ```
-Cria um novo vínculo de orientação entre `advisor_id` e `advisee_id`, definindo o papel (`MAIN_ADVISOR` ou `CO_ADVISOR`), tópico e status inicial. Rejeita auto-orientação (`advisor_id == advisee_id`) com `400 Bad Request` e duplicidade de vínculos ativos com `409 Conflict`.
+Cria um novo vínculo de orientação entre `advisor_id` e `advisee_id`, definindo o papel (`MAIN_ADVISOR` ou `CO_ADVISOR`) e o tópico. Só um `ADMIN` cria vínculo entre terceiros. O orientando pode criar o próprio vínculo com um orientador `ADMIN`, e um orientador sem esse nível usa o fluxo de convite. Qualquer outra combinação recebe `403 Forbidden`. Rejeita auto-orientação (`advisor_id == advisee_id`) com `400 Bad Request` e duplicidade de vínculos ativos com `409 Conflict`. Se o par já teve um vínculo encerrado, esse vínculo volta a `ACTIVE`.
+
+```http
+GET /advisorship/advisors
+```
+Lista os orientadores disponíveis (contas `ADMIN` ativas) com `id`, `username`, `email` e `icon`, para o onboarding do orientando.
+
+```http
+DELETE /advisorship/{advisorship_id}
+```
+Encerra o vínculo. As duas partes e um `ADMIN` podem encerrar. Só um `ADMIN` devolve um vínculo encerrado para `ACTIVE`.
 
 ```http
 GET /advisorship/my-advisees

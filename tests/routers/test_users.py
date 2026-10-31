@@ -92,18 +92,73 @@ async def test_admin_nao_usa_nivel_removido(client, admin, other_user, token):
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.asyncio
+async def test_token_de_usuario_removido_nao_vale(
+    client, session, user, token
+):
+    user.set_deletion_audit(user.id)
+    await session.commit()
+
+    response = client.get(
+        '/user/my', headers={'Authorization': f'Bearer {token}'}
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_usuario_comum_nao_lista_usuarios(client, token):
+    response = client.get(
+        '/user', headers={'Authorization': f'Bearer {token}'}
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_usuario_comum_nao_le_outra_conta(client, other_user, token):
+    response = client.get(
+        f'/user/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.asyncio
+async def test_admin_lista_usuarios(client, admin, token):
+    response = client.get(
+        '/user', headers={'Authorization': f'Bearer {token}'}
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert len(response.json()['users']) >= 1
+
+
+@pytest.mark.asyncio
+async def test_atualizacao_sem_nivel_mantem_admin(client, admin, token):
+    response = client.put(
+        '/user',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'id': str(admin.id),
+            'username': admin.username,
+            'email': admin.email,
+            'phone_number': admin.phone_number,
+        },
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['access_level'] == AccessType.ADMIN
+
+
 def test_read_users_unauthorized(client):
     response = client.get('/user')
     assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
-def test_read_users(client, token):
+@pytest.mark.asyncio
+async def test_read_users(client, admin, token):
     response = client.get('/user', headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == HTTPStatus.OK
     assert len(response.json()['users']) >= 1
 
 
-def test_read_users_with_users(client, user, token):
+@pytest.mark.asyncio
+async def test_read_users_with_users(client, admin, user, token):
     user_schema = UserPublic.model_validate(user).model_dump(mode='json')
     response = client.get('/user', headers={'Authorization': f'Bearer {token}'})
     assert any(u['id'] == user_schema['id'] for u in response.json()['users'])
@@ -166,17 +221,18 @@ def test_delete_user(client, user, token):
     assert response.status_code == HTTPStatus.NO_CONTENT
 
 
-def test_usuario_comum_nao_remove_outra_conta(client, other_user, token):
+@pytest.mark.asyncio
+async def test_usuario_comum_nao_remove_outra_conta(
+    client, session, other_user, token
+):
     response = client.delete(
         f'/user/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
 
-    users = client.get(
-        '/user', headers={'Authorization': f'Bearer {token}'}
-    ).json()['users']
-    assert any(u['id'] == str(other_user.id) for u in users)
+    await session.refresh(other_user)
+    assert other_user.deleted_at is None
 
 
 @pytest.mark.asyncio

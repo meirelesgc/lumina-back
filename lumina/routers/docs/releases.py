@@ -23,6 +23,7 @@ from lumina.core.dependencies import (
     Storage,
     VStore,
 )
+from lumina.core.security import get_current_user
 from lumina.core.settings import Settings
 from lumina.models import (
     Document,
@@ -34,7 +35,13 @@ from lumina.schemas import (
     DocumentReleasePublic,
 )
 from lumina.schemas.document import DocumentProcessingStatus
-from lumina.services import audit_service, release_service, report_service
+from lumina.services import (
+    access_service,
+    audit_service,
+    doc_service,
+    release_service,
+    report_service,
+)
 from lumina.services.ai.pipeline import release_pipeline
 
 SETTINGS = Settings()
@@ -43,6 +50,7 @@ BROKER_URL = SETTINGS.BROKER_URL
 router = APIRouter(
     prefix='/doc/{doc_id}/release',
     tags=['verificação dos documentos, versões'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -72,6 +80,9 @@ async def create_release(  # noqa: PLR0913, PLR0917
             status_code=HTTPStatus.NOT_FOUND,
             detail='Document not found',
         )
+
+    if not access_service.can_edit_document(current_user, db_doc):
+        raise access_service.forbidden('Sem permissão para enviar versões.')
 
     unique_filename = f'{uuid4()}_{file.filename}'
     file_path = await storage.save(file, unique_filename)
@@ -155,6 +166,9 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
             detail='Document not found',
         )
 
+    if not access_service.can_edit_document(current_user, db_doc):
+        raise access_service.forbidden('Sem permissão para enviar versões.')
+
 
     project_doc = await project_document_repo.get_by_id(
         session, payload.project_document_id
@@ -210,7 +224,10 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
 
 
 @router.get('', response_model=DocumentReleaseList)
-async def read_releases(doc_id: UUID, session: Session):
+async def read_releases(
+    doc_id: UUID, session: Session, current_user: CurrentUser
+):
+    await doc_service.get_doc_by_id(session, current_user, doc_id)
     query = (
         select(DocumentRelease)
         .where(
@@ -232,6 +249,10 @@ async def delete_release(
     session: Session,
     current_user: CurrentUser,
 ):
+    db_doc = await doc_service.get_doc_by_id(session, current_user, doc_id)
+    if not access_service.can_delete_document(current_user, db_doc):
+        raise access_service.forbidden('Sem permissão para remover versões.')
+
     query = (
         select(DocumentRelease)
         .where(
@@ -271,8 +292,12 @@ async def delete_release(
 @router.get('/{document_release_id}/export/pdf', include_in_schema=False)
 async def exportar_document_release_pdf(
     session: Session,
+    current_user: CurrentUser,
     document_release_id: UUID,
 ):
+    await release_service.ensure_can_read_release(
+        session, current_user, document_release_id
+    )
     report_path = await report_service.generate_document_release_pdf(
         session=session,
         document_release_id=document_release_id,

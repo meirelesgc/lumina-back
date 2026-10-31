@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, UploadFile
 
-from lumina.core.dependencies import CurrentUser, Session, Storage
+from lumina.core.dependencies import AdminUser, CurrentUser, Session, Storage
 from lumina.schemas import (
     UserCreate,
     UserFilter,
@@ -50,7 +50,7 @@ async def add_icon(
 @router.get('', response_model=UserList)
 async def read_users(
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     filters: Annotated[UserFilter, Depends()],
 ):
     users = await user_service.get_users(session, filters)
@@ -68,7 +68,7 @@ async def read_user(
     session: Session,
     current_user: CurrentUser,
 ):
-    return await user_service.get_user_by_id(session, user_id)
+    return await user_service.get_user_by_id(session, current_user, user_id)
 
 
 @router.put('', response_model=UserPublic)

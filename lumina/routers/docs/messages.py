@@ -4,16 +4,21 @@ from uuid import UUID
 
 from fastapi import (
     APIRouter,
-    Cookie,
     Depends,
     HTTPException,
     WebSocket,
     WebSocketDisconnect,
+    status,
 )
 
 from lumina.core.cache import WebSocketManager, get_socket_manager
-from lumina.core.dependencies import CurrentUser, Model, Session, VStore
-from lumina.core.security import get_current_user
+from lumina.core.dependencies import (
+    CurrentUser,
+    CurrentWSUser,
+    Model,
+    Session,
+    VStore,
+)
 from lumina.schemas import (
     DocumentMessageCreate,
     DocumentMessageList,
@@ -26,7 +31,7 @@ from lumina.schemas.document_message import (
     MessageFilter,
     MessageMention,
 )
-from lumina.services import message_service
+from lumina.services import doc_service, message_service
 from lumina.services.ai import chat as ai_chat_service
 
 router = APIRouter(prefix='/doc', tags=['document verification, messages'])
@@ -43,6 +48,7 @@ async def create_document_message(
     session: Session,
     current_user: CurrentUser,
 ):
+    await doc_service.get_doc_by_id(session, current_user, doc_id)
     return await message_service.create_message(
         session, current_user.id, doc_id, msg
     )
@@ -61,6 +67,7 @@ async def create_document_ai_message(  # noqa: PLR0913, PLR0917
     vstore: VStore,
     current_user: CurrentUser,
 ):
+    await doc_service.get_doc_by_id(session, current_user, doc_id)
     await message_service.create_message(session, current_user.id, doc_id, msg)
 
     filters = MessageFilter(limit=3)
@@ -105,8 +112,10 @@ async def create_document_ai_message(  # noqa: PLR0913, PLR0917
 async def list_document_messages(
     doc_id: UUID,
     session: Session,
+    current_user: CurrentUser,
     filters: Annotated[MessageFilter, Depends()],
 ):
+    await doc_service.get_doc_by_id(session, current_user, doc_id)
     messages = await message_service.list_messages(session, doc_id, filters)
     return {'messages': messages}
 
@@ -115,8 +124,14 @@ async def list_document_messages(
     '/message/{message_id}',
     response_model=DocumentMessagePublic,
 )
-async def read_document_message(message_id: UUID, session: Session):
-    return await message_service.get_message_by_id(session, message_id)
+async def read_document_message(
+    message_id: UUID, session: Session, current_user: CurrentUser
+):
+    message = await message_service.get_message_by_id(session, message_id)
+    await doc_service.get_doc_by_id(
+        session, current_user, message.document_id
+    )
+    return message
 
 
 @router.put(
@@ -128,7 +143,7 @@ async def update_document_message(
     session: Session,
     current_user: CurrentUser,
 ):
-    return await message_service.update_message(session, current_user.id, msg)
+    return await message_service.update_message(session, current_user, msg)
 
 
 @router.delete(
@@ -140,7 +155,7 @@ async def delete_document_message(
     session: Session,
     current_user: CurrentUser,
 ):
-    await message_service.delete_message(session, current_user.id, message_id)
+    await message_service.delete_message(session, current_user, message_id)
     return {'message': 'Message deleted successfully.'}
 
 
@@ -207,10 +222,15 @@ async def document_chat_websocket(  # noqa: PLR0913, PLR0917
     session: Session,
     model: Model,
     vstore: VStore,
-    access_token: str | None = Cookie(default=None),
+    current_user: CurrentWSUser,
     socket_manager: WebSocketManager = Depends(get_socket_manager),
 ):
-    current_user = await get_current_user(None, access_token, session)
+    try:
+        await doc_service.get_doc_by_id(session, current_user, doc_id)
+    except HTTPException:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     channel_id = f'ws:doc:{doc_id}:chat'
 
     await socket_manager.add_user_to_channel(channel_id, websocket)

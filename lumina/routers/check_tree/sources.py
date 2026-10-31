@@ -4,7 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, UploadFile
 
-from lumina.core.dependencies import CurrentUser, Session, Storage
+from lumina.core.dependencies import AdminUser, Session, Storage
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     SourceCreate,
     SourceList,
@@ -17,6 +18,7 @@ from lumina.services import source_service
 router = APIRouter(
     prefix='/source',
     tags=['árvore de verificação, fontes'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -24,7 +26,7 @@ router = APIRouter(
 async def create_source(
     source: SourceCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await source_service.create_source(session, current_user.id, source)
 
@@ -45,7 +47,7 @@ async def read_sources(
 async def upload_source_document(
     source_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     storage: Storage,
     file: UploadFile = File(...),
 ):
@@ -63,7 +65,7 @@ async def read_source(source_id: UUID, session: Session):
 async def update_source(
     source: SourceUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await source_service.update_source(session, current_user.id, source)
 
@@ -75,7 +77,7 @@ async def update_source(
 async def delete_source(
     source_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await source_service.delete_source(session, current_user.id, source_id)
     return {'message': 'Source deleted'}

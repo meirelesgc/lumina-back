@@ -4,7 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     TypificationCreate,
     TypificationFilter,
@@ -17,6 +18,7 @@ from lumina.services import typification_service
 router = APIRouter(
     prefix='/typification',
     tags=['árvore de verificação, tipificações'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -28,7 +30,7 @@ router = APIRouter(
 async def create_typification(
     typification: TypificationCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await typification_service.create_typification(
         session, current_user.id, typification
@@ -56,7 +58,7 @@ async def read_typification(typification_id: UUID, session: Session):
 async def update_typification(
     typification: TypificationUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await typification_service.update_typification(
         session, current_user.id, typification
@@ -70,7 +72,7 @@ async def update_typification(
 async def delete_typification(
     typification_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await typification_service.delete_typification(
         session, current_user.id, typification_id

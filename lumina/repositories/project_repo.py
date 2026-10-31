@@ -35,9 +35,6 @@ async def get_by_name(
 async def has_project_access(
     session: AsyncSession, current_user: User, project: Project
 ) -> bool:
-    if current_user.access_level == AccessType.ADMIN:
-        return True
-
     if project.created_by == current_user.id:
         return True
 

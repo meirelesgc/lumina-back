@@ -21,6 +21,7 @@ from lumina.routers import (
     stats,
     system,
     templates,
+    uploads,
     users,
 )
 from lumina.routers.audit import audit_logs
@@ -101,7 +102,6 @@ app = FastAPI(
 )
 
 
-app.mount('/uploads', StaticFiles(directory=UPLOADS_DIR), name='uploads')
 app.mount('/demos', StaticFiles(directory=DEMOS_DIR, html=True), name='demos')
 
 app.add_middleware(
@@ -159,3 +159,4 @@ app.include_router(system.router)
 app.include_router(reports.router)
 app.include_router(templates.router)
 app.include_router(abnt.router)
+app.include_router(uploads.router)

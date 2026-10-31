@@ -24,9 +24,9 @@ from lumina.features.schemas import (
 from lumina.features.template_check import (
     template as template_check,
 )
-from lumina.models import TemplateConformityResult
+from lumina.models import TemplateConformityResult, User
 from lumina.repositories import template_conformity_repo
-from lumina.services import audit_service
+from lumina.services import access_service, audit_service
 
 logger = logging.getLogger(__name__)
 
@@ -40,20 +40,28 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 RESULT_NOT_FOUND_DETAIL = 'Resultado de conformidade não encontrado.'
 
 
+def _owner_filter(current_user: User) -> UUID | None:
+    return None if access_service.is_admin(current_user) else current_user.id
+
+
 async def list_results(
-    session: AsyncSession, filters: ConformityFilter
+    session: AsyncSession, current_user: User, filters: ConformityFilter
 ) -> list[TemplateConformityResult]:
-    return await template_conformity_repo.list_all(session, filters)
+    return await template_conformity_repo.list_all(
+        session, filters, _owner_filter(current_user)
+    )
 
 
 async def count_results(
-    session: AsyncSession, filters: ConformityFilter
+    session: AsyncSession, current_user: User, filters: ConformityFilter
 ) -> int:
-    return await template_conformity_repo.count(session, filters)
+    return await template_conformity_repo.count(
+        session, filters, _owner_filter(current_user)
+    )
 
 
 async def get_result_by_id(
-    session: AsyncSession, result_id: UUID
+    session: AsyncSession, current_user: User, result_id: UUID
 ) -> TemplateConformityResult:
     record = await template_conformity_repo.get_by_id(session, result_id)
     if not record or record.deleted_at:
@@ -61,20 +69,23 @@ async def get_result_by_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail=RESULT_NOT_FOUND_DETAIL,
         )
+    access_service.ensure_owner_or_admin(
+        current_user, record.created_by, 'Acesso negado a este resultado.'
+    )
     return record
 
 
 async def delete_result(
-    session: AsyncSession, user_id: UUID, result_id: UUID
+    session: AsyncSession, current_user: User, result_id: UUID
 ) -> None:
-    record = await get_result_by_id(session, result_id)
+    record = await get_result_by_id(session, current_user, result_id)
 
     old_data = ProcessingResult.model_validate(record).model_dump(mode='json')
-    record.set_deletion_audit(user_id)
+    record.set_deletion_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,
-        user_id=user_id,
+        user_id=current_user.id,
         action='DELETE',
         table_name=TemplateConformityResult.__tablename__,
         record_id=record.id,

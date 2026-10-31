@@ -166,7 +166,7 @@ Os testes com IA compartilham `tests/ai/evaluation/support.py` (base vetorial, i
 ## 3. Segurança e Privacidade por Padrão
 
 * **Autenticação**: Tokens JWT (`HS256`) com segredo robusto e hash de senhas via algoritmo **Argon2** (`pwdlib`).
-* **Autorização Contextual**: Acesso a recursos controlado pelo nível global (`AccessType`) e pela relação com o recurso (autor, editor, orientador com vínculo ativo), validados em services antes de repassar chamadas ao repositório.
+* **Autorização Contextual**: Acesso a recursos controlado pelo nível global (`AccessType`) e pela relação com o recurso (autor, editor, orientador com vínculo ativo), validados em `access_service` antes de repassar chamadas ao repositório.
 * **Exclusão Lógica Obrigatória (Soft Delete)**: Entidades com `AuditMixin` utilizam `deleted_at` e `deleted_by`. Exclusões físicas são expressamente vedadas em rotinas normais de negócio.
 * **Trilha de Auditoria**: Operações críticas de mutação (CREATE, UPDATE, DELETE) geram registros imutáveis na tabela `audit_logs` via `audit_service`.
 * **Proteção LGPD**: Dados pessoais sensíveis são anonimizados antes de qualquer envio a provedores externos de IA via Microsoft Presidio.

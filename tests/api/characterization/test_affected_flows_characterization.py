@@ -57,6 +57,7 @@ async def test_characterization_document_crud_flow(client, token):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('user_is_admin')
 async def test_characterization_user_crud_flow(client, user, token):
     """
     Caracterização do CRUD de Usuários.
@@ -107,6 +108,7 @@ async def test_characterization_user_crud_flow(client, user, token):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('user_is_admin')
 async def test_characterization_stats_kpis_flow(client, token):
     """
     Caracterização das métricas gerais do sistema (GET /stats/kpis).

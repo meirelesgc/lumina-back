@@ -1,9 +1,10 @@
 from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas.project_document import (
     ProjectDocumentCreate,
     ProjectDocumentList,
@@ -15,6 +16,7 @@ from lumina.services import project_document_service
 router = APIRouter(
     prefix='/project-document',
     tags=['projetos, documentos'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

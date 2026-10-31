@@ -2,6 +2,10 @@
 
 from http import HTTPStatus
 from itertools import count
+from uuid import UUID
+
+from lumina.models import User
+from lumina.schemas import AccessType
 
 _phones = count(1)
 PASSWORD = 'senha-segura'
@@ -19,6 +23,14 @@ def sign_up(client, name: str) -> dict:
     )
     assert response.status_code == HTTPStatus.CREATED, response.text
     return response.json()
+
+
+async def make_admin(session, account: dict) -> None:
+    # A promoção é provisionada: o comando de operação fica fora da jornada.
+    user = await session.get(User, UUID(account['id']))
+    user.access_level = AccessType.ADMIN
+    await session.commit()
+    await session.refresh(user)
 
 
 def log_in(client, name: str) -> dict:

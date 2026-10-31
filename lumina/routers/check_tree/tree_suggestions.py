@@ -12,7 +12,8 @@ from fastapi import (
     UploadFile,
 )
 
-from lumina.core.dependencies import CurrentUser, Session, Storage
+from lumina.core.dependencies import AdminUser, Session, Storage
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     TreeSuggestionFilter,
     TreeSuggestionItemConfirm,
@@ -25,6 +26,7 @@ from lumina.services import tree_suggestion_service
 router = APIRouter(
     prefix='/tree-suggestion',
     tags=['árvore de verificação, sugestões'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -35,7 +37,7 @@ router = APIRouter(
 )
 async def create_suggestion_session(  # noqa: PLR0913, PLR0917
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     storage: Storage,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -54,7 +56,7 @@ async def create_suggestion_session(  # noqa: PLR0913, PLR0917
 @router.get('', response_model=TreeSuggestionSessionList)
 async def read_suggestion_sessions(
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     filters: Annotated[TreeSuggestionFilter, Depends()],
 ):
     sessions = await tree_suggestion_service.list_sessions(session, filters)
@@ -63,7 +65,7 @@ async def read_suggestion_sessions(
 
 @router.get('/{session_id}', response_model=TreeSuggestionSessionDetail)
 async def read_suggestion_session(
-    session_id: UUID, session: Session, current_user: CurrentUser
+    session_id: UUID, session: Session, current_user: AdminUser
 ):
     return await tree_suggestion_service.get_session_detail(
         session, session_id
@@ -78,7 +80,7 @@ async def confirm_suggestion_item(  # noqa: PLR0913, PLR0917
     session_id: UUID,
     item_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     data: Annotated[Optional[TreeSuggestionItemConfirm], Body()] = None,
 ):
     return await tree_suggestion_service.confirm_item(
@@ -98,7 +100,7 @@ async def discard_suggestion_item(
     session_id: UUID,
     item_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await tree_suggestion_service.discard_item(
         session, current_user.id, session_id, item_id
@@ -110,7 +112,7 @@ async def discard_suggestion_item(
     response_model=TreeSuggestionSessionDetail,
 )
 async def discard_suggestion_session(
-    session_id: UUID, session: Session, current_user: CurrentUser
+    session_id: UUID, session: Session, current_user: AdminUser
 ):
     return await tree_suggestion_service.discard_session(
         session, current_user.id, session_id

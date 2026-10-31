@@ -2,6 +2,8 @@ from http import HTTPStatus
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 
 @pytest.mark.asyncio
 async def test_create_group(client, token):

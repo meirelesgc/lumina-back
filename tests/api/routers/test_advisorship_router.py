@@ -4,12 +4,13 @@ from uuid import uuid4
 import pytest
 
 from lumina.core.security import create_access_token
-from lumina.models import Project, User
+from lumina.models import Advisorship, Project, User
 from lumina.schemas.user import AccessType
 
 
 @pytest.fixture
 def advisee_and_project(session, user):
+    user.access_level = AccessType.ADMIN
     advisee = User(
         username=f'advisee_{uuid4().hex[:6]}',
         email=f'advisee_{uuid4().hex[:6]}@test.com',
@@ -251,3 +252,153 @@ async def test_get_my_advisors_with_deleted_advisor(
     assert resp_advisors.status_code == HTTPStatus.OK
     advisors_list = resp_advisors.json()['advisors']
     assert len(advisors_list) == 0
+
+
+def auth(token):
+    return {'Authorization': f'Bearer {token}'}
+
+
+def test_usuario_nao_se_declara_orientador_de_outro(
+    client, user, other_user, token
+):
+    response = client.post(
+        '/advisorship',
+        headers=auth(token),
+        json={'advisor_id': str(user.id), 'advisee_id': str(other_user.id)},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_orientando_nao_escolhe_orientador_comum(
+    client, user, other_user, token
+):
+    response = client.post(
+        '/advisorship',
+        headers=auth(token),
+        json={'advisor_id': str(other_user.id), 'advisee_id': str(user.id)},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_orientando_escolhe_orientador_admin(
+    client, user, admin_user, token
+):
+    response = client.post(
+        '/advisorship',
+        headers=auth(token),
+        json={'advisor_id': str(admin_user.id), 'advisee_id': str(user.id)},
+    )
+    assert response.status_code == HTTPStatus.CREATED
+
+
+def test_admin_cria_vinculo_entre_terceiros(
+    client, user, other_user, admin_token
+):
+    response = client.post(
+        '/advisorship',
+        headers=auth(admin_token),
+        json={'advisor_id': str(user.id), 'advisee_id': str(other_user.id)},
+    )
+    assert response.status_code == HTTPStatus.CREATED
+
+
+@pytest.mark.asyncio
+async def test_orientando_nao_usa_projeto_de_terceiro(
+    client, session, user, other_user, admin_user, token
+):
+    project = Project(name='Projeto alheio', description='Outro')
+    project.set_creation_audit(other_user.id)
+    session.add(project)
+    await session.commit()
+
+    response = client.post(
+        '/advisorship',
+        headers=auth(token),
+        json={
+            'advisor_id': str(admin_user.id),
+            'advisee_id': str(user.id),
+            'project_id': str(project.id),
+        },
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.fixture
+def link(session, user, other_user):
+    async def _link(status, project_id=None):
+        advisorship = Advisorship(
+            advisor_id=user.id,
+            advisee_id=other_user.id,
+            project_id=project_id,
+            status=status,
+        )
+        advisorship.set_creation_audit(user.id)
+        session.add(advisorship)
+        await session.commit()
+        return advisorship
+
+    return _link
+
+
+@pytest.mark.asyncio
+async def test_orientador_comum_nao_reativa_vinculo(client, link, token):
+    advisorship = await link('CANCELLED')
+
+    response = client.put(
+        f'/advisorship/{advisorship.id}',
+        headers=auth(token),
+        json={'status': 'ACTIVE'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.asyncio
+async def test_admin_reativa_vinculo(client, link, admin_token):
+    advisorship = await link('CANCELLED')
+
+    response = client.put(
+        f'/advisorship/{advisorship.id}',
+        headers=auth(admin_token),
+        json={'status': 'ACTIVE'},
+    )
+    assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('status', ['CANCELLED', 'COMPLETED'])
+async def test_ex_orientador_nao_lista_documentos(
+    client, link, other_user, token, status
+):
+    await link(status)
+
+    response = client.get(
+        f'/advisorship/advisees/{other_user.id}/documents',
+        headers=auth(token),
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.asyncio
+async def test_orientador_ativo_em_outro_projeto_lista_documentos(
+    client, session, link, user, other_user, token
+):
+    project = Project(name='Projeto ativo', description='Ativo')
+    project.set_creation_audit(other_user.id)
+    session.add(project)
+    await session.commit()
+    await link('ACTIVE', project.id)
+
+    response = client.get(
+        f'/advisorship/advisees/{other_user.id}/documents',
+        headers=auth(token),
+    )
+    assert response.status_code == HTTPStatus.OK
+
+
+def test_usuario_comum_nao_envia_convite(client, token):
+    response = client.post(
+        '/invitations',
+        headers=auth(token),
+        json={'email': 'convidado@example.com'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN

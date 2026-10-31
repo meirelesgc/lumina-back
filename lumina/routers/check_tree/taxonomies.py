@@ -4,7 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     TaxonomyCreate,
     TaxonomyList,
@@ -17,6 +18,7 @@ from lumina.services import taxonomy_service
 router = APIRouter(
     prefix='/taxonomy',
     tags=['árvore de verificação, taxonomias'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -24,7 +26,7 @@ router = APIRouter(
 async def create_taxonomy(
     taxonomy: TaxonomyCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await taxonomy_service.create_taxonomy(
         session, current_user.id, taxonomy
@@ -48,7 +50,7 @@ async def read_taxonomy(taxonomy_id: UUID, session: Session):
 async def update_taxonomy(
     taxonomy: TaxonomyUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     return await taxonomy_service.update_taxonomy(
         session, current_user.id, taxonomy
@@ -62,7 +64,7 @@ async def update_taxonomy(
 async def delete_taxonomy(
     taxonomy_id: UUID,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     await taxonomy_service.delete_taxonomy(
         session, current_user.id, taxonomy_id

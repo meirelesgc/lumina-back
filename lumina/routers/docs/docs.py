@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas import (
     DocumentCreate,
     DocumentFilter,
@@ -14,7 +15,11 @@ from lumina.schemas import (
 )
 from lumina.services import doc_service
 
-router = APIRouter(prefix='/doc', tags=['verificação dos documentos, editais'])
+router = APIRouter(
+    prefix='/doc',
+    tags=['verificação dos documentos, editais'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post('', status_code=HTTPStatus.CREATED, response_model=DocumentPublic)
