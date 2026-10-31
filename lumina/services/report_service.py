@@ -28,7 +28,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from sqlalchemy import select
 from svglib.svglib import svg2rlg
 
-from lumina.models import Document, DocumentHistory, DocumentRelease
+from lumina.models import Document, DocumentRelease
 from lumina.schemas.document_release import DocumentReleasePublic
 from lumina.utils.markdown_reportlab import (
     markdown_styles,
@@ -520,9 +520,7 @@ async def generate_document_release_pdf(session, document_release_id: UUID):
 
     payload = DocumentReleasePublic.model_validate(obj).model_dump()
     payload['document_name'] = await session.scalar(
-        select(Document.name)
-        .join(DocumentHistory, DocumentHistory.document_id == Document.id)
-        .where(DocumentHistory.id == obj.history_id)
+        select(Document.name).where(Document.id == obj.document_id)
     )
 
     report_path = document_release_report(payload)

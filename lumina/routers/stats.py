@@ -8,7 +8,6 @@ from lumina.core.dependencies import Session
 from lumina.models import (
     AppliedTypification,
     Document,
-    DocumentHistory,
     DocumentMessage,
     DocumentRelease,
     User,
@@ -69,11 +68,7 @@ async def get_most_used_typifications(session: Session):
             DocumentRelease,
             AppliedTypification.applied_release_id == DocumentRelease.id,
         )
-        .join(
-            DocumentHistory,
-            DocumentRelease.history_id == DocumentHistory.id,
-        )
-        .join(Document, DocumentHistory.document_id == Document.id)
+        .join(Document, DocumentRelease.document_id == Document.id)
         .where(Document.deleted_at.is_(None))
         .group_by(AppliedTypification.name)
         .order_by(desc('usage_count'))
@@ -107,11 +102,7 @@ async def get_kpis(session: Session):
 
     stmt_analyses = (
         select(func.count(DocumentRelease.id))
-        .join(
-            DocumentHistory,
-            DocumentRelease.history_id == DocumentHistory.id,
-        )
-        .join(Document, DocumentHistory.document_id == Document.id)
+        .join(Document, DocumentRelease.document_id == Document.id)
         .where(Document.deleted_at.is_(None))
     )
     total_analyses = await session.scalar(stmt_analyses) or 0

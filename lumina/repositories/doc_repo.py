@@ -1,15 +1,13 @@
 from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import select, true
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
 
 from lumina.models import (
     AccessType,
     Advisorship,
     Document,
-    DocumentHistory,
     Typification,
     User,
 )
@@ -83,22 +81,10 @@ async def has_document_access(
 async def list_all(
     session: AsyncSession, current_user: User, filters: DocumentFilter
 ) -> list[Document]:
-    # Lógica de Lateral Join para pegar o último histórico
-    last_history_subq = (
-        select(DocumentHistory)
-        .where(DocumentHistory.document_id == Document.id)
-        .order_by(DocumentHistory.created_at.desc())
-        .limit(1)
-        .lateral()
-    )
-
-    last_history = aliased(DocumentHistory, last_history_subq)
-
     query = (
         select(Document)
-        .join(last_history, true())
         .where(Document.deleted_at.is_(None))
-        .order_by(last_history.status.asc(), last_history.created_at.asc())
+        .order_by(Document.created_at.asc())
     )
 
     # Controle de Acesso e Escopo
@@ -192,5 +178,3 @@ def add_document(session: AsyncSession, doc: Document) -> None:
     session.add(doc)
 
 
-def add_history(session: AsyncSession, history: DocumentHistory) -> None:
-    session.add(history)

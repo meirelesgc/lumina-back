@@ -5,14 +5,13 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.dependencies import CurrentUser
-from lumina.models import AccessType, Document, DocumentHistory
+from lumina.models import AccessType, Document
 from lumina.repositories import doc_repo, project_document_repo, release_repo
 from lumina.schemas import (
     DocumentCreate,
     DocumentFilter,
     DocumentProcessingStatus,
     DocumentPublic,
-    DocumentStatus,
     DocumentUpdate,
 )
 from lumina.schemas.typification import TypificationList
@@ -48,14 +47,6 @@ async def create_doc(
     doc_repo.add_document(session, db_doc)
     await session.flush()
 
-    # Histórico inicial
-    history = DocumentHistory(
-        document_id=db_doc.id,
-        status=DocumentStatus.PENDING.value,
-    )
-    history.set_creation_audit(current_user.id)
-    doc_repo.add_history(session, history)
-
     # Relacionamentos Many-to-Many
     if data.typification_ids:
         typifications = await doc_repo.get_typifications_by_ids(
@@ -69,14 +60,6 @@ async def create_doc(
 
     if data.project_document_id:
         db_doc.project_document_id = data.project_document_id
-
-        project_doc = await project_document_repo.get_by_id(
-            session, data.project_document_id
-        )
-        if project_doc and not project_doc.deleted_at:
-            project_doc.status = DocumentStatus.PENDING.value
-            project_doc.sent_to_kanban = True
-            project_doc.set_update_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,
@@ -299,9 +282,6 @@ async def delete_doc(
             session, db_doc.project_document_id
         )
         if project_doc and not project_doc.deleted_at:
-            project_doc.sent_to_kanban = False
-            project_doc.status = 'PENDING'
-
             if not project_doc.file_path:
                 releases = await release_repo.get_releases_by_document(
                     session, db_doc.id

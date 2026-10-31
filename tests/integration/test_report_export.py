@@ -19,7 +19,6 @@ from lumina.models import (
     AppliedTaxonomy,
     AppliedTypification,
     Document,
-    DocumentHistory,
     DocumentRelease,
 )
 from lumina.schemas.document import DocumentProcessingStatus
@@ -59,10 +58,8 @@ async def evaluated_release(session, description, feedback):
         processing_status=DocumentProcessingStatus.IDLE,
     )
     await persist(session, document)
-    history = DocumentHistory(document_id=document.id, status='ACTIVE')
-    await persist(session, history)
     release = DocumentRelease(
-        history_id=history.id,
+        document_id=document.id,
         file_path='edital.pdf',
         version='v1',
         description=description,

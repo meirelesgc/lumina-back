@@ -49,7 +49,7 @@ Suíte de testes focada em comportamento e criticidade:
 
 #### V. Segurança e Privacidade por Padrão
 * Autenticação JWT (HS256) com senhas em Argon2 (`pwdlib`).
-* Controle de acesso por nível global (`AccessType`: `DEFAULT`, `ADMIN`, `ANALYST`, `AUDITOR`) e por relação com o recurso (autor, editor, orientador com vínculo ativo).
+* Controle de acesso por nível global (`AccessType`: `DEFAULT`, `ADMIN`) e por relação com o recurso (autor, editor, orientador com vínculo ativo).
 * Cadastro público cria contas `DEFAULT`. Só um `ADMIN` altera o nível de uma conta, por `PUT /user`.
 * Só o titular ou um `ADMIN` remove um usuário. Só um `ADMIN` lê `GET /audit-log`.
 * Soft Delete obrigatório com filtro de `deleted_at.is_(None)`.

@@ -263,7 +263,6 @@ async def get_my_advisees(
                     else None
                 ),
                 total_documents=metrics['total'],
-                pending_reviews=metrics['pending'],
             )
         )
 

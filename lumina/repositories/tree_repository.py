@@ -3,7 +3,6 @@ from sqlalchemy import select
 from lumina.core.dependencies import Session
 from lumina.models import (
     Document,
-    DocumentHistory,
     DocumentRelease,
     DocumentTypification,
     Typification,
@@ -18,10 +17,7 @@ async def get_tree_by_release(session: Session, release: DocumentRelease):
             Typification.id == DocumentTypification.typification_id,
         )
         .join(Document, Document.id == DocumentTypification.document_id)
-        .join(DocumentHistory, DocumentHistory.document_id == Document.id)
-        .join(
-            DocumentRelease, DocumentRelease.history_id == DocumentHistory.id
-        )
+        .join(DocumentRelease, DocumentRelease.document_id == Document.id)
         .where(
             DocumentRelease.id == release.id,
             Typification.deleted_at.is_(None),

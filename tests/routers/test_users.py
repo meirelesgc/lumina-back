@@ -76,6 +76,22 @@ async def test_admin_promove_outra_conta(client, admin, other_user, token):
     assert response.json()['access_level'] == AccessType.ADMIN
 
 
+@pytest.mark.asyncio
+async def test_admin_nao_usa_nivel_removido(client, admin, other_user, token):
+    response = client.put(
+        '/user',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'id': str(other_user.id),
+            'username': other_user.username,
+            'email': other_user.email,
+            'phone_number': other_user.phone_number,
+            'access_level': 'AUDITOR',
+        },
+    )
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_read_users_unauthorized(client):
     response = client.get('/user')
     assert response.status_code == HTTPStatus.UNAUTHORIZED

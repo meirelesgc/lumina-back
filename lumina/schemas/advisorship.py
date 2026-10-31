@@ -84,7 +84,6 @@ class AdviseeCardPublic(BaseModel):
     status: str
     project: Optional[ProjectPublic] = None
     total_documents: int = 0
-    pending_reviews: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

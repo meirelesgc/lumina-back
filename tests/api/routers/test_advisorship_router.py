@@ -166,6 +166,29 @@ async def test_advisorship_unauthorized(client):
 
 
 @pytest.mark.asyncio
+async def test_cartao_de_orientando_nao_traz_pendencias(
+    client, session, user, token, advisee_and_project
+):
+    advisee, _ = advisee_and_project
+    session.add(advisee)
+    await session.commit()
+
+    client.post(
+        '/advisorship',
+        headers={'Authorization': f'Bearer {token}'},
+        json={'advisor_id': str(user.id), 'advisee_id': str(advisee.id)},
+    )
+
+    card = client.get(
+        '/advisorship/my-advisees',
+        headers={'Authorization': f'Bearer {token}'},
+    ).json()['advisees'][0]
+
+    assert card['total_documents'] == 0
+    assert 'pending_reviews' not in card
+
+
+@pytest.mark.asyncio
 async def test_get_my_advisees_with_deleted_advisee(
     client, session, user, token, advisee_and_project
 ):

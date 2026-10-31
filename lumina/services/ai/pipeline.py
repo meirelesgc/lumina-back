@@ -204,7 +204,7 @@ async def process_release_pipeline(
     if not db_release:
         raise ValueError(f'DocumentRelease {release_id} not found.')
 
-    db_doc = db_release.history.document
+    db_doc = db_release.document
 
     # 1. Ingestão e Vetorização
     await ws_update(redis, db_release, 'creating_vectors')
@@ -253,7 +253,7 @@ async def run_release_pipeline(
     if not db_release:
         raise Exception(f'DocumentRelease {release_id} not found.')
 
-    db_doc = db_release.history.document
+    db_doc = db_release.document
 
     db_doc.processing_status = DocumentProcessingStatus.PROCESSING
     await session.commit()

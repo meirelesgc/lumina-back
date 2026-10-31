@@ -22,7 +22,6 @@ from lumina.core.llm import set_fast_model_override
 from lumina.models import (
     AppliedBranch,
     Document,
-    DocumentHistory,
     DocumentRelease,
     DocumentTypification,
 )
@@ -117,9 +116,7 @@ async def release_with_tree(session, user, branches_kwargs=None):
         processing_status=DocumentProcessingStatus.IDLE,
     )
     await persist(session, document)
-    history = DocumentHistory(document_id=document.id, status='ACTIVE')
-    await persist(session, history)
-    release = DocumentRelease(history_id=history.id, file_path=str(PDF))
+    release = DocumentRelease(document_id=document.id, file_path=str(PDF))
     typification = TypificationFactory()
     await persist(session, release, typification)
     taxonomy = TaxonomyFactory(typification_id=typification.id)

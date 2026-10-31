@@ -149,12 +149,7 @@ async def get_advisee_document_metrics(
     project_id: Optional[UUID] = None,
 ) -> dict[str, int]:
     # Conta documentos onde o advisee é o autor (created_by) ou editor
-    query = select(
-        func.count(Document.id).label('total'),
-        func.count(Document.id)
-        .filter(Document.processing_status == 'WAITING_FOR_REVIEW')
-        .label('pending'),
-    ).where(
+    query = select(func.count(Document.id).label('total')).where(
         Document.deleted_at.is_(None),
         Document.created_by == advisee_id,
     )
@@ -169,8 +164,8 @@ async def get_advisee_document_metrics(
     result = await session.execute(query)
     row = result.first()
     if row:
-        return {'total': row.total or 0, 'pending': row.pending or 0}
-    return {'total': 0, 'pending': 0}
+        return {'total': row.total or 0}
+    return {'total': 0}
 
 
 async def get_advisee_documents(
@@ -181,7 +176,6 @@ async def get_advisee_documents(
     stmt = (
         select(Document)
         .options(
-            selectinload(Document.history),
             selectinload(Document.typifications),
             selectinload(Document.editors),
             selectinload(Document.project_document),

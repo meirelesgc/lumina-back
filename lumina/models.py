@@ -569,12 +569,11 @@ class Document(AuditMixin):
         deferred=True,
     )
 
-    history: Mapped[List['DocumentHistory']] = relationship(
+    releases: Mapped[List['DocumentRelease']] = relationship(
         back_populates='document',
-        lazy='selectin',
+        cascade='all, delete-orphan',
         init=False,
-        default_factory=list,
-        order_by='desc(DocumentHistory.created_at)',
+        lazy='noload',
     )
 
     typifications: Mapped[List['Typification']] = relationship(
@@ -656,32 +655,6 @@ class Document(AuditMixin):
 
 
 @table_registry.mapped_as_dataclass
-class DocumentHistory(AuditMixin):
-    __tablename__ = 'document_histories'
-    id: Mapped[UUID] = mapped_column(
-        init=False,
-        primary_key=True,
-        insert_default=uuid4,
-        default_factory=uuid4,
-    )
-    document_id: Mapped[UUID] = mapped_column(
-        ForeignKey('documents.id', name='fk_document_histories_document_id'),
-        nullable=False,
-    )
-    document: Mapped['Document'] = relationship(
-        back_populates='history', init=False
-    )
-    status: Mapped[str] = mapped_column(nullable=False)
-
-    releases: Mapped[List['DocumentRelease']] = relationship(
-        back_populates='history',
-        cascade='all, delete-orphan',
-        init=False,
-        lazy='noload',
-    )
-
-
-@table_registry.mapped_as_dataclass
 class DocumentRelease(AuditMixin):
     __tablename__ = 'document_releases'
     id: Mapped[UUID] = mapped_column(
@@ -691,14 +664,12 @@ class DocumentRelease(AuditMixin):
         default_factory=uuid4,
     )
 
-    history_id: Mapped[UUID] = mapped_column(
-        ForeignKey(
-            'document_histories.id',
-            name='fk_document_releases_history_id',
-        ),
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey('documents.id', name='fk_document_releases_document_id'),
         nullable=False,
+        index=True,
     )
-    history: Mapped['DocumentHistory'] = relationship(
+    document: Mapped['Document'] = relationship(
         back_populates='releases', init=False
     )
 
@@ -1258,7 +1229,6 @@ class ProjectDocument(AuditMixin):
     name: Mapped[str] = mapped_column(nullable=False)
     type: Mapped[Optional[str]] = mapped_column(default=None)
     number: Mapped[Optional[str]] = mapped_column(default=None)
-    status: Mapped[str] = mapped_column(default='PENDING', nullable=False)
     responsible: Mapped[Optional[UUID]] = mapped_column(
         ForeignKey('users.id'),
         nullable=True,
@@ -1274,7 +1244,6 @@ class ProjectDocument(AuditMixin):
         nullable=True,
         default=None,
     )
-    sent_to_kanban: Mapped[bool] = mapped_column(default=False)
     file_path: Mapped[Optional[str]] = mapped_column(
         default=None, nullable=True
     )
