@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http import HTTPStatus
@@ -20,9 +21,6 @@ from lumina.models import (
 )
 from lumina.schemas import TreeSuggestionItemConfirm
 from lumina.services import tree_suggestion_service as service
-from lumina.services.ai.query_expansion_service import (
-    run_branch_query_expansion_background,
-)
 from lumina.services.ai.tree_suggestion import generate_tree_suggestions
 from lumina.services.ai.tree_suggestion.structures import (
     ConsolidatedBranch,
@@ -40,6 +38,8 @@ from tests.factories.tree_suggestion_factory import (
     default_create_responses,
     rule,
 )
+
+PENDING_TASK_TURNS = 5
 
 
 class FakeStorage:
@@ -299,31 +299,28 @@ async def test_confirm_child_requires_confirmed_parent(
 
 
 @pytest.mark.asyncio
-async def test_confirm_chain_and_dispatch_branch_enrichment(
-    session, user, ready_session
+async def test_revisor_confirma_cadeia_de_sugestoes_sem_chamar_modelo(
+    session, user, ready_session, mock_fast_model_for_tests
 ):
     typ = _item(ready_session, 'typification', TCC)
     taxonomy = _item(ready_session, 'taxonomy', ESTRUTURA)
     branch = _item(ready_session, 'branch', INTRODUCAO)
-    background_tasks = BackgroundTasks()
+    mock_fast_model_for_tests.reset_mock()
 
     await service.confirm_item(session, user.id, ready_session.id, typ.id)
     tax_item = await service.confirm_item(
         session, user.id, ready_session.id, taxonomy.id
     )
     branch_item = await service.confirm_item(
-        session,
-        user.id,
-        ready_session.id,
-        branch.id,
-        background_tasks=background_tasks,
+        session, user.id, ready_session.id, branch.id
     )
+    # Dá a vez às tarefas que uma confirmação tenha agendado em segundo plano.
+    for _ in range(PENDING_TASK_TURNS):
+        await asyncio.sleep(0)
 
     created = await session.get(Branch, branch_item.applied_entity_id)
     assert created.taxonomy_id == tax_item.applied_entity_id
-    assert [task.func for task in background_tasks.tasks] == [
-        run_branch_query_expansion_background
-    ]
+    mock_fast_model_for_tests.with_structured_output.assert_not_called()
 
 
 @pytest.mark.asyncio

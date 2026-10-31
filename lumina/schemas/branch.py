@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from lumina.schemas.common import FilterPage
 
@@ -78,28 +78,3 @@ class BranchPublic(BranchSchema):
 
 class BranchList(BaseModel):
     branches: list[BranchPublic]
-
-
-class ExpansionType(str, Enum):
-    PARAPHRASE = 'paraphrase'
-    SUB_QUESTION = 'sub_question'
-    SECTION_HINT = 'section_hint'
-
-
-class QueryExpansionItem(BaseModel):
-    expansion_text: str = Field(
-        description='Formulação alternativa da consulta do critério.'
-    )
-    expansion_type: ExpansionType = Field(
-        description=(
-            'Classificação da expansão: paraphrase, sub_question ou '
-            'section_hint.'
-        )
-    )
-
-
-class QueryExpansionList(BaseModel):
-    expansions: list[QueryExpansionItem] = Field(
-        default_factory=list,
-        description='2 a 4 formulações alternativas geradas para o critério.',
-    )

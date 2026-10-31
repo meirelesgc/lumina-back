@@ -76,19 +76,14 @@ async def _null_async_session():
 @pytest.fixture(autouse=True)
 def isolate_background_task_db_writes(monkeypatch):
     """
-    Impede que tarefas em background disparadas por create_branch/
-    update_branch (geração de expansões de consulta)
-    gravem no banco real configurado em DATABASE_URL quando disparadas
-    fora de uma sessão de teste controlada — via `asyncio.create_task`
-    ou o `BackgroundTasks` real do FastAPI/TestClient. Mesmo espírito de
+    Impede que a tarefa em background da sugestão de árvore grave no banco
+    real configurado em DATABASE_URL quando disparada fora de uma sessão de
+    teste controlada — via o `BackgroundTasks` real do FastAPI/TestClient.
+    Mesmo espírito de
     `mock_fast_model_for_tests`: nenhum teste rotineiro deve ter efeitos
     colaterais em serviços externos (aqui, o Postgres configurado no
     ambiente local/`.env`, e não o container efêmero de testes).
     """
-    monkeypatch.setattr(
-        'lumina.services.ai.query_expansion_service.async_session',
-        _null_async_session,
-    )
     monkeypatch.setattr(
         'lumina.services.tree_suggestion_service.async_session',
         _null_async_session,

@@ -52,9 +52,6 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2.4. Assessment of Study Bias Risk
-            expansions:
-              - publication bias
-              - funnel plot or selective reporting analysis
             evidence: []
 
           - id: vies-estudos-avaliado
@@ -279,9 +276,6 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: 2. Materials and Methods
-            expansions:
-              - synonyms and related terms used in the search string
-              - alternative search terms combined with OR
             fulfilled: true
             evidence:
               - section: 2. Materials and Methods

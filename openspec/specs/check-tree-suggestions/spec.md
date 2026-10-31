@@ -141,7 +141,7 @@ Para itens `create`, o sistema SHALL sinalizar quando houver entidade ativa seme
 - **THEN** o sistema responde HTTP 409, o item permanece `pending` e a árvore não é alterada
 
 ### Requirement: Confirm a suggested item
-O sistema SHALL fornecer `POST /tree-suggestion/{session_id}/items/{item_id}/confirm`, com corpo opcional para sobrescrever os campos propostos. A confirmação MUST aplicar o item imediatamente na árvore real, com as mesmas validações e efeitos colaterais da criação ou atualização manual (unicidade, registro de auditoria e, para ramos, análise de seção e expansão de consultas). Ao final, o item fica `confirmed`, com referência à entidade aplicada, ao revisor e à data da revisão.
+O sistema SHALL fornecer `POST /tree-suggestion/{session_id}/items/{item_id}/confirm`, com corpo opcional para sobrescrever os campos propostos. A confirmação MUST aplicar o item imediatamente na árvore real, com as mesmas validações e efeitos colaterais da criação ou atualização manual (unicidade e registro de auditoria). Ao final, o item fica `confirmed`, com referência à entidade aplicada, ao revisor e à data da revisão.
 
 #### Scenario: Confirm create item with edits
 - **WHEN** o usuário confirma um item `create` pendente, informando novo título
@@ -170,6 +170,10 @@ O sistema SHALL fornecer `POST /tree-suggestion/{session_id}/items/{item_id}/con
 #### Scenario: Session not ready for review
 - **WHEN** o usuário tenta confirmar ou descartar um item de uma sessão em `processing` ou `failed`
 - **THEN** o sistema responde HTTP 409
+
+#### Scenario: Confirmação de ramo sem chamada de modelo
+- **WHEN** o usuário confirma um item de ramo
+- **THEN** o ramo é aplicado sem nenhuma chamada a modelo de linguagem
 
 ### Requirement: Source linkage
 O item `source` SHALL ser independente da cascata: confirmá-lo não é pré-requisito de nenhum outro item. Quando confirmado, o Source criado recebe o arquivo da sessão e MUST ser vinculado às tipificações e taxonomias que a sessão já aplicou (criadas ou atualizadas) e às que aplicar depois. No modo `enrich`, ele é vinculado também à tipificação alvo. Se o item `source` for descartado, nenhum vínculo é criado.

@@ -52,9 +52,6 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
-            expansions:
-              - viés de publicação
-              - funnel plot ou análise de relato seletivo
             evidence: []
 
           - id: vies-estudos-avaliado
@@ -246,9 +243,6 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: Metodologia
-            expansions:
-              - sinônimos e termos relacionados usados na busca
-              - termos alternativos combinados com OR
             evidence: []
 
           - id: strings-apresentadas

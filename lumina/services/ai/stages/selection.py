@@ -278,7 +278,7 @@ async def select_evaluation_payloads(
 
     async def run(taxonomy: dict, branch: dict) -> dict:
         async with semaphore:
-            payload = await select_payload(
+            return await select_payload(
                 model,
                 outline,
                 taxonomy,
@@ -286,8 +286,6 @@ async def select_evaluation_payloads(
                 section_requirement_of(branch),
                 outline_md,
             )
-        payload['expansion_generation_version'] = None
-        return payload
 
     return list(
         await asyncio.gather(*[

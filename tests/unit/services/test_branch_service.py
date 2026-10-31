@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import HTTPException
 
 from lumina.schemas import BranchCreate, BranchUpdate
 from lumina.services import branch_service
@@ -88,119 +88,6 @@ async def test_create_branch_taxonomy_not_found(session, mock_branch_repo):
         await branch_service.create_branch(session, user_id, data)
 
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
-
-
-@pytest.mark.asyncio
-async def test_create_branch_dispatches_query_expansion_background(
-    session, mock_branch_repo, mock_audit_service, mocker
-):
-    dispatch = mocker.patch(
-        'lumina.services.branch_service.run_branch_query_expansion_background'
-    )
-    user_id = uuid4()
-    taxonomy_id = uuid4()
-    data = BranchCreate(
-        title='New Branch', description='Desc', taxonomy_id=taxonomy_id
-    )
-    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
-    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
-
-    background_tasks = MagicMock(spec=BackgroundTasks)
-    branch = await branch_service.create_branch(
-        session, user_id, data, background_tasks
-    )
-
-    dispatched_funcs = [
-        call.args[0] for call in background_tasks.add_task.call_args_list
-    ]
-    assert dispatch in dispatched_funcs
-    dispatched_branch_id = next(
-        call.args[1]
-        for call in background_tasks.add_task.call_args_list
-        if call.args[0] is dispatch
-    )
-    assert dispatched_branch_id == branch.id
-
-
-@pytest.mark.asyncio
-async def test_update_branch_dispatches_on_title_change(
-    session, mock_branch_repo, mock_audit_service, mocker
-):
-    dispatch = mocker.patch(
-        'lumina.services.branch_service.run_branch_query_expansion_background'
-    )
-    user_id = uuid4()
-    branch_id = uuid4()
-    taxonomy_id = uuid4()
-    data = BranchUpdate(
-        id=branch_id,
-        title='Updated Branch',
-        description='Old Desc',
-        taxonomy_id=taxonomy_id,
-    )
-    db_branch = MagicMock(
-        id=branch_id,
-        title='Old Branch',
-        description='Old Desc',
-        taxonomy_id=taxonomy_id,
-        deleted_at=None,
-        section_scope='UNKNOWN',
-        expected_section=None,
-    )
-    mock_branch_repo.get_by_id.return_value = db_branch
-    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
-    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
-
-    background_tasks = MagicMock(spec=BackgroundTasks)
-    await branch_service.update_branch(
-        session, user_id, data, background_tasks
-    )
-
-    dispatched_funcs = [
-        call.args[0] for call in background_tasks.add_task.call_args_list
-    ]
-    assert dispatch in dispatched_funcs
-
-
-@pytest.mark.asyncio
-async def test_update_branch_skips_dispatch_when_unchanged(
-    session, mock_branch_repo, mock_audit_service, mocker
-):
-    dispatch = mocker.patch(
-        'lumina.services.branch_service.run_branch_query_expansion_background'
-    )
-    user_id = uuid4()
-    branch_id = uuid4()
-    taxonomy_id = uuid4()
-    other_taxonomy_id = uuid4()
-    data = BranchUpdate(
-        id=branch_id,
-        title='Same Branch',
-        description='Same Desc',
-        taxonomy_id=other_taxonomy_id,
-    )
-    db_branch = MagicMock(
-        id=branch_id,
-        title='Same Branch',
-        description='Same Desc',
-        taxonomy_id=taxonomy_id,
-        deleted_at=None,
-        section_scope='UNKNOWN',
-        expected_section=None,
-    )
-    mock_branch_repo.get_by_id.return_value = db_branch
-    mock_branch_repo.get_by_title_and_taxonomy.return_value = None
-    mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
-
-    background_tasks = MagicMock(spec=BackgroundTasks)
-    await branch_service.update_branch(
-        session, user_id, data, background_tasks
-    )
-
-    dispatched_funcs = [
-        call.args[0] for call in background_tasks.add_task.call_args_list
-    ]
-    assert dispatch not in dispatched_funcs
 
 
 @pytest.mark.asyncio
@@ -294,26 +181,24 @@ async def test_delete_branch_success(
 
 
 @pytest.mark.asyncio
-async def test_create_branch_without_commit_skips_enrichment(
+async def test_create_branch_without_commit_only_flushes(
     session, mock_branch_repo, mock_audit_service
 ):
     data = BranchCreate(title='Ramo', description='Desc', taxonomy_id=uuid4())
     mock_branch_repo.get_by_title_and_taxonomy.return_value = None
     mock_branch_repo.get_taxonomy.return_value = MagicMock(deleted_at=None)
-    background_tasks = BackgroundTasks()
 
     branch = await branch_service.create_branch(
-        session, uuid4(), data, background_tasks, commit=False
+        session, uuid4(), data, commit=False
     )
 
     assert branch.title == 'Ramo'
     session.commit.assert_not_called()
     session.flush.assert_awaited()
-    assert background_tasks.tasks == []
 
 
 @pytest.mark.asyncio
-async def test_update_branch_without_commit_skips_enrichment(
+async def test_update_branch_without_commit_only_flushes(
     session, mock_branch_repo, mock_audit_service
 ):
     taxonomy_id = uuid4()
@@ -323,7 +208,6 @@ async def test_update_branch_without_commit_skips_enrichment(
     db_branch.created_at = datetime.now()
     mock_branch_repo.get_by_id.return_value = db_branch
     mock_branch_repo.get_by_title_and_taxonomy.return_value = None
-    background_tasks = BackgroundTasks()
     data = BranchUpdate(
         id=db_branch.id,
         title='Novo',
@@ -332,24 +216,8 @@ async def test_update_branch_without_commit_skips_enrichment(
     )
 
     branch = await branch_service.update_branch(
-        session, uuid4(), data, background_tasks, commit=False
+        session, uuid4(), data, commit=False
     )
 
     assert branch.title == 'Novo'
     session.commit.assert_not_called()
-    assert background_tasks.tasks == []
-
-
-def test_dispatch_branch_enrichment_schedules_only_query_expansion():
-    background_tasks = BackgroundTasks()
-    branch_id = uuid4()
-    context = branch_service.BranchNormativeContext(branch_title='Ramo')
-
-    branch_service.dispatch_branch_enrichment(
-        background_tasks, branch_id, context
-    )
-
-    assert [task.func for task in background_tasks.tasks] == [
-        branch_service.run_branch_query_expansion_background
-    ]
-    assert background_tasks.tasks[0].args == (branch_id, context)

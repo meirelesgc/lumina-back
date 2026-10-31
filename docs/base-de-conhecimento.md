@@ -53,7 +53,7 @@ Além do cadastro manual, a árvore pode ser montada ou enriquecida a partir de 
 * **Somente regras de conteúdo**: os ramos são avaliados pelo texto do documento, então só regras verificáveis pela leitura viram itens. Regras de formatação ou leiaute (fonte, tamanho, margens, espaçamento, recuo, alinhamento, posição na página) são classificadas pelo motor e listadas em `excluded_rules`, com trecho e páginas, apenas para conferência. Elas não são encaminhadas a outros módulos.
 * **Evidência**: cada sugestão traz o trecho literal e as páginas que a fundamentam. Trechos que não são encontrados no texto extraído são descartados antes da revisão.
 * **Duplicatas**: itens com título equivalente a uma entidade ativa do mesmo escopo são sinalizados (`similar_to_id`), sem bloquear a confirmação.
-* **Revisão**: confirmar aplica o item imediatamente, com as mesmas regras do CRUD (unicidade, auditoria e, para ramos, análise de seção e expansão de consultas), e aceita edição de título e descrição. O filho só pode ser confirmado depois do pai. Descartar um item descarta seus filhos pendentes. Alterações cuja entidade mudou desde a sugestão são recusadas com `409`.
+* **Revisão**: confirmar aplica o item imediatamente, com as mesmas regras do CRUD (unicidade e auditoria), e aceita edição de título e descrição. O filho só pode ser confirmado depois do pai. Descartar um item descarta seus filhos pendentes. Alterações cuja entidade mudou desde a sugestão são recusadas com `409`.
 
 ```mermaid
 stateDiagram-v2

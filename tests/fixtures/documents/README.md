@@ -51,8 +51,8 @@ commit. See "Validação da Ingestão sobre Acervo Anotado" in
 ## Expected retrieval
 
 Next to a PDF that has its `<name>.sections.yaml`, a `<name>.retrieval.yaml`
-file holds a check tree and, for each branch, the passages the retrieval must
-return for it:
+file holds a check tree and, for each branch, the passages the evaluator must
+receive for it:
 
 ```
 research_proposal/
@@ -67,7 +67,7 @@ section, that section exactly as the `.sections.yaml` names it. Straight and
 curly quotes compare as equal, and so do hyphens and dashes. Inside tables
 the extractor keeps words broken by a hyphen (`net-‖works`): pick the part of
 the excerpt that does not break. Pick excerpts that tell a branch apart from its neighbours in the same
-section, and leave personal names out: the retrieval only sees the
+section, and leave personal names out: the evaluator only sees the
 anonymized text.
 
 Each branch with evidence also carries `fulfilled`, the expected verdict:
@@ -80,14 +80,14 @@ Check the file without spending tokens:
 poetry run pytest tests/unit/services/test_retrieval_answer_keys.py
 ```
 
-Then measure the retrieval against it with real embeddings:
+Then measure the section selector against it with real models:
 
 ```
 poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai
 ```
 
 The second test prints the score per branch and fails below the floors kept
-in the test. See "Validação da Recuperação sobre Acervo Anotado" in
+in the test. See "Gabaritos do Acervo Anotado" in
 `docs/arquitetura-engenharia.md`.
 
 ## Expected running headers and footers

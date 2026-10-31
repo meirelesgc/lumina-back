@@ -8,8 +8,8 @@ from lumina.core.settings import Settings
 
 settings = Settings()
 
-# Uso rápido e simples: seletor, classificação de ramos, expansões, sugestão
-# de árvore e comparação visual de template.
+# Uso rápido e simples: seletor, classificação de ramos, sugestão de árvore
+# e comparação visual de template.
 FAST_MODEL = 'gpt-6-luna'
 FAST_REASONING_EFFORT = 'none'
 FAST_TEMPERATURE = 0
