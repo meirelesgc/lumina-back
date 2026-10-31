@@ -31,7 +31,7 @@ O front não lê o conteúdo de `history`, não usa `history_id`, não lê `Proj
 
 **Remover os ramos de `history` do `audit_service`.** `STATUS_TRANSLATION` e o tratamento da chave `history` só servem a diffs de status, e `update_document_status` era o único chamador que gerava esse diff.
 
-**Ignorar `status` no `POST /project-document`.** O Pydantic ignora o campo extra, e o back sai primeiro sem quebrar o front. A limpeza do front vem em PR próprio no `lumina-front`.
+**Ignorar `status` no `POST /project-document`.** O Pydantic ignora o campo extra, e o front continua funcionando sem alteração.
 
 ## Risks / Trade-offs
 
@@ -46,4 +46,3 @@ O front não lê o conteúdo de `history`, não usa `history_id`, não lê `Proj
 2. Registrar `SELECT count(*) FROM document_releases`.
 3. Publicar o back, que aplica a migração.
 4. Conferir que a contagem não mudou e que `SELECT count(*) FROM document_releases WHERE document_id IS NULL` devolve zero.
-5. Publicar a limpeza do `lumina-front`.

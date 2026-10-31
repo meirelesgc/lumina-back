@@ -26,6 +26,6 @@ O Kanban e os níveis `AUDITOR` e `ANALYST` estão obsoletos. O front não chama
 - **Rotas**: `/doc/{doc_id}/status/*` deixam de existir. `/doc`, `/doc/{doc_id}/release`, `/project-document`, `/user` e `/advisorship/my-advisees` mudam de contrato.
 - **Banco**: migração em `document_releases`, `project_documents` e `users`, e remoção de `document_histories`.
 - **Código**: `lumina/models.py`, schemas de documento, release, projeto, orientação e usuário, pipeline de IA, relatórios, stats, chat, mensagens, repositories de documento e release, `audit_service` e `notification_service`.
-- **Frontend**: remover `ANALYST`, `AUDITOR`, `sent_to_kanban`, `history` e a métrica "Pendências de revisão" do `lumina-front`. O campo `status` enviado ao criar documento de projeto passa a ser ignorado.
+- **Frontend**: nenhuma alteração, porque esta mudança só toca o backend. O front continua compatível: o `status` enviado ao criar documento de projeto passa a ser ignorado, e a métrica "Pendências de revisão" segue mostrando zero, como hoje, pelo `?? 0`. Os tipos do front continuam citando `ANALYST`, `AUDITOR`, `sent_to_kanban` e `history`, sem efeito em tela.
 - **Testes**: `test_release_pipeline.py`, `test_report_export.py`, a caracterização do Kanban e os testes de orientação.
 - **Fora desta mudança**: a revisão de permissões e as issues #31, #32 e #33.

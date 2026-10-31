@@ -28,14 +28,14 @@
 - [x] 5.1 Em `tests/routers/test_users.py`, escrever o teste de `PUT /user` com `AUDITOR` e `422`, e ver o teste falhar antes da mudança. `test_admin_promove_outra_conta` continua como guarda.
 - [x] 5.2 Remover `ANALYST` e `AUDITOR` de `AccessType`. Verificar que 5.1 passa, que `grep -rn "AUDITOR\|ANALYST" lumina` não devolve nada e que `entrypoint.sh` aplica as migrações antes de subir a API.
 
-## 6. Documentação e frontend
+## 6. Documentação
 
 - [x] 6.1 Atualizar `docs/governanca.md` com os dois níveis. Verificar com `grep` que `ANALYST` saiu de `docs/`.
-- [x] 6.2 No `lumina-front`, remover `ANALYST`, `AUDITOR`, `sent_to_kanban`, `history`, `pending_reviews`, o `status` enviado ao criar documento de projeto e a métrica "Pendências de revisão". Verificar com o lint e o build do front.
+- [x] 6.2 Confirmar a compatibilidade do `lumina-front` sem alterá-lo. Numa cópia local descartada, tirar `history`, `sent_to_kanban` e o `status` de documento de projeto dos tipos não gerou erro no `next build`, o que mostra que nenhuma tela lê esses campos. `pending_reviews` usa `?? 0`.
 
 ## 7. Fechamento
 
-- [x] 7.1 Rodar a suíte completa e registrar aqui o resultado que de fato rodou. Resultado em 2026-10-31, depois do merge da `main` atual, com o `pytest` da `.venv` e o Docker Desktop: 561 passaram, 9 foram pulados, nenhum falhou. No `lumina-front`, `next build` concluiu e o ESLint passou nos arquivos alterados.
+- [x] 7.1 Rodar a suíte completa e registrar aqui o resultado que de fato rodou. Resultado em 2026-10-31, depois do merge da `main` atual, com o `pytest` da `.venv` e o Docker Desktop: 561 passaram, 9 foram pulados, nenhum falhou.
 
 ## Workflow follow-up
 
