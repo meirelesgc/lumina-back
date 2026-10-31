@@ -86,7 +86,7 @@ async def delete_user(
     session: Session,
     current_user: CurrentUser,
 ):
-    await user_service.delete_user(session, current_user.id, user_id)
+    await user_service.delete_user(session, current_user, user_id)
 
 
 @router.delete('/{user_id}/icon', response_model=Message)

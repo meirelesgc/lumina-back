@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
-from lumina.core.dependencies import Session
+from lumina.core.dependencies import AdminUser, Session
 from lumina.models import AuditLog, User
 from lumina.schemas import AuditLogFilter, AuditLogList
 
@@ -12,7 +12,9 @@ router = APIRouter(prefix='/audit-log', tags=['auditoria'])
 
 @router.get('', response_model=AuditLogList)
 async def read_audit_logs(
-    session: Session, filters: Annotated[AuditLogFilter, Depends()]
+    session: Session,
+    current_user: AdminUser,
+    filters: Annotated[AuditLogFilter, Depends()],
 ):
     query = select(AuditLog).join(User, User.id == AuditLog.user_id)
 

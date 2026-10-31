@@ -61,7 +61,6 @@ async def create_user(session: AsyncSession, data: UserCreate) -> User:
         email=data.email,
         phone_number=norm_phone,
         password=hashed_password,
-        access_level=data.access_level,
     )
 
     user_repo.add_user(session, db_user)
@@ -294,7 +293,7 @@ async def change_password(
 
 
 async def delete_user(
-    session: AsyncSession, current_user_id: UUID, user_id: UUID
+    session: AsyncSession, current_user: User, user_id: UUID
 ) -> None:
     db_user = await user_repo.get_by_id(session, user_id)
     if not db_user or db_user.deleted_at:
@@ -302,12 +301,20 @@ async def delete_user(
             status_code=HTTPStatus.FORBIDDEN, detail='User not found'
         )
 
+    is_owner = db_user.id == current_user.id
+    is_admin = current_user.access_level == AccessType.ADMIN
+
+    if not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail='Unauthorized'
+        )
+
     old_data = UserPublic.model_validate(db_user).model_dump(mode='json')
-    db_user.set_deletion_audit(current_user_id)
+    db_user.set_deletion_audit(current_user.id)
 
     await audit_service.register_action(
         session=session,
-        user_id=current_user_id,
+        user_id=current_user.id,
         action='DELETE',
         table_name=User.__tablename__,
         record_id=db_user.id,

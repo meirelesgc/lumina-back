@@ -284,7 +284,6 @@ async def register_and_accept_invitation(
             email=invitation.email,
             phone_number=data.phone_number,
             password=data.password,
-            access_level=AccessType.DEFAULT,
         ),
     )
 
