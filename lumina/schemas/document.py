@@ -5,7 +5,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from .document_history import DocumentHistoryPublic
 from .typification import TypificationPublic
 from .user import UserFilter, UserPublic
 
@@ -41,7 +40,6 @@ class DocumentUpdate(DocumentSchema):
 
 class DocumentPublic(DocumentSchema):
     id: UUID
-    history: list[DocumentHistoryPublic]
     typifications: list[TypificationPublic]
     editors: list[UserPublic]
     created_at: datetime

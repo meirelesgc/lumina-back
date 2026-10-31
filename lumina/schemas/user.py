@@ -11,8 +11,6 @@ from lumina.schemas.common import FilterPage
 class AccessType(str, Enum):
     DEFAULT = 'DEFAULT'
     ADMIN = 'ADMIN'
-    ANALYST = 'ANALYST'
-    AUDITOR = 'AUDITOR'
 
 
 class UserSchema(BaseModel):

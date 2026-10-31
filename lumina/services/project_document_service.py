@@ -25,7 +25,6 @@ async def create_document(
         type=data.type,
         name=data.name,
         number=data.number,
-        status=data.status or 'PENDING',
         responsible=data.responsible,
         responsibles=[str(uid) for uid in data.responsibles or []],
         typification_ids=data.typification_ids,
@@ -68,14 +67,10 @@ async def update_document(
         db_doc.type = data.type
     if data.number is not None:
         db_doc.number = data.number
-    if data.status is not None:
-        db_doc.status = data.status
     if data.responsible is not None:
         db_doc.responsible = data.responsible
     if data.responsibles is not None:
         db_doc.responsibles = [str(uid) for uid in data.responsibles]
-    if data.sent_to_kanban is not None:
-        db_doc.sent_to_kanban = data.sent_to_kanban
     if data.typification_ids is not None:
         db_doc.typification_ids = data.typification_ids
 

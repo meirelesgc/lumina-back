@@ -38,7 +38,6 @@ from lumina.routers.docs import (
     assistant,
     chat,
     docs,
-    kanban,
     messages,
     releases,
 )
@@ -148,7 +147,6 @@ app.include_router(users.router)
 app.include_router(advisorship.router)
 app.include_router(invitations.router)
 app.include_router(releases.router)
-app.include_router(kanban.router)
 app.include_router(sources.router)
 app.include_router(document_groups.router)
 app.include_router(projects.router)

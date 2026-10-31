@@ -256,10 +256,8 @@ async def test_get_my_advisees(session, mock_advisorship_repo):
 
     mock_advisorship_repo.list_by_advisor.return_value = [rel]
     expected_total_docs = 3
-    expected_pending = 1
     mock_advisorship_repo.get_advisee_document_metrics.return_value = {
         'total': expected_total_docs,
-        'pending': expected_pending,
     }
 
     cards = await advisorship_service.get_my_advisees(session, current_user)
@@ -267,7 +265,6 @@ async def test_get_my_advisees(session, mock_advisorship_repo):
     assert len(cards) == 1
     assert cards[0].advisee.username == 'orientando_1'
     assert cards[0].total_documents == expected_total_docs
-    assert cards[0].pending_reviews == expected_pending
 
 
 @pytest.mark.asyncio

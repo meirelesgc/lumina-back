@@ -10,7 +10,6 @@ from lumina.models import (
     AppliedTypification,
     Branch,
     Document,
-    DocumentHistory,
     DocumentRelease,
     Taxonomy,
     Typification,
@@ -22,9 +21,8 @@ async def get_releases_by_document(
 ) -> list[DocumentRelease]:
     stmt = (
         select(DocumentRelease)
-        .join(DocumentHistory)
         .where(
-            DocumentHistory.document_id == doc_id,
+            DocumentRelease.document_id == doc_id,
             DocumentRelease.deleted_at.is_(None),
         )
         .order_by(DocumentRelease.created_at.desc())
@@ -40,9 +38,9 @@ async def get_release_with_details(
         select(DocumentRelease)
         .where(DocumentRelease.id == release_id)
         .options(
-            selectinload(DocumentRelease.history)
-            .selectinload(DocumentHistory.document)
-            .selectinload(Document.editors)
+            selectinload(DocumentRelease.document).selectinload(
+                Document.editors
+            )
         )
     )
     result = await session.execute(stmt)

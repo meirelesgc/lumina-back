@@ -99,8 +99,7 @@ async def publish_user_welcome_notification(
 
 
 def format_release_message(db_release: DocumentRelease):
-    db_history = db_release.history
-    db_doc = db_history.document
+    db_doc = db_release.document
     return (
         f"Olá! O processo de verificação do documento '{db_doc.name}' "
         f'foi concluído com sucesso.'

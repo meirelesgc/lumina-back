@@ -45,11 +45,6 @@ from .document_group import (
     DocumentGroupSchema,
     DocumentGroupUpdate,
 )
-from .document_history import (
-    DocumentHistoryPublic,
-    DocumentHistorySchema,
-    DocumentStatus,
-)
 from .document_message import (
     DocumentMessageCreate,
     DocumentMessageList,
@@ -199,8 +194,6 @@ __all__ = [
     'DocumentPublic',
     'DocumentSchema',
     'DocumentUpdate',
-    'DocumentHistoryPublic',
-    'DocumentHistorySchema',
     'DocumentProcessingStatus',
     'DocumentMessageCreate',
     'DocumentMessagePublic',
@@ -248,7 +241,6 @@ __all__ = [
     'TypificationFilter',
     'TaxonomyFilter',
     'BranchFilter',
-    'DocumentStatus',
     'UserImagePublic',
     'SystemSettingCreate',
     'SystemSettingList',

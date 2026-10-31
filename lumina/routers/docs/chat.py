@@ -8,7 +8,6 @@ from lumina.core.dependencies import CurrentUser, Session
 from lumina.models import (
     ChatConversation,
     Document,
-    DocumentHistory,
     DocumentRelease,
 )
 from lumina.repositories import chat_repo
@@ -45,8 +44,7 @@ async def list_conversations(
 ):
     latest_release_subq = (
         select(DocumentRelease)
-        .join(DocumentHistory)
-        .where(DocumentHistory.document_id == Document.id)
+        .where(DocumentRelease.document_id == Document.id)
         .order_by(DocumentRelease.created_at.desc())
         .limit(1)
         .lateral()

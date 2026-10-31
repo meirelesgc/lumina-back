@@ -24,7 +24,7 @@ async def get_latest_release(
 ) -> Optional[DocumentRelease]:
     stmt = (
         select(DocumentRelease)
-        .where(DocumentRelease.history.has(document_id=doc_id))
+        .where(DocumentRelease.document_id == doc_id)
         .order_by(DocumentRelease.created_at.desc())
     )
     return await session.scalar(stmt)

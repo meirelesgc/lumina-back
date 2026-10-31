@@ -26,7 +26,6 @@ from lumina.core.dependencies import (
 from lumina.core.settings import Settings
 from lumina.models import (
     Document,
-    DocumentHistory,
     DocumentRelease,
 )
 from lumina.repositories import project_document_repo
@@ -74,12 +73,6 @@ async def create_release(  # noqa: PLR0913, PLR0917
             detail='Document not found',
         )
 
-    if not db_doc.history:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='The document sent has integrity issues.',
-        )
-    latest_history = db_doc.history[0]
     unique_filename = f'{uuid4()}_{file.filename}'
     file_path = await storage.save(file, unique_filename)
 
@@ -90,7 +83,7 @@ async def create_release(  # noqa: PLR0913, PLR0917
     )
 
     db_release = DocumentRelease(
-        history_id=latest_history.id,
+        document_id=doc_id,
         file_path=file_path,
         version=version,
         created_by=current_user.id,
@@ -162,11 +155,6 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
             detail='Document not found',
         )
 
-    if not db_doc.history:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='The document sent has integrity issues.',
-        )
 
     project_doc = await project_document_repo.get_by_id(
         session, payload.project_document_id
@@ -177,8 +165,6 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
             detail='File not found for this project document',
         )
 
-    latest_history = db_doc.history[0]
-
     version = await release_service.get_next_version(
         session,
         doc_id,
@@ -188,7 +174,7 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
     )
 
     db_release = DocumentRelease(
-        history_id=latest_history.id,
+        document_id=doc_id,
         file_path=project_doc.file_path,
         version=version,
         created_by=current_user.id,
@@ -227,9 +213,8 @@ async def create_release_from_file(  # noqa: PLR0913, PLR0917
 async def read_releases(doc_id: UUID, session: Session):
     query = (
         select(DocumentRelease)
-        .join(DocumentHistory)
         .where(
-            DocumentHistory.document_id == doc_id,
+            DocumentRelease.document_id == doc_id,
             DocumentRelease.deleted_at.is_(None),
         )
         .order_by(DocumentRelease.created_at.desc())
@@ -249,10 +234,9 @@ async def delete_release(
 ):
     query = (
         select(DocumentRelease)
-        .join(DocumentHistory)
         .where(
             DocumentRelease.id == release_id,
-            DocumentHistory.document_id == doc_id,
+            DocumentRelease.document_id == doc_id,
             DocumentRelease.deleted_at.is_(None),
         )
     )

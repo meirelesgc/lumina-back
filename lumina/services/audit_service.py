@@ -5,16 +5,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.models import AuditLog
-from lumina.schemas import DocumentStatus
 
 logger = logging.getLogger(__name__)
-
-STATUS_TRANSLATION = {
-    DocumentStatus.PENDING: 'Pendente',
-    DocumentStatus.UNDER_CONSTRUCTION: 'Em construção',
-    DocumentStatus.WAITING_FOR_REVIEW: 'Aguardando revisão',
-    DocumentStatus.COMPLETED: 'Concluído',
-}
 
 
 def _format_value(value: Any) -> str:
@@ -24,9 +16,6 @@ def _format_value(value: Any) -> str:
         return 'Sim'
     if value is False:
         return 'Não'
-
-    if isinstance(value, DocumentStatus):
-        return STATUS_TRANSLATION.get(value, str(value.value))
 
     if isinstance(value, (dict, list)):
         return 'Configurado'
@@ -63,33 +52,7 @@ def _generate_human_diff(
 
         old_val = old_data.get(key)
 
-        if (
-            key == 'history'
-            and isinstance(old_val, list)
-            and isinstance(new_val, list)
-        ):
-            old_item = old_val[0] if old_val else {}
-            new_item = new_val[0] if new_val else {}
-
-            old_status_raw = old_item.get('status')
-            new_status_raw = new_item.get('status')
-
-            if old_status_raw != new_status_raw:
-                old_status = STATUS_TRANSLATION.get(
-                    old_status_raw, old_status_raw or 'Sem status'
-                )
-                new_status = STATUS_TRANSLATION.get(
-                    new_status_raw, new_status_raw or 'Sem status'
-                )
-                msg = f"Moveu o documento da etapa '{old_status}' para '{new_status}'"
-                changes.append(msg)
-            continue
-
-        if (
-            key != 'history'
-            and isinstance(old_val, list)
-            and isinstance(new_val, list)
-        ):
+        if isinstance(old_val, list) and isinstance(new_val, list):
             field_name = field_translation.get(
                 key, key.replace('_', ' ').capitalize()
             )
