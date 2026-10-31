@@ -3,7 +3,7 @@
 ## 1. Migração
 
 - [x] 1.1 Criar `tests/integration/test_remove_kanban_migration.py`, no padrão de `test_branch_section_scope_migration.py`, com documento de dois históricos e dois releases, e contas `AUDITOR`, `ANALYST` e `ADMIN`. Ver o teste falhar antes da mudança, porque a revisão ainda não existe. O teste precisa provar: releases ligados ao documento, `document_histories` removida, colunas de `project_documents` removidas, níveis convertidos e `downgrade` recriando a estrutura.
-- [x] 1.2 Criar a revisão Alembic descrita no `design.md`, a partir de `0adaecd70bea`. Verificar que 1.1 passa e que `alembic heads` mostra uma só cabeça.
+- [x] 1.2 Criar a revisão Alembic descrita no `design.md`, a partir da cabeça atual da `main` (`c4d1e7a92b36`). Verificar que 1.1 passa e que `alembic heads` mostra uma só cabeça.
 
 ## 2. Release ligado ao documento
 
@@ -35,7 +35,7 @@
 
 ## 7. Fechamento
 
-- [x] 7.1 Rodar a suíte completa e registrar aqui o resultado que de fato rodou. Resultado em 2026-10-31, com o `pytest` da `.venv` e o Docker Desktop: 589 passaram, 13 foram pulados, nenhum falhou. No `lumina-front`, `next build` concluiu e o ESLint passou nos arquivos alterados.
+- [x] 7.1 Rodar a suíte completa e registrar aqui o resultado que de fato rodou. Resultado em 2026-10-31, depois do merge da `main` atual, com o `pytest` da `.venv` e o Docker Desktop: 561 passaram, 9 foram pulados, nenhum falhou. No `lumina-front`, `next build` concluiu e o ESLint passou nos arquivos alterados.
 
 ## Workflow follow-up
 
