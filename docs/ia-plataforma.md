@@ -158,7 +158,6 @@ Antes de qualquer vetorização ou envio para a OpenAI, o `PresidioAnonymizer` i
 * **Modelo**: OpenAI `text-embedding-3-small` (1536 dimensões).
 * **Armazenamento**: Extensão `pgvector` no PostgreSQL 17 (tabela `langchain_pg_embedding`).
 * **Metadados Persistidos**: `chunk_id`, `chunk_index` (índice sequencial no documento), `page`, `rects`, `source` (caminho do arquivo para isolamento absoluto), `section_title`, `section_path`, `section_role`, `section_index` (posição da seção na árvore achatada), `chunk_index_in_section` (posição do chunk dentro da seção naquela página), `sentences` e `presidio_mapping`.
-* **Resumos de Seção**: A ingestão grava na mesma coleção um registro por seção, com `record_type = section_summary`. O texto do resumo é o título da seção seguido dos primeiros 500 caracteres do primeiro chunk dela (`build_section_summary_documents`). Nenhum LLM participa. A recuperação usa esses registros só no roteamento por seção e os exclui das buscas de chunks.
 * **Métrica**: Distância por cosseno (`<=>`).
 
 ---
@@ -188,7 +187,7 @@ Implementada em `lumina/services/ai/stages/outline.py` e `selection.py`. O conte
 5. **Conteúdo inexistente**: quando o seletor conclui que o conteúdo não existe, o critério recebe "não contempla", nota 0 e um parecer padrão (`NOT_FOUND_FEEDBACK`) com as seções inspecionadas, sem chamar o avaliador.
 6. **Registro**: cada veredito guarda a seleção em `AppliedBranch.context_selection` (escopo, resultado, seções, rodadas, tokens, modelo e falha, se houve). Com `DEBUG_INGESTION_AUDIT=True`, o sumário vai para `05_outline/<documento>.md` e a seleção de cada critério, com o contexto enviado e o veredito, para `06_selection/<documento>/<critério>.md`.
 
-Todo critério da árvore recebe veredito. A ingestão continua gerando embeddings e resumos de seção para o chat; `retrieve_criteria_payload`, em `retrieval.py`, continua medido pelo placar de recuperação do acervo anotado.
+Todo critério da árvore recebe veredito. A ingestão continua gerando embeddings para o chat, que funde a busca vetorial com a busca léxica por RRF.
 
 ### O Barema de Pontuação e Regras de Avaliação
 O modelo avalia cada ramo utilizando o prompt `DOCUMENT_ANALYSIS_PROMPT` com base no seguinte barema de 0 a 10 pontos:

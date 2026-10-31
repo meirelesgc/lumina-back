@@ -208,6 +208,18 @@ async def test_avaliacao_segue_a_marcacao_de_escopo_do_ramo(
     )
 
 
+@pytest.mark.asyncio
+async def test_ingestao_indexa_so_os_chunks_do_documento():
+    vstore = MagicMock()
+    vstore.aadd_documents = AsyncMock()
+
+    chunks = await pipeline.run_document_ingestion(PDF, vstore, MagicMock())
+
+    indexed = vstore.aadd_documents.await_args.args[0]
+    assert len(indexed) == len(chunks)
+    assert all('record_type' not in doc.metadata for doc in indexed)
+
+
 def citable_chunk():
     """Chunk em que uma frase ocupa menos linhas que o chunk inteiro."""
     chunks, *_ = extract_pdf_chunks(str(PDF), 'fonte')

@@ -16,13 +16,11 @@
 #   branches[].id:        short slug, unique in the file. Names the branch
 #                         in the report.
 #   title, description:   branch title and description, as written in the
-#                         check tree. Both go into the search query.
+#                         check tree.
 #   section_requirement:  optional. Where the branch expects its evidence.
 #     scope:              SPECIFIC_SECTION, ENTIRE_DOCUMENT or UNKNOWN.
-#                         SPECIFIC_SECTION turns on section routing.
-#     expected_section:   text the routing searches for, e.g. Metodologia.
-#   expansions:           optional. Alternative phrasings of the branch,
-#                         searched together with the original query.
+#                         ENTIRE_DOCUMENT skips the selector.
+#     expected_section:   hint the selector receives, e.g. Metodologia.
 #   fulfilled:            expected verdict: true when the document meets the
 #                         branch in full, false otherwise (partial = false).
 #                         Required when the branch has evidence. A branch
@@ -68,9 +66,6 @@ tree:
             section_requirement:
               scope: SPECIFIC_SECTION
               expected_section: <section the branch expects>
-            expansions:
-              - <alternative phrasing>
-              - <alternative phrasing>
             fulfilled: false
             evidence:
               - section: <section title>

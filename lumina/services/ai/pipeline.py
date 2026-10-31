@@ -137,9 +137,6 @@ async def save_applied_snapshot(
             feedback=branch_data.get('feedback'),
             presidio_mapping=str(branch_data.get('presidio_mapping')),
             references=branch_data.get('references', []),
-            expansion_generation_version=branch_data.get(
-                'expansion_generation_version'
-            ),
             context_selection=branch_data.get('context_selection'),
         )
         release_repo.add_applied_entity(session, applied_branch)
@@ -177,12 +174,7 @@ async def run_document_ingestion(
         full_path, source_name
     )
     anonymized = await stages.anonymization.anonymize_chunks(raw_chunks)
-    section_docs = stages.sections.build_section_summary_documents(
-        anonymized, source_name
-    )
-    await stages.indexing.index_chunks_to_vstore(
-        vstore, anonymized + section_docs
-    )
+    await stages.indexing.index_chunks_to_vstore(vstore, anonymized)
     return anonymized
 
 

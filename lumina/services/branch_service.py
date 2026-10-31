@@ -1,12 +1,10 @@
-import asyncio
 from http import HTTPStatus
-from typing import Optional
 from uuid import UUID
 
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina.models import Branch, Typification
+from lumina.models import Branch
 from lumina.repositories import branch_repo
 from lumina.schemas import (
     BranchCreate,
@@ -15,59 +13,12 @@ from lumina.schemas import (
     BranchUpdate,
 )
 from lumina.services import audit_service
-from lumina.services.ai.query_expansion_service import (
-    BranchNormativeContext,
-    run_branch_query_expansion_background,
-)
-
-
-def _dispatch_background(
-    background_tasks: Optional[BackgroundTasks], func, *args
-) -> None:
-    if background_tasks is not None:
-        background_tasks.add_task(func, *args)
-    else:
-        asyncio.create_task(func(*args))
-
-
-async def build_branch_context(
-    session: AsyncSession, branch: Branch
-) -> BranchNormativeContext:
-    taxonomy = await branch_repo.get_taxonomy(session, branch.taxonomy_id)
-    typification = None
-    if taxonomy and taxonomy.typification_id:
-        typification = await session.get(
-            Typification, taxonomy.typification_id
-        )
-
-    return BranchNormativeContext(
-        branch_title=branch.title,
-        branch_description=branch.description,
-        taxonomy_title=taxonomy.title if taxonomy else None,
-        taxonomy_description=taxonomy.description if taxonomy else None,
-        typification_name=typification.name if typification else None,
-    )
-
-
-def dispatch_branch_enrichment(
-    background_tasks: Optional[BackgroundTasks],
-    branch_id: UUID,
-    context: BranchNormativeContext,
-) -> None:
-    """Dispara a expansão de consultas do ramo."""
-    _dispatch_background(
-        background_tasks,
-        run_branch_query_expansion_background,
-        branch_id,
-        context,
-    )
 
 
 async def create_branch(
     session: AsyncSession,
     user_id: UUID,
     data: BranchCreate,
-    background_tasks: Optional[BackgroundTasks] = None,
     commit: bool = True,
 ) -> Branch:
     # Verifica duplicidade
@@ -87,20 +38,6 @@ async def create_branch(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Taxonomy not found',
         )
-
-    typification = None
-    if taxonomy.typification_id:
-        typification = await session.get(
-            Typification, taxonomy.typification_id
-        )
-
-    context = BranchNormativeContext(
-        branch_title=data.title,
-        branch_description=data.description,
-        taxonomy_title=taxonomy.title,
-        taxonomy_description=taxonomy.description,
-        typification_name=typification.name if typification else None,
-    )
 
     db_branch = Branch(
         title=data.title,
@@ -129,8 +66,6 @@ async def create_branch(
 
     await session.commit()
     await session.refresh(db_branch)
-
-    dispatch_branch_enrichment(background_tasks, db_branch.id, context)
 
     return db_branch
 
@@ -163,7 +98,6 @@ async def update_branch(
     session: AsyncSession,
     user_id: UUID,
     data: BranchUpdate,
-    background_tasks: Optional[BackgroundTasks] = None,
     commit: bool = True,
 ) -> Branch:
     db_branch = await branch_repo.get_by_id(session, data.id)
@@ -177,7 +111,6 @@ async def update_branch(
     old_data = BranchPublic.model_validate(db_branch).model_dump(mode='json')
 
     title_changed = data.title != db_branch.title
-    description_changed = data.description != db_branch.description
     taxonomy_changed = data.taxonomy_id != db_branch.taxonomy_id
 
     if title_changed or taxonomy_changed:
@@ -224,10 +157,6 @@ async def update_branch(
 
     await session.commit()
     await session.refresh(db_branch)
-
-    if title_changed or description_changed:
-        context = await build_branch_context(session, db_branch)
-        dispatch_branch_enrichment(background_tasks, db_branch.id, context)
 
     return db_branch
 

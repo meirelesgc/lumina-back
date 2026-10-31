@@ -1,37 +1,21 @@
 from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 
 import pytest
 from langchain_core.documents import Document
 
 from lumina.services.ai.stages import retrieval
-from lumina.services.ai.stages import retrieval as retrieval_module
 from lumina.services.ai.stages.evaluation import (
     evaluate_criteria_batch as apply_tree,
 )
 from lumina.services.ai.stages.retrieval import (
-    _merge_overlapping_text,  # noqa: PLC2701
-    expand_and_merge_neighbors,
     format_context,
     get_base_filter,
-    get_section_filter,
     reciprocal_rank_fusion,
-    retrieve_criteria_payload,
-    route_candidate_sections,
 )
 
 EXPECTED_SCORE_NINE = 9
 EXPECTED_REFS_COUNT_ONE = 1
 EXPECTED_ITEMS_COUNT_TWO = 2
-
-
-def _mock_sql_session() -> MagicMock:
-    """Sessão mockada para as buscas SQL diretas (léxica/vizinhos)."""
-    session = MagicMock()
-    empty_result = MagicMock()
-    empty_result.all.return_value = []
-    session.execute = AsyncMock(return_value=empty_result)
-    return session
 
 
 @pytest.mark.asyncio
@@ -223,300 +207,23 @@ def test_reciprocal_rank_fusion_merges_and_deduplicates():
 
 
 @pytest.mark.asyncio
-async def test_retrieve_criteria_payload_fuses_expansions_via_rrf():
-    doc_original = Document(
-        page_content='Contrato social regular.',
-        metadata={
-            'chunk_id': 'chunk_original',
-            'chunk_index': 0,
-            'section_title': 'Habilitacao Juridica',
-        },
-    )
-    doc_expansion = Document(
-        page_content='Documento societario vigente.',
-        metadata={
-            'chunk_id': 'chunk_expansao',
-            'chunk_index': 1,
-            'section_title': 'Habilitacao Juridica',
-        },
-    )
-
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(
-        side_effect=[[doc_original], [doc_expansion]]
-    )
-
-    payload = await retrieve_criteria_payload(
-        _mock_sql_session(),
-        mock_vstore,
-        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
-        branch={
-            'id': str(uuid4()),
-            'title': 'Contrato Social',
-            'description': 'Apresentar contrato ativo.',
-        },
-        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
-        expansions=['Documento societario vigente?'],
-    )
-
-    assert (
-        mock_vstore.asimilarity_search.call_count == EXPECTED_ITEMS_COUNT_TWO
-    )
-    assert 'chunk_original' in payload['retrieved_chunks']
-    assert 'chunk_expansao' in payload['retrieved_chunks']
-
-
 @pytest.mark.asyncio
-async def test_retrieve_criteria_payload_lexical_search_uses_branch_title(
-    monkeypatch,
-):
-    lexical_spy = AsyncMock(return_value=[])
-    monkeypatch.setattr(
-        'lumina.services.ai.stages.vector_store_sql.lexical_search',
-        lexical_spy,
-    )
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
-
-    await retrieve_criteria_payload(
-        _mock_sql_session(),
-        mock_vstore,
-        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
-        branch={
-            'id': str(uuid4()),
-            'title': 'Contrato Social',
-            'description': 'Apresentar contrato ativo.',
-        },
-        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
-    )
-
-    assert lexical_spy.call_args_list[0].args[1] == 'Contrato Social'
-    dense_query = mock_vstore.asimilarity_search.call_args.args[0]
-    assert 'Contrato Social' in dense_query
-    assert 'Apresentar contrato ativo.' in dense_query
-
-
 @pytest.mark.asyncio
-async def test_retrieve_criteria_payload_lexical_falls_back_to_description(
-    monkeypatch,
-):
-    lexical_spy = AsyncMock(return_value=[])
-    monkeypatch.setattr(
-        'lumina.services.ai.stages.vector_store_sql.lexical_search',
-        lexical_spy,
-    )
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
-
-    await retrieve_criteria_payload(
-        _mock_sql_session(),
-        mock_vstore,
-        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
-        branch={
-            'id': str(uuid4()),
-            'title': 'Contrato Social',
-            'description': 'Apresentar contrato ativo.',
-        },
-        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
-    )
-
-    queries = [c.args[1] for c in lexical_spy.call_args_list]
-    assert queries == [
-        'Contrato Social',
-        'Contrato Social: Apresentar contrato ativo.',
-    ]
-
-
-def test_get_base_filter_excludes_section_summaries_backward_compatible():
+def test_get_base_filter_isolates_the_document():
     db_release = MagicMock()
     db_release.file_path = 'uploads/doc.pdf'
 
-    result = get_base_filter(db_release)
-
-    assert result['source'] == 'lumina/storage/uploads/doc.pdf'
-    # Ausência (não um valor específico) garante compatibilidade com
-    # chunks indexados antes da Fase 2, que nunca tiveram este campo.
-    assert result['record_type'] == {'$exists': False}
-
-
-def test_get_section_filter_targets_section_summaries():
-    base_filter = {'source': 'lumina/storage/uploads/doc.pdf'}
-    result = get_section_filter(base_filter)
-    assert result == {
-        'source': 'lumina/storage/uploads/doc.pdf',
-        'record_type': 'section_summary',
+    assert get_base_filter(db_release) == {
+        'source': 'lumina/storage/uploads/doc.pdf'
     }
 
 
 @pytest.mark.asyncio
-async def test_route_candidate_sections_confident_match():
-    section_doc = Document(
-        page_content='Habilitação Jurídica\nResumo...',
-        metadata={'section_title': 'Habilitação Jurídica'},
-    )
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search_with_score = AsyncMock(
-        return_value=[(section_doc, 0.1)]
-    )
-
-    candidates = await route_candidate_sections(
-        mock_vstore, 'Habilitação Jurídica', {'source': 'x'}
-    )
-
-    assert candidates == ['Habilitação Jurídica']
-
-
 @pytest.mark.asyncio
-async def test_route_candidate_sections_low_confidence_returns_none():
-    section_doc = Document(
-        page_content='Seção qualquer',
-        metadata={'section_title': 'Seção qualquer'},
-    )
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search_with_score = AsyncMock(
-        return_value=[(section_doc, 0.9)]
-    )
-
-    candidates = await route_candidate_sections(
-        mock_vstore, 'Consulta qualquer', {'source': 'x'}
-    )
-
-    assert candidates is None
-
-
 @pytest.mark.asyncio
-async def test_route_candidate_sections_empty_query_short_circuits():
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search_with_score = AsyncMock()
-
-    candidates = await route_candidate_sections(mock_vstore, '   ', {})
-
-    assert candidates is None
-    mock_vstore.asimilarity_search_with_score.assert_not_called()
-
-
-def test_merge_overlapping_text_removes_duplicate_suffix_prefix():
-    overlap = 'SHARED_OVERLAP_TEXT_1234567890'
-    text_a = 'A' * 50 + overlap
-    text_b = overlap + 'B' * 50
-
-    merged = _merge_overlapping_text(text_a, text_b)
-
-    assert merged == text_a + 'B' * 50
-
-
-def test_merge_overlapping_text_no_overlap_concatenates():
-    text_a = 'Texto completamente diferente por aqui, sem relação nenhuma.'
-    text_b = 'Outro texto qualquer, totalmente distinto do primeiro bloco.'
-
-    merged = _merge_overlapping_text(text_a, text_b)
-
-    assert merged == f'{text_a}\n{text_b}'
-
-
-def test_merge_overlapping_text_empty_inputs():
-    assert _merge_overlapping_text('', 'b') == 'b'
-    assert _merge_overlapping_text('a', '') == 'a'
-
-
 @pytest.mark.asyncio
-async def test_expand_and_merge_neighbors_passes_through_without_metadata():
-    anchor = Document(page_content='Sem metadados de seção', metadata={})
-
-    result = await expand_and_merge_neighbors(
-        _mock_sql_session(), [anchor], source='doc.pdf'
-    )
-
-    assert result == [anchor]
-
-
 @pytest.mark.asyncio
-async def test_expand_and_merge_neighbors_uses_full_small_section(
-    monkeypatch,
-):
-    anchor = Document(
-        page_content='[Objeto] Meio.',
-        metadata={
-            'chunk_id': 'chunk_0_1',
-            'section_index': 0,
-            'page': 0,
-            'chunk_index_in_section': 1,
-            'rects': [[0, 0, 1, 1]],
-        },
-    )
-    siblings = [
-        Document(
-            page_content='[Objeto] Inicio.',
-            metadata={
-                'chunk_id': 'chunk_0_0',
-                'chunk_index_in_section': 0,
-                'rects': [[0, 1, 1, 2]],
-            },
-        ),
-        anchor,
-        Document(
-            page_content='[Objeto] Fim.',
-            metadata={
-                'chunk_id': 'chunk_0_2',
-                'chunk_index_in_section': 2,
-                'rects': [[0, 2, 1, 3]],
-            },
-        ),
-    ]
-    monkeypatch.setattr(
-        'lumina.services.ai.stages.vector_store_sql.fetch_chunk_siblings',
-        AsyncMock(return_value=siblings),
-    )
-
-    result = await expand_and_merge_neighbors(
-        _mock_sql_session(), [anchor], source='doc.pdf'
-    )
-
-    assert len(result) == 1
-    merged = result[0]
-    assert 'Inicio' in merged.page_content
-    assert 'Meio' in merged.page_content
-    assert 'Fim' in merged.page_content
-    assert len(merged.metadata['rects']) == EXPECTED_ITEMS_COUNT_TWO + 1
-    assert merged.metadata['chunk_id'] == 'chunk_0_1'
-
-
 @pytest.mark.asyncio
-async def test_retrieve_criteria_payload_reranking_flag_elevates_k(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        retrieval_module.SETTINGS, 'CROSS_ENCODER_RERANKING_ENABLED', True
-    )
-    reranked_doc = Document(
-        page_content='Reordenado',
-        metadata={'chunk_id': 'chunk_reranked'},
-    )
-    monkeypatch.setattr(
-        'lumina.services.ai.stages.reranking.rerank_chunks',
-        MagicMock(return_value=[reranked_doc]),
-    )
-
-    mock_vstore = MagicMock()
-    mock_vstore.asimilarity_search = AsyncMock(return_value=[])
-
-    payload = await retrieve_criteria_payload(
-        _mock_sql_session(),
-        mock_vstore,
-        taxonomy={'title': 'Habilitacao Juridica', 'sources': []},
-        branch={
-            'id': str(uuid4()),
-            'title': 'Contrato Social',
-            'description': 'Apresentar contrato ativo.',
-        },
-        base_filter={'source': 'lumina/storage/uploads/doc.pdf'},
-    )
-
-    call_kwargs = mock_vstore.asimilarity_search.call_args.kwargs
-    assert call_kwargs['k'] == retrieval_module.RERANK_CANDIDATE_K
-    assert payload['retrieved_chunks'] == ['chunk_reranked']
-
-
 def test_contextos_marcam_as_frases_do_chunk():
     chunk = Document(
         page_content='[Método] Primeira frase. Segunda frase.',

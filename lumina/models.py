@@ -467,38 +467,6 @@ class Branch(AuditMixin):
 
 
 @table_registry.mapped_as_dataclass
-class BranchQueryExpansion(AuditMixin):
-    __tablename__ = 'branch_query_expansions'
-
-    id: Mapped[UUID] = mapped_column(
-        init=False,
-        primary_key=True,
-        insert_default=uuid4,
-        default_factory=uuid4,
-    )
-
-    branch_id: Mapped[UUID] = mapped_column(
-        ForeignKey('branches.id', name='fk_branch_query_expansion_branch_id'),
-        nullable=False,
-    )
-
-    expansion_text: Mapped[str] = mapped_column(nullable=False)
-    expansion_type: Mapped[str] = mapped_column(nullable=False)
-    generation_model: Mapped[str] = mapped_column(nullable=False)
-    generation_version: Mapped[int] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
-
-    __table_args__ = (
-        Index(
-            'ix_branch_query_expansions_branch_active',
-            'branch_id',
-            'is_active',
-            postgresql_where=(column('deleted_at').is_(None)),
-        ),
-    )
-
-
-@table_registry.mapped_as_dataclass
 class DocumentTypification:
     __tablename__ = 'document_typifications'
 
@@ -994,9 +962,6 @@ class AppliedBranch:
     )
     references: Mapped[Any] = mapped_column(
         JSONB, nullable=True, default_factory=list
-    )
-    expansion_generation_version: Mapped[Optional[int]] = mapped_column(
-        nullable=True, default=None
     )
     context_selection: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True, default=None

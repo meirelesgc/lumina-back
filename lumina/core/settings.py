@@ -49,7 +49,6 @@ class Settings(BaseSettings):
     INGESTION_AUDIT_DIRECTORY: Path = 'lumina/storage/ingestion_audit'
     STORAGE_PROVIDER: Literal['S3', 'LOCAL'] = 'LOCAL'
     CONTEXTUAL_CHUNK_ENRICHMENT_ENABLED: bool = False
-    CROSS_ENCODER_RERANKING_ENABLED: bool = False
     INVITATION_EXPIRE_DAYS: int = 7
     TREE_SUGGESTION_MAX_FILE_MB: int = 20
     TREE_SUGGESTION_MAX_PAGES: int = 300
