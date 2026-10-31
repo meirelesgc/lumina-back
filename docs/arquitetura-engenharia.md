@@ -128,35 +128,25 @@ A ingestão (extração do PDF, árvore de seções e fatiamento) não chama mod
 poetry run pytest tests/unit/services/test_ingestion_running_lines.py
 ```
 
-### Validação da Recuperação sobre Acervo Anotado
-A recuperação de evidências decide quais trechos chegam ao avaliador de cada critério. O time mede o comportamento atual contra o mesmo acervo, com um segundo gabarito por documento.
+### Gabaritos do Acervo Anotado
+A seleção de seções e os veredictos são medidos contra o mesmo acervo, com um segundo gabarito por documento.
 
-**Gabarito.** `<nome>.retrieval.yaml` fica ao lado do PDF e do `<nome>.sections.yaml`. Ele guarda a árvore de critérios (tipificação, taxonomia e ramo) e, em cada ramo, os trechos que a recuperação precisa devolver: página, um trecho de até cerca de 150 caracteres copiado do PDF e, quando o trecho pertence a uma seção anotada, a seção. Expansões de consulta e requisito de seção entram como campos opcionais do ramo. O modelo comentado fica em `tests/fixtures/documents/retrieval_template.yaml`. A leitura dos dois gabaritos fica em `tests/fixtures/answer_keys.py`.
+**Gabarito.** `<nome>.retrieval.yaml` fica ao lado do PDF e do `<nome>.sections.yaml`. Ele guarda a árvore de critérios (tipificação, taxonomia e ramo) e, em cada ramo, os trechos que o avaliador precisa receber: página, um trecho de até cerca de 150 caracteres copiado do PDF e, quando o trecho pertence a uma seção anotada, a seção. O requisito de seção entra como campo opcional do ramo. O modelo comentado fica em `tests/fixtures/documents/retrieval_template.yaml`. A leitura dos dois gabaritos fica em `tests/fixtures/answer_keys.py`.
 
-**Comparação de texto.** Os dois testes comparam o trecho com o texto dos chunks depois de `normalize`: sem marcação Markdown e HTML, sem os prefixos `[título]`, com espaços juntos e sem diferença de caixa. Aspas curvas contam como retas e travessões contam como hífen, então o anotador pode digitar o trecho sem reproduzir a tipografia do PDF. Em tabelas, o extrator ainda mantém palavras partidas por hífen (`net-‖works`, issue #25): escolha a parte do trecho que não quebra.
+**Comparação de texto.** Os testes comparam o trecho com o texto dos chunks depois de `normalize`: sem marcação Markdown e HTML, sem os prefixos `[título]`, com espaços juntos e sem diferença de caixa. Aspas curvas contam como retas e travessões contam como hífen, então o anotador pode digitar o trecho sem reproduzir a tipografia do PDF. Em tabelas, o extrator ainda mantém palavras partidas por hífen (`net-‖works`, issue #25): escolha a parte do trecho que não quebra.
 
-**Acervo atual.** Três documentos têm gabarito de recuperação: o anteprojeto, com a árvore de Validação de Ante-Projeto, e as duas revisões sistemáticas, com a árvore de Revisão Sistemática da Literatura.
+**Acervo atual.** Três documentos têm esse gabarito: o anteprojeto, com a árvore de Validação de Ante-Projeto, e as duas revisões sistemáticas, com a árvore de Revisão Sistemática da Literatura.
 
-**Testes.**
-
-| Teste | Onde roda | Verifica | Tolerância |
-| :--- | :--- | :--- | :--- |
-| `tests/unit/services/test_retrieval_answer_keys.py` | Suíte padrão, sem IA | Cada trecho está no texto anonimizado da página e da seção anotadas, e cada seção existe no `.sections.yaml` | Zero falhas, por documento |
-| `tests/ai/evaluation/retrieval/test_retrieval_baseline.py` | `poetry run task test-ai` (embeddings reais e pgvector) | Nenhuma evidência vem de outro documento | Zero falhas, por documento |
-| O mesmo arquivo | O mesmo | Recall de trechos, acerto de seção e página, precisão entre ramos e acerto do roteamento por seção | Piso por métrica sobre o acervo inteiro, com placar impresso por ramo |
-
-O teste de avaliação ingere os PDFs anotados por `run_document_ingestion` e chama `retrieve_criteria_payload` para cada ramo, como `/release` faz. A precisão entre ramos conta os blocos devolvidos que contêm trecho do próprio ramo, entre os blocos que contêm trecho de algum ramo do documento. Ela cai quando um ramo recebe a evidência de um vizinho.
+**Teste.** `tests/unit/services/test_retrieval_answer_keys.py` roda na suíte padrão, sem IA. Ele confere que cada trecho está no texto anonimizado da página e da seção anotadas e que cada seção existe no `.sections.yaml`, com tolerância zero por documento.
 
 **Fluxo para um gabarito novo:**
 
 1. Escreva `<nome>.retrieval.yaml` a partir de `retrieval_template.yaml`.
 2. Rode `poetry run pytest tests/unit/services/test_retrieval_answer_keys.py`. Se falhar, a mensagem mostra onde o trecho aparece no documento: corrija a página ou a seção, ou troque um trecho que a anonimização alterou.
-3. Rode `poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai` e leia o placar. Uma métrica abaixo do piso pede a mesma decisão da ingestão: melhorar a recuperação numa mudança do OpenSpec ou baixar o piso com a justificativa registrada.
-
-**Pisos.** Os quatro pisos (`MIN_EVIDENCE_RECALL`, `MIN_SECTION_PAGE_HIT_RATE`, `MIN_BRANCH_PRECISION`, `MIN_ROUTING_HIT_RATE`) ficam no teste de avaliação. Cada um recebe o menor valor de três execuções, arredondado para baixo na segunda casa decimal, e só sobe.
+3. Rode `poetry run pytest tests/ai/evaluation/retrieval -s --run-ai -m ai` e leia o placar do seletor. Uma métrica abaixo do piso pede a mesma decisão da ingestão: melhorar a seleção numa mudança do OpenSpec ou baixar o piso com a justificativa registrada.
 
 ### Validação da Seleção de Seções e dos Veredictos
-A avaliação usa a seleção de seções pelo sumário, e não mais a recuperação vetorial (`docs/ia-plataforma.md`, "Seleção de Seções por Critério"). Os mesmos gabaritos `<nome>.retrieval.yaml` medem a seleção e o veredicto. Cada ramo com evidência traz `fulfilled`: `true` só quando o documento atende o critério por inteiro; atendimento parcial é `false`; ramo com `evidence: []` é `false`.
+A avaliação usa a seleção de seções pelo sumário (`docs/ia-plataforma.md`, "Seleção de Seções por Critério"). Os mesmos gabaritos `<nome>.retrieval.yaml` medem a seleção e o veredicto. Cada ramo com evidência traz `fulfilled`: `true` só quando o documento atende o critério por inteiro; atendimento parcial é `false`; ramo com `evidence: []` é `false`.
 
 | Teste | Onde roda | Verifica | Tolerância |
 | :--- | :--- | :--- | :--- |
@@ -167,7 +157,7 @@ A avaliação usa a seleção de seções pelo sumário, e não mais a recupera�
 
 Os testes com IA compartilham `tests/ai/evaluation/support.py` (base vetorial, ingestão, entrada do ramo e seleção por gabarito) e a fixture `indexed_vectorstore` de `tests/ai/evaluation/conftest.py`, que ingere o acervo uma vez por sessão. A seleção roda em memória sobre os chunks anonimizados, sem PGVector.
 
-**Pisos.** `MIN_SELECTION_RECALL`, `MIN_NOT_FOUND_HIT_RATE` e `MIN_NOT_FOUND_SAFETY` ficam no teste do seletor, e `MIN_FULFILLED_ACCURACY` no teste de veredictos, com a mesma regra dos outros pisos. Na troca, a recuperação vetorial tinha recall de 0,44 e acerto de `fulfilled` de 0,79 (mediana de três execuções); o seletor chegou a 0,87 e 0,86 com o `gpt-6.1-sol` como avaliador. Por custo, o avaliador passou a ser o `gpt-6-luna` com `reasoning.effort = medium`, e o acerto ficou em 0,79. Os testes do seletor e de veredictos imprimem o consumo de tokens por etapa.
+**Pisos.** `MIN_SELECTION_RECALL`, `MIN_NOT_FOUND_HIT_RATE` e `MIN_NOT_FOUND_SAFETY` ficam no teste do seletor, e `MIN_FULFILLED_ACCURACY` no teste de veredictos. Cada piso recebe o menor valor de três execuções, arredondado para baixo na segunda casa decimal, e só sobe. Na troca, a recuperação vetorial tinha recall de 0,44 e acerto de `fulfilled` de 0,79 (mediana de três execuções); o seletor chegou a 0,87 e 0,86 com o `gpt-6.1-sol` como avaliador. Por custo, o avaliador passou a ser o `gpt-6-luna` com `reasoning.effort = medium`, e o acerto ficou em 0,79. Os testes do seletor e de veredictos imprimem o consumo de tokens por etapa.
 
 **Depuração.** Com `DEBUG_INGESTION_AUDIT=True`, `05_outline/<documento>.md` mostra o sumário que o seletor recebeu e `06_selection/<documento>/<critério>.md` mostra cada rodada, o contexto enviado ao avaliador e o veredito.
 

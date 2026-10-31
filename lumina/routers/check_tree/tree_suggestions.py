@@ -79,7 +79,6 @@ async def confirm_suggestion_item(  # noqa: PLR0913, PLR0917
     item_id: UUID,
     session: Session,
     current_user: CurrentUser,
-    background_tasks: BackgroundTasks,
     data: Annotated[Optional[TreeSuggestionItemConfirm], Body()] = None,
 ):
     return await tree_suggestion_service.confirm_item(
@@ -88,7 +87,6 @@ async def confirm_suggestion_item(  # noqa: PLR0913, PLR0917
         session_id,
         item_id,
         data,
-        background_tasks,
     )
 
 

@@ -669,7 +669,6 @@ async def confirm_item(  # noqa: PLR0913, PLR0917
     suggestion_id: UUID,
     item_id: UUID,
     data: Optional[TreeSuggestionItemConfirm] = None,
-    background_tasks: Optional[BackgroundTasks] = None,
 ) -> TreeSuggestionItem:
     data = data or TreeSuggestionItemConfirm()
     suggestion = await _get_reviewable(session, suggestion_id)
@@ -698,13 +697,6 @@ async def confirm_item(  # noqa: PLR0913, PLR0917
     item.reviewed_at = _utcnow()
     await _complete_if_done(session, suggestion)
     await session.commit()
-
-    if item.kind == TreeSuggestionItemKind.BRANCH.value:
-        branch = await session.get(Branch, applied_id)
-        context = await branch_service.build_branch_context(session, branch)
-        branch_service.dispatch_branch_enrichment(
-            background_tasks, branch.id, context
-        )
 
     return item
 

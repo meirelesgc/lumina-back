@@ -7,7 +7,7 @@ from tests.ai.evaluation.support import build_vectorstore, ingest_answer_keys
 async def indexed_vectorstore(engine):
     """
     Base vetorial com todos os PDFs anotados, ingerida uma vez por sessão.
-    A busca léxica e a expansão de vizinhos leem a coleção `langchain` direto
+    A busca léxica lê a coleção `langchain` direto
     pelo SQL, então os testes compartilham a mesma coleção.
     """
     vstore = build_vectorstore(engine)

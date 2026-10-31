@@ -1,13 +1,12 @@
 """
 Apoio comum aos testes de avaliação com IA sobre o acervo anotado: base
 vetorial ligada ao container de teste, ingestão dos PDFs anotados pelo
-caminho de produção, entrada de cada ramo do gabarito na forma que a
-recuperação recebe e seleção de seções de cada ramo.
+caminho de produção, entrada de cada ramo do gabarito na forma que o
+seletor recebe e seleção de seções de cada ramo.
 """
 
 import asyncio
 from pathlib import Path
-from types import SimpleNamespace
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import OpenAIEmbeddings
@@ -15,7 +14,6 @@ from langchain_postgres import PGVector
 
 from lumina.core.settings import Settings
 from lumina.services.ai.pipeline import run_document_ingestion
-from lumina.services.ai.stages import retrieval
 from lumina.services.ai.stages.outline import (
     OutlineSection,
     build_outline,
@@ -49,15 +47,8 @@ async def ingest_answer_keys(vstore: PGVector) -> None:
         await run_document_ingestion(pdf_for(key), vstore, model=None)
 
 
-def document_filter(retrieval_key: Path) -> dict:
-    """Filtro de produção que isola os chunks do PDF do gabarito."""
-    return retrieval.get_base_filter(
-        SimpleNamespace(file_path=str(pdf_for(retrieval_key)))
-    )
-
-
 def branch_query(taxonomy: dict, branch: dict) -> tuple[dict, dict]:
-    """Taxonomia e ramo do gabarito na forma que a recuperação recebe."""
+    """Taxonomia e ramo do gabarito na forma que o seletor recebe."""
     return (
         {'title': taxonomy['title']},
         {

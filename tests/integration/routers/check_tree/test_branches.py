@@ -189,6 +189,43 @@ async def test_configurador_marca_secao_do_ramo_e_edicao_preserva_marcacao(
 
 
 @pytest.mark.asyncio
+async def test_configurador_cria_e_edita_ramo_sem_chamar_modelo(
+    client, token, setup_taxonomy, mock_fast_model_for_tests
+):
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # 1. O configurador cria o ramo e o vê na resposta.
+    created = client.post(
+        '/branch',
+        headers=headers,
+        json={
+            'title': 'Busca',
+            'description': 'Estratégia de busca',
+            'taxonomy_id': str(setup_taxonomy.id),
+        },
+    )
+    assert created.status_code == HTTPStatus.CREATED
+    assert created.json()['title'] == 'Busca'
+
+    # 2. O configurador edita a descrição e vê o novo texto.
+    updated = client.put(
+        '/branch',
+        headers=headers,
+        json={
+            'id': created.json()['id'],
+            'title': 'Busca',
+            'description': 'Bases e descritores da busca',
+            'taxonomy_id': str(setup_taxonomy.id),
+        },
+    )
+    assert updated.status_code == HTTPStatus.OK
+    assert updated.json()['description'] == 'Bases e descritores da busca'
+
+    # 3. Nada leria uma geração do modelo rápido, então ele fica de fora.
+    mock_fast_model_for_tests.with_structured_output.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_ramo_criado_sem_marcacao_fica_sem_escopo(
     client, token, setup_taxonomy
 ):

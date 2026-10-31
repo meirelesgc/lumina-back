@@ -66,8 +66,6 @@ run = 'fastapi dev lumina/app.py'
 
 seed = 'python -m lumina.scripts.seed_demo'
 
-enrich-branches = 'python -m lumina.scripts.enrich_existing_branches'
-
 test = 'pytest -s -x --cov=lumina -vv'
 
 test-ai = 'pytest -s -x --run-ai -m ai -vv'

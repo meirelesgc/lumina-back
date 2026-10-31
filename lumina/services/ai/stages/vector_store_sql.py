@@ -34,43 +34,12 @@ def _rows_to_documents(rows) -> List[Document]:
     ]
 
 
-async def fetch_chunk_siblings(
-    session: AsyncSession, source: str, section_index: int, page: int
-) -> List[Document]:
-    """
-    Retorna todos os chunks normais (exclui resumos de seção) de uma
-    mesma seção/página, ordenados por `chunk_index_in_section`, para
-    expansão de vizinhos e merge de janelas (Fase 3). Reaproveita a
-    mesma sessão de banco do chamador (mesmo padrão dos repositórios).
-    """
-    stmt = (
-        select(_embedding.c.document, _embedding.c.cmetadata)
-        .select_from(_base_join())
-        .where(
-            _collection.c.name == COLLECTION_NAME,
-            _embedding.c.cmetadata['source'].astext == source,
-            _embedding.c.cmetadata['section_index'].astext
-            == str(section_index),
-            _embedding.c.cmetadata['page'].astext == str(page),
-            _embedding.c.cmetadata['record_type'].astext.is_(None),
-        )
-        .order_by(
-            sa.cast(
-                _embedding.c.cmetadata['chunk_index_in_section'].astext,
-                sa.Integer,
-            )
-        )
-    )
-    result = await session.execute(stmt)
-    return _rows_to_documents(result.all())
-
-
 async def lexical_search(
     session: AsyncSession, query: str, source: str, k: int
 ) -> List[Document]:
     """
-    Busca léxica (full-text search) sobre os chunks normais de um
-    documento, para fusão híbrida dense + léxica via RRF (Fase 4).
+    Busca léxica (full-text search) sobre os chunks de um documento,
+    para fusão híbrida dense + léxica via RRF.
     Aceita chunks com qualquer termo da consulta: o `plainto_tsquery`
     normaliza o texto e liga os termos com `&`, que vira `|`. O
     `ts_rank` divide a pontuação pelo tamanho do chunk (normalização 2),
@@ -97,7 +66,6 @@ async def lexical_search(
         .where(
             _collection.c.name == COLLECTION_NAME,
             _embedding.c.cmetadata['source'].astext == source,
-            _embedding.c.cmetadata['record_type'].astext.is_(None),
             tsvector.op('@@')(tsquery),
         )
         .order_by(rank.desc())
