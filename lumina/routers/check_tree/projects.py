@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.security import get_current_user
 from lumina.schemas.project import (
     ProjectCreate,
     ProjectFilter,
@@ -18,6 +19,7 @@ from lumina.services import project_service, study_guide_service
 router = APIRouter(
     prefix='/project',
     tags=['projetos'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

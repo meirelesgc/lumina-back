@@ -3,12 +3,13 @@ from typing import Optional, Sequence
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from lumina.models import AccessType, Advisorship, Document, User
+from lumina.models import Advisorship, Document, Project, User
 from lumina.repositories import (
     advisorship_repo,
-    doc_repo,
     project_repo,
     user_repo,
 )
@@ -23,7 +24,57 @@ from lumina.schemas.advisorship import (
 )
 from lumina.schemas.project import ProjectPublic
 from lumina.schemas.user import UserPublic
-from lumina.services import audit_service
+from lumina.services import access_service, audit_service, doc_service
+
+
+async def reload_advisorship(
+    session: AsyncSession, advisorship: Advisorship
+) -> None:
+    # A resposta lê advisor e advisee fora do contexto assíncrono, então
+    # as relações precisam voltar carregadas depois do commit.
+    await session.scalar(
+        select(Advisorship)
+        .options(
+            selectinload(Advisorship.advisor),
+            selectinload(Advisorship.advisee),
+            selectinload(Advisorship.project),
+        )
+        .where(Advisorship.id == advisorship.id)
+        .execution_options(populate_existing=True)
+    )
+
+
+def _ensure_project_of_parties(
+    current_user: User, project: Project, parties: set[UUID]
+) -> None:
+    if project.created_by not in parties and not access_service.is_admin(
+        current_user
+    ):
+        raise access_service.forbidden(
+            'O projeto precisa pertencer a uma das partes do vínculo.'
+        )
+
+
+async def reactivate_advisorship(
+    session: AsyncSession, current_user: User, advisorship: Advisorship
+) -> None:
+    old_data = AdvisorshipPublic.model_validate(advisorship).model_dump(
+        mode='json'
+    )
+    advisorship.status = 'ACTIVE'
+    new_data = AdvisorshipPublic.model_validate(advisorship).model_dump(
+        mode='json'
+    )
+    advisorship.set_update_audit(current_user.id)
+    await audit_service.register_action(
+        session=session,
+        user_id=current_user.id,
+        action='UPDATE',
+        table_name=Advisorship.__tablename__,
+        record_id=advisorship.id,
+        old_data=old_data,
+        new_data=new_data,
+    )
 
 
 async def create_advisorship(
@@ -35,11 +86,21 @@ async def create_advisorship(
             detail='Um usuário não pode ser orientador de si mesmo.',
         )
 
+    is_admin = access_service.is_admin(current_user)
+    if not is_admin and current_user.id != data.advisee_id:
+        raise access_service.forbidden(
+            'Só o orientando ou um administrador cria o vínculo direto.'
+        )
+
     advisor = await user_repo.get_by_id(session, data.advisor_id)
     if not advisor or advisor.deleted_at:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Orientador não encontrado.',
+        )
+    if not is_admin and not access_service.is_admin(advisor):
+        raise access_service.forbidden(
+            'O orientador escolhido precisa ser um administrador.'
         )
 
     advisee = await user_repo.get_by_id(session, data.advisee_id)
@@ -56,19 +117,27 @@ async def create_advisorship(
                 status_code=HTTPStatus.NOT_FOUND,
                 detail='Projeto não encontrado.',
             )
+        _ensure_project_of_parties(
+            current_user, project, {data.advisor_id, data.advisee_id}
+        )
 
-    existing = await advisorship_repo.get_active_pair(
+    existing = await advisorship_repo.get_pair(
         session=session,
         advisor_id=data.advisor_id,
         advisee_id=data.advisee_id,
         project_id=data.project_id,
         role_type=data.role_type.value,
     )
-    if existing:
+    if existing and existing.status == 'ACTIVE':
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
             detail='Já existe um vínculo ativo com esses dados.',
         )
+    if existing:
+        await reactivate_advisorship(session, current_user, existing)
+        await session.commit()
+        await reload_advisorship(session, existing)
+        return existing
 
     db_advisorship = Advisorship(
         advisor_id=data.advisor_id,
@@ -91,7 +160,7 @@ async def create_advisorship(
     )
 
     await session.commit()
-    await session.refresh(db_advisorship)
+    await reload_advisorship(session, db_advisorship)
     return db_advisorship
 
 
@@ -105,7 +174,7 @@ async def get_advisorship_by_id(
             detail='Vínculo de orientação não encontrado.',
         )
 
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     is_party = current_user.id in {
         advisorship.advisor_id,
         advisorship.advisee_id,
@@ -133,13 +202,23 @@ async def update_advisorship(
             detail='Vínculo de orientação não encontrado.',
         )
 
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     is_advisor = advisorship.advisor_id == current_user.id
 
     if not is_admin and not is_advisor:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='Apenas orientador ou admin podem atualizar.',
+        )
+
+    reactivating = (
+        data.status is not None
+        and data.status.value == 'ACTIVE'
+        and advisorship.status != 'ACTIVE'
+    )
+    if reactivating and not is_admin:
+        raise access_service.forbidden(
+            'Só um administrador reativa um vínculo encerrado.'
         )
 
     old_data = AdvisorshipPublic.model_validate(advisorship).model_dump(
@@ -154,6 +233,11 @@ async def update_advisorship(
                     status_code=HTTPStatus.NOT_FOUND,
                     detail='Projeto não encontrado.',
                 )
+            _ensure_project_of_parties(
+                current_user,
+                project,
+                {advisorship.advisor_id, advisorship.advisee_id},
+            )
         advisorship.project_id = data.project_id
 
     if data.role_type is not None:
@@ -181,7 +265,7 @@ async def update_advisorship(
     )
 
     await session.commit()
-    await session.refresh(advisorship)
+    await reload_advisorship(session, advisorship)
     return advisorship
 
 
@@ -195,13 +279,16 @@ async def delete_advisorship(
             detail='Vínculo de orientação não encontrado.',
         )
 
-    is_admin = current_user.access_level == AccessType.ADMIN
-    is_advisor = advisorship.advisor_id == current_user.id
+    is_admin = access_service.is_admin(current_user)
+    is_party = current_user.id in {
+        advisorship.advisor_id,
+        advisorship.advisee_id,
+    }
 
-    if not is_admin and not is_advisor:
+    if not is_admin and not is_party:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
-            detail='Apenas orientador ou admin podem remover.',
+            detail='Apenas as partes do vínculo ou admin podem remover.',
         )
 
     old_data = AdvisorshipPublic.model_validate(advisorship).model_dump(
@@ -224,7 +311,7 @@ async def delete_advisorship(
 async def list_advisorships(
     session: AsyncSession, current_user: User, filters: AdvisorshipFilter
 ) -> Sequence[Advisorship]:
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     if not is_admin:
         if not filters.advisor_id and not filters.advisee_id:
             filters.advisor_id = current_user.id
@@ -232,6 +319,10 @@ async def list_advisorships(
             filters.advisor_id = current_user.id
 
     return await advisorship_repo.list_all(session, filters)
+
+
+async def list_advisors(session: AsyncSession) -> Sequence[User]:
+    return await user_repo.list_admins(session)
 
 
 async def get_my_advisees(
@@ -301,7 +392,7 @@ async def get_advisee_documents(
     advisee_id: UUID,
     project_id: Optional[UUID] = None,
 ) -> list[Document]:
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
     is_self = current_user.id == advisee_id
 
     if not is_admin and not is_self:
@@ -314,7 +405,7 @@ async def get_advisee_documents(
         if not active_pair:
             # Verifica se é orientador em qualquer projeto deste aluno
             all_rels = await advisorship_repo.list_by_advisor(
-                session, current_user.id
+                session, current_user.id, status='ACTIVE'
             )
             has_rel = any(r.advisee_id == advisee_id for r in all_rels)
             if not has_rel:
@@ -332,12 +423,7 @@ async def get_advisee_documents(
 async def get_document_academic_context(
     session: AsyncSession, current_user: User, doc_id: UUID
 ) -> DocumentAcademicContextPublic:
-    doc = await doc_repo.get_by_id(session, doc_id)
-    if not doc or doc.deleted_at:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Documento não encontrado.',
-        )
+    doc = await doc_service.get_doc_by_id(session, current_user, doc_id)
 
     author = None
     if doc.created_by:

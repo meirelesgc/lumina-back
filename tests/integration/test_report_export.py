@@ -42,6 +42,11 @@ LEGACY = 'Linha antiga um\nLinha antiga dois'
 DOCUMENT_NAME = 'Edital de Pesquisa 2026'
 
 
+@pytest.fixture(autouse=True)
+def logged_in(client, admin_token):
+    client.headers['Authorization'] = f'Bearer {admin_token}'
+
+
 async def persist(session, *entities):
     for entity in entities:
         session.add(entity)

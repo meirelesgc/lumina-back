@@ -46,9 +46,6 @@ async def get_by_identifier(
 async def has_document_access(
     session: AsyncSession, current_user: User, doc: Document
 ) -> bool:
-    if current_user.access_level == AccessType.ADMIN:
-        return True
-
     if doc.created_by == current_user.id:
         return True
 

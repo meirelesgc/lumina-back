@@ -31,6 +31,9 @@ async def test_create_document_ai_message_endpoint(client, user, token):
     # vamos mocar a camada de serviço.
 
     with patch(
+        'lumina.routers.docs.messages.doc_service.get_doc_by_id',
+        new_callable=AsyncMock,
+    ), patch(
         'lumina.routers.docs.messages.message_service.create_message',
         new_callable=AsyncMock,
     ) as mock_create_msg:

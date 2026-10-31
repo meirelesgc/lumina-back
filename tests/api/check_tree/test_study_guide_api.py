@@ -9,6 +9,8 @@ from lumina.core.security import get_password_hash
 from lumina.models import AccessType
 from tests.conftest import UserFactory
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 
 def _auth(token):
     return {'Authorization': f'Bearer {token}'}
@@ -33,7 +35,7 @@ async def _create_user(session, **fields):
 
 @pytest_asyncio.fixture
 async def advisor(session):
-    return await _create_user(session)
+    return await _create_user(session, access_level=AccessType.ADMIN)
 
 
 @pytest_asyncio.fixture

@@ -4,10 +4,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
 from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.models import AuditLog, User
 from lumina.schemas import AuditLogFilter, AuditLogList
 
-router = APIRouter(prefix='/audit-log', tags=['auditoria'])
+router = APIRouter(
+    prefix='/audit-log',
+    tags=['auditoria'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get('', response_model=AuditLogList)

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from lumina.core.database import get_session
 from lumina.core.llm import get_model
-from lumina.core.security import get_current_user
+from lumina.core.security import get_current_user, get_current_ws_user
 from lumina.core.storage_provider import (
     StorageProvider,
     get_storage_provider,
@@ -21,6 +21,7 @@ from lumina.schemas import AccessType
 
 Session = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentWSUser = Annotated[User, Depends(get_current_ws_user)]
 OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 VStore = Annotated[VectorStore, Depends(get_vectorstore)]
 Model = Annotated[BaseChatModel, Depends(get_model)]

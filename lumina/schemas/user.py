@@ -58,7 +58,7 @@ class UserPublicMessage(BaseModel):
 
 class UserUpdate(UserSchema):
     id: UUID
-    access_level: AccessType = AccessType.DEFAULT
+    access_level: Optional[AccessType] = None
 
 
 class UserPasswordChange(BaseModel):

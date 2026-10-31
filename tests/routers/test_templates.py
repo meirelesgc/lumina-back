@@ -8,6 +8,8 @@ import pytest
 from lumina.core.settings import Settings
 from lumina.features import template_conformity_service
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 PDF_BYTES = b'%PDF-1.4 dummy template'
 STORAGE_DIR = Path(Settings().STORAGE_DIRECTORY)
 

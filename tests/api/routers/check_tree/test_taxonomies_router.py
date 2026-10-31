@@ -16,10 +16,10 @@ async def typification(session):
 
 
 @pytest.mark.asyncio
-async def test_create_taxonomy_router(client, token, typification):
+async def test_create_taxonomy_router(client, admin_token, typification):
     response = client.post(
         '/taxonomy',
-        headers={'Authorization': f'Bearer {token}'},
+        headers={'Authorization': f'Bearer {admin_token}'},
         json={
             'title': 'New Taxonomy',
             'description': 'Description',
@@ -73,7 +73,9 @@ async def test_read_taxonomy_by_id_router(
 
 
 @pytest.mark.asyncio
-async def test_delete_taxonomy_router(client, token, session, typification):
+async def test_delete_taxonomy_router(
+    client, admin_token, session, typification
+):
     tax = Taxonomy(
         title='Delete Taxonomy',
         description='',
@@ -84,6 +86,6 @@ async def test_delete_taxonomy_router(client, token, session, typification):
     await session.refresh(tax)
 
     response = client.delete(
-        f'/taxonomy/{tax.id}', headers={'Authorization': f'Bearer {token}'}
+        f'/taxonomy/{tax.id}', headers={'Authorization': f'Bearer {admin_token}'}
     )
     assert response.status_code == HTTPStatus.NO_CONTENT

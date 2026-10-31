@@ -9,6 +9,8 @@ from tests.factories.branch_factory import (
     TypificationFactory,
 )
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 
 @pytest_asyncio.fixture
 async def setup_taxonomy(session, user):

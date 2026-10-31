@@ -100,7 +100,7 @@ O sistema SHALL permitir `DELETE /advisorship/{id}` às duas partes e a um `ADMI
 #### Scenario: Orientando encerra o vínculo
 
 - **WHEN** o orientando envia `DELETE /advisorship/{id}` do próprio vínculo
-- **THEN** o sistema responde `204` e o orientador perde o acesso
+- **THEN** o sistema responde `200` e o orientador perde o acesso
 
 #### Scenario: Orientador sem nível de administrador tenta reativar
 

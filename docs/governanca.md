@@ -52,6 +52,9 @@ Suíte de testes focada em comportamento e criticidade:
 * Controle de acesso por nível global (`AccessType`: `DEFAULT`, `ADMIN`) e por relação com o recurso (autor, editor, orientador com vínculo ativo).
 * Cadastro público cria contas `DEFAULT`. Só um `ADMIN` altera o nível de uma conta, por `PUT /user`.
 * Só o titular ou um `ADMIN` remove um usuário. Só um `ADMIN` lê `GET /audit-log`.
+* Toda rota nega acesso por padrão: exige sessão, exceto a lista de `PUBLIC_ROUTES` em `tests/api/routers/test_route_protection.py`. As regras ficam em `lumina/services/access_service.py`.
+* Escrita no configurador, templates, sugestões de árvore, `/stats` e `/system-settings` exigem `ADMIN`.
+* Arquivos em `/uploads` seguem o acesso ao recurso dono do arquivo. Resultados de ABNT e template pertencem a quem os criou.
 * Soft Delete obrigatório com filtro de `deleted_at.is_(None)`.
 * Trilha de auditoria em `audit_logs`.
 

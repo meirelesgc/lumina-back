@@ -1,4 +1,19 @@
+from http import HTTPStatus
+
+from fastapi import HTTPException
+
+from lumina.models import DocumentRelease
 from lumina.repositories import release_repo
+from lumina.services import doc_service
+
+
+async def ensure_can_read_release(session, current_user, release_id) -> None:
+    release = await session.get(DocumentRelease, release_id)
+    if not release or release.deleted_at:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Release not found'
+        )
+    await doc_service.get_doc_by_id(session, current_user, release.document_id)
 
 
 async def get_releases_by_document(session, doc_id):

@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lumina.models import AccessType, Project, User
+from lumina.models import Project, User
 from lumina.repositories import project_repo
 from lumina.schemas.project import (
     ProjectCreate,
@@ -12,7 +12,7 @@ from lumina.schemas.project import (
     ProjectPublic,
     ProjectUpdate,
 )
-from lumina.services import audit_service
+from lumina.services import access_service, audit_service
 
 
 async def create_project(
@@ -64,7 +64,7 @@ async def get_project_by_id(
             detail='Project not found',
         )
 
-    has_access = await project_repo.has_project_access(
+    has_access = await access_service.can_read_project(
         session, current_user, project
     )
     if not has_access:
@@ -86,14 +86,11 @@ async def update_project(
             detail='Project not found',
         )
 
-    if (
-        db_project.created_by != current_user.id
-        and current_user.access_level != AccessType.ADMIN
-    ):
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail='Você não tem permissão para editar este projeto.',
-        )
+    access_service.ensure_owner_or_admin(
+        current_user,
+        db_project.created_by,
+        'Você não tem permissão para editar este projeto.',
+    )
 
     old_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
     old_name = db_project.name
@@ -148,14 +145,11 @@ async def delete_project(
             detail='Project not found',
         )
 
-    if (
-        db_project.created_by != current_user.id
-        and current_user.access_level != AccessType.ADMIN
-    ):
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail='Você não tem permissão para excluir este projeto.',
-        )
+    access_service.ensure_owner_or_admin(
+        current_user,
+        db_project.created_by,
+        'Você não tem permissão para excluir este projeto.',
+    )
 
     old_data = ProjectPublic.model_validate(db_project).model_dump(mode='json')
     db_project.set_deletion_audit(current_user.id)

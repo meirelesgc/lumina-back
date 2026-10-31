@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import desc, func, select
 
-from lumina.core.dependencies import Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.models import (
     AppliedTypification,
     Document,
@@ -45,7 +46,9 @@ class UserMessageActivityList(BaseModel):
 
 
 router = APIRouter(
-    prefix='/stats', tags=['operações de sistema, estatísticas']
+    prefix='/stats',
+    tags=['operações de sistema, estatísticas'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -54,7 +57,7 @@ router = APIRouter(
     response_model=TypificationUsageList,
     summary='Top 10 tipificações mais utilizadas nas análises',
 )
-async def get_most_used_typifications(session: Session):
+async def get_most_used_typifications(session: Session, current_user: AdminUser):
     """
     Retorna as 10 tipificações mais aplicadas (com base em
     'AppliedTypification') em documentos ativos.
@@ -86,7 +89,7 @@ async def get_most_used_typifications(session: Session):
     response_model=KpiStats,
     summary='Indicadores chave de performance (KPIs) gerais',
 )
-async def get_kpis(session: Session):
+async def get_kpis(session: Session, current_user: AdminUser):
     """
     Retorna métricas gerais do sistema, como total de usuários,
     documentos e análises (releases) em documentos ativos.
@@ -119,7 +122,7 @@ async def get_kpis(session: Session):
     response_model=UserMessageActivityList,
     summary='Top 5 usuários mais ativos por mensagens',
 )
-async def get_user_message_activity(session: Session):
+async def get_user_message_activity(session: Session, current_user: AdminUser):
     """
     Retorna os 5 usuários mais ativos com base no número de mensagens
     enviadas (excluindo usuários e mensagens deletadas).

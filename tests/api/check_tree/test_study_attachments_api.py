@@ -5,6 +5,8 @@ import pytest
 
 from lumina.services.crossref_client import DoiMetadata
 
+pytestmark = pytest.mark.usefixtures('user_is_admin')
+
 DOI = '10.1590/s0102-311x2023000100001'
 ARTIGO = DoiMetadata(
     title='Saúde coletiva e pesquisa',

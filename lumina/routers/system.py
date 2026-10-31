@@ -5,7 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-from lumina.core.dependencies import CurrentUser, Session
+from lumina.core.dependencies import AdminUser, Session
+from lumina.core.security import get_current_user
 from lumina.models import (
     SystemSetting,
 )
@@ -18,7 +19,11 @@ from lumina.schemas import (
     SystemSettingUpdate,
 )
 
-router = APIRouter(prefix='/system-settings', tags=['system settings'])
+router = APIRouter(
+    prefix='/system-settings',
+    tags=['system settings'],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post(
@@ -27,7 +32,7 @@ router = APIRouter(prefix='/system-settings', tags=['system settings'])
 async def create_setting(
     setting: SystemSettingCreate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     db_setting = await session.scalar(
         select(SystemSetting).where(SystemSetting.key == setting.key)
@@ -57,7 +62,7 @@ async def create_setting(
 @router.get('', response_model=SystemSettingList)
 async def read_settings(
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     filter_page: Annotated[FilterPage, Depends()],
 ):
     query = (
@@ -78,7 +83,7 @@ async def update_setting(
     key: str,
     setting_update: SystemSettingUpdate,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     db_setting = await session.scalar(
         select(SystemSetting).where(
@@ -109,7 +114,7 @@ async def update_setting(
 
 @router.delete('/{key}', response_model=Message)
 async def delete_setting(
-    key: str, session: Session, current_user: CurrentUser
+    key: str, session: Session, current_user: AdminUser
 ):
     db_setting = await session.scalar(
         select(SystemSetting).where(SystemSetting.key == key)
@@ -132,7 +137,7 @@ async def delete_setting(
 async def read_setting(
     identifier: str,
     session: Session,
-    current_user: CurrentUser,
+    current_user: AdminUser,
 ):
     db_setting = await session.scalar(
         select(SystemSetting).where(

@@ -35,23 +35,29 @@ Desvios (testados à parte, em tests/api/check_tree/):
 from http import HTTPStatus
 
 from lumina.services.crossref_client import DoiMetadata
+import pytest
+
 from tests.api.journeys.helpers import (
     attach,
     create_group,
     create_typification,
     log_in,
+    make_admin,
     sign_up,
 )
 
 
-def test_coordenadora_monta_a_trilha_do_anteprojeto(client, crossref):
+@pytest.mark.asyncio
+async def test_coordenadora_monta_a_trilha_do_anteprojeto(
+    client, session, crossref
+):
     crossref.works['10.1590/s0102-311x2023000100001'] = DoiMetadata(
         title='Saúde coletiva e pesquisa',
         authors=['Ana Souza', 'Bruno Lima'],
         year=2023,
         container_title='Cadernos de Saúde Pública',
     )
-    sign_up(client, 'helena')
+    await make_admin(session, sign_up(client, 'helena'))
     helena = log_in(client, 'helena')
 
     # 1. Helena cria o grupo com os itens fora da ordem de trabalho.

@@ -12,7 +12,7 @@ from lumina.core.security import (
     verify_password,
 )
 from lumina.core.settings import Settings
-from lumina.models import AccessType, PasswordReset, User
+from lumina.models import PasswordReset, User
 from lumina.repositories import user_repo
 from lumina.schemas import (
     ForgotPasswordRequest,
@@ -22,7 +22,11 @@ from lumina.schemas import (
     UserPublic,
 )
 from lumina.schemas.common import Message
-from lumina.services import audit_service, notification_service
+from lumina.services import (
+    access_service,
+    audit_service,
+    notification_service,
+)
 
 SETTINGS = Settings()
 
@@ -205,7 +209,7 @@ async def change_password(
         )
 
     is_owner = db_user.id == current_user.id
-    is_admin = current_user.access_level == AccessType.ADMIN
+    is_admin = access_service.is_admin(current_user)
 
     if not is_owner and not is_admin:
         raise HTTPException(

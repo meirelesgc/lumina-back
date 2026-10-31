@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lumina.models import (
     DocumentMessage,
     DocumentMessageMention,
+    User,
 )
 from lumina.repositories import message_repo
 from lumina.schemas import (
@@ -16,6 +17,7 @@ from lumina.schemas import (
     DocumentMessageUpdate,
 )
 from lumina.schemas.document_message import MessageFilter
+from lumina.services import access_service
 
 AI_PATTERN = re.compile(r'<ai:[^>]+>')
 
@@ -98,15 +100,20 @@ async def get_message_by_id(
 
 
 async def update_message(
-    session: AsyncSession, user_id: UUID, data: DocumentMessageUpdate
+    session: AsyncSession, current_user: User, data: DocumentMessageUpdate
 ) -> DocumentMessage:
     db_msg = await get_message_by_id(session, data.id)
+    access_service.ensure_owner_or_admin(
+        current_user,
+        db_msg.author_id,
+        'Apenas o autor ou um administrador altera a mensagem.',
+    )
 
     db_msg.content = data.content
     db_msg.references = (
         [r.model_dump() for r in data.references] if data.references else []
     )
-    db_msg.updated_by = user_id
+    db_msg.updated_by = current_user.id
     db_msg.updated_at = datetime.now(timezone.utc)
 
     # Limpa menções antigas
@@ -131,10 +138,15 @@ async def update_message(
 
 
 async def delete_message(
-    session: AsyncSession, user_id: UUID, message_id: UUID
+    session: AsyncSession, current_user: User, message_id: UUID
 ) -> None:
     db_msg = await get_message_by_id(session, message_id)
+    access_service.ensure_owner_or_admin(
+        current_user,
+        db_msg.author_id,
+        'Apenas o autor ou um administrador altera a mensagem.',
+    )
 
     db_msg.deleted_at = datetime.now(timezone.utc)
-    db_msg.deleted_by = user_id
+    db_msg.deleted_by = current_user.id
     await session.commit()

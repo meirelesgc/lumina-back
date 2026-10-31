@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 from lumina.schemas.common import FilterPage
 from lumina.schemas.project import ProjectPublic
-from lumina.schemas.user import UserPublic
+from lumina.schemas.user import UserImagePublic, UserPublic
 
 
 class AdvisorshipRoleType(str, Enum):
@@ -105,6 +105,19 @@ class AdvisorCardPublic(BaseModel):
 
 class AdvisorListPublic(BaseModel):
     advisors: list[AdvisorCardPublic]
+
+
+class AdvisorCandidatePublic(BaseModel):
+    id: UUID
+    username: str
+    email: str
+    icon: Optional[UserImagePublic] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdvisorCandidateList(BaseModel):
+    advisors: list[AdvisorCandidatePublic]
 
 
 class DocumentAcademicContextPublic(BaseModel):

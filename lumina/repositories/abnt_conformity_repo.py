@@ -15,13 +15,18 @@ async def get_by_id(
 
 
 async def list_all(
-    session: AsyncSession, filters: ConformityFilter
+    session: AsyncSession,
+    filters: ConformityFilter,
+    created_by: UUID | None = None,
 ) -> list[AbntConformityResult]:
     query = (
         select(AbntConformityResult)
         .where(AbntConformityResult.deleted_at.is_(None))
         .order_by(AbntConformityResult.created_at.desc())
     )
+
+    if created_by:
+        query = query.where(AbntConformityResult.created_by == created_by)
 
     if filters.doc_id:
         query = query.where(AbntConformityResult.doc_id == filters.doc_id)
@@ -35,13 +40,18 @@ async def list_all(
 
 
 async def count(
-    session: AsyncSession, filters: ConformityFilter
+    session: AsyncSession,
+    filters: ConformityFilter,
+    created_by: UUID | None = None,
 ) -> int:
     query = (
         select(func.count())
         .select_from(AbntConformityResult)
         .where(AbntConformityResult.deleted_at.is_(None))
     )
+
+    if created_by:
+        query = query.where(AbntConformityResult.created_by == created_by)
 
     if filters.doc_id:
         query = query.where(AbntConformityResult.doc_id == filters.doc_id)

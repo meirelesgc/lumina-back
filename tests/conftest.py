@@ -15,6 +15,7 @@ from lumina.app import app
 from lumina.core.database import get_session
 from lumina.core.llm import set_fast_model_override
 from lumina.core.security import get_password_hash
+from lumina.schemas import AccessType
 from lumina.models import User, table_registry
 
 
@@ -196,6 +197,48 @@ def token(client, user):
         data={'username': user.email, 'password': user.clean_password},
     )
     return response.json()['access_token']
+
+
+def _login(client, user):
+    response = client.post(
+        '/auth/token',
+        data={'username': user.email, 'password': user.clean_password},
+    )
+    return response.json()['access_token']
+
+
+@pytest_asyncio.fixture
+async def user_is_admin(session, user):
+    user.access_level = AccessType.ADMIN
+    await session.commit()
+    await session.refresh(user)
+
+
+@pytest.fixture
+def other_token(client, other_user):
+    return _login(client, other_user)
+
+
+@pytest_asyncio.fixture
+async def admin_user(session):
+    password = 'testtest'
+    user = UserFactory(
+        password=get_password_hash(password),
+        access_level=AccessType.ADMIN,
+    )
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    user.clean_password = password
+
+    return user
+
+
+@pytest.fixture
+def admin_token(client, admin_user):
+    return _login(client, admin_user)
 
 
 class UserFactory(factory.Factory):
