@@ -596,12 +596,14 @@ def parse_headings_from_markdown(  # noqa: PLR0912, PLR0914, PLR0915
                 if label in INLINE_SECTION_LABELS or any(
                     p in rest for p in DECLARATION_PHRASES
                 ):
+                    i += 1
                     continue
             elif any(
                 p in title_clean.lower() for p in DECLARATION_PHRASES
             ) and any(
                 lbl in title_clean.lower() for lbl in INLINE_SECTION_LABELS
             ):
+                i += 1
                 continue
 
             page = find_page_for_line(line_idx, page_map)
