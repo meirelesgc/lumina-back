@@ -272,10 +272,10 @@ tree:
               expected_section: 'Discussion'
             fulfilled: true
             evidence:
-              - section: 'Limitations'
+              - section: 'Scapular kinematics in healthy individuals'
                 page: 8
                 contains: 'First, all the included studies had small sample sizes, maybe due to the complexity and potential risks of the measurement procedures.'
-              - section: 'Limitations'
+              - section: 'Scapular kinematics in healthy individuals'
                 page: 8
                 contains: 'meta-analysis of individual participant data could not be performed due to the impossibility of accessing individual data from included studies'
 

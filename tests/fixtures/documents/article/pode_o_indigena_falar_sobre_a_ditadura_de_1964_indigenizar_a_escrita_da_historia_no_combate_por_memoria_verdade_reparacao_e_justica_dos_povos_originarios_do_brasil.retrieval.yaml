@@ -61,7 +61,7 @@ tree:
               expected_section: 'Resumo'
             fulfilled: false
             evidence:
-              - section: 'Resumo'
+              - section: 'Abstract'
                 page: 2
                 contains: 'aponta para o horizonte de reavaliação crítica de conceitos e categorias como violência(s), trauma, etnogenocídio, ditadura militar'
 

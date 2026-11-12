@@ -206,9 +206,6 @@ def test_reciprocal_rank_fusion_merges_and_deduplicates():
     assert ids[0] == 'c2'
 
 
-@pytest.mark.asyncio
-@pytest.mark.asyncio
-@pytest.mark.asyncio
 def test_get_base_filter_isolates_the_document():
     db_release = MagicMock()
     db_release.file_path = 'uploads/doc.pdf'
@@ -218,12 +215,6 @@ def test_get_base_filter_isolates_the_document():
     }
 
 
-@pytest.mark.asyncio
-@pytest.mark.asyncio
-@pytest.mark.asyncio
-@pytest.mark.asyncio
-@pytest.mark.asyncio
-@pytest.mark.asyncio
 def test_contextos_marcam_as_frases_do_chunk():
     chunk = Document(
         page_content='[Método] Primeira frase. Segunda frase.',

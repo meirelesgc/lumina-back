@@ -357,7 +357,7 @@ tree:
             fulfilled: true
             evidence:
               - page: 1
-                contains: 'Os autores afirmam que todos os dados utilizados na pesquisa foram disponibilizados publicamente e podem ser acessados por meio da plataforma Harvard Dataverse'
+                contains: 'Os autores afirmam que todos os dados utilizados na pesquisa foram disponibilizados publicamente'
 
 
       - title: Referências

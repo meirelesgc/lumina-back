@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         'postgresql+psycopg://db_user:db_password@localhost:5432/db'
     )
 
-    SECRET_KEY: str = 'SECRET_KEY'
+    SECRET_KEY: str = 'insecure-default-secret-key-with-at-least-32-bytes'
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = 'HS256'
 
