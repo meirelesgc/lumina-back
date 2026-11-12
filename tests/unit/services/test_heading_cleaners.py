@@ -164,10 +164,14 @@ def test_adjacent_merger_never_merges_inline_label():
 
 def test_adjacent_merger_keeps_canonical_first_heading_apart():
     full_text = '## Methods\n\n### Study design\n'
-    lines = full_text.splitlines()
     headings = [
         Heading(line_number=1, level=2, title='Methods', raw='## Methods'),
-        Heading(line_number=3, level=3, title='Study design', raw='### Study design'),
+        Heading(
+            line_number=3,
+            level=3,
+            title='Study design',
+            raw='### Study design',
+        ),
     ]
     merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
     assert [h.title for h in merged] == ['Methods', 'Study design']
@@ -176,8 +180,18 @@ def test_adjacent_merger_keeps_canonical_first_heading_apart():
 def test_adjacent_merger_keeps_different_levels_apart():
     full_text = '## Visão Geral\n\n### Contexto Histórico\n'
     headings = [
-        Heading(line_number=1, level=2, title='Visão Geral', raw='## Visão Geral'),
-        Heading(line_number=3, level=3, title='Contexto Histórico', raw='### Contexto Histórico'),
+        Heading(
+            line_number=1,
+            level=2,
+            title='Visão Geral',
+            raw='## Visão Geral',
+        ),
+        Heading(
+            line_number=3,
+            level=3,
+            title='Contexto Histórico',
+            raw='### Contexto Histórico',
+        ),
     ]
     merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
     assert [h.title for h in merged] == ['Visão Geral', 'Contexto Histórico']
@@ -354,7 +368,9 @@ def test_parse_headings_detects_standalone_abstract():
     headings = parse_headings_from_markdown(content)
     titles = [h.title for h in headings]
     assert 'A B S T R A C T' in titles
-    abstract_heading = next(h for h in headings if h.title == 'A B S T R A C T')
+    abstract_heading = next(
+        h for h in headings if h.title == 'A B S T R A C T'
+    )
     assert abstract_heading.level == 2
 
 
@@ -372,3 +388,59 @@ def test_parse_headings_ignores_inline_declarations():
     assert 'Declarations' in titles
     assert 'References' in titles
     assert not any('Competing interests' in t for t in titles)
+
+
+def test_parse_unhashed_numbered_headings():
+    content = """
+# 1. Introdução
+Texto da introdução com conteúdo suficiente para o teste.
+
+2. Desenvolvimento e Fundamentação
+Texto do desenvolvimento com fundamentação teórica.
+
+_2.1. Subseção Específica_
+Detalhes da subseção específica.
+
+Os seguintes pontos foram observados:
+1. Primeiro item da lista de requisitos;
+2. Segundo item da lista de requisitos.
+
+# 3. Considerações Finais
+Texto de conclusão.
+
+## Referências
+1. Autor A. Livro Exemplo. 2020.
+2. Autor B. Artigo Exemplo. 2021.
+"""
+    headings = parse_headings_from_markdown(content)
+    titles = [h.title for h in headings]
+    assert titles == [
+        '1. Introdução',
+        '2. Desenvolvimento e Fundamentação',
+        '2.1. Subseção Específica',
+        '3. Considerações Finais',
+        'Referências',
+    ]
+    assert headings[1].level == 1
+    assert headings[2].level == 2
+
+
+def test_parse_unhashed_multiline_heading():
+    content = """
+# 1. Introdução
+Texto introdutório.
+
+2. A Presença de Elementos Dissertativos:
+Da Representação Conceitual à Prática
+
+Corpo do texto da seção dois.
+"""
+    headings = parse_headings_from_markdown(content)
+    assert len(headings) == 2
+    assert headings[0].title == '1. Introdução'
+    expected_title = (
+        '2. A Presença de Elementos Dissertativos: '
+        'Da Representação Conceitual à Prática'
+    )
+    assert headings[1].title == expected_title
+    assert headings[1].level == 1
