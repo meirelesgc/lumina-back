@@ -99,10 +99,32 @@ INLINE_SECTION_LABELS = frozenset({
     'acknowledgments',
     'acknowledgements',
     'conflicts of interest',
+    'competing interests',
+    'conflict of interest',
     "disclaimer/publisher's note",
     'institutional review board statement',
     'informed consent statement',
+    'ethical approval',
+    'ethics approval',
+    'consent to participate',
+    'consent for publication',
 })
+
+DECLARATION_PHRASES = (
+    'the author',
+    'the authors',
+    'os autores',
+    'o autor',
+    'declare',
+    'declaram',
+    'have no competing',
+    'não há conflito',
+    'no conflict',
+)
+RUN_IN_HEADING_RE = re.compile(
+    r'^\*\*(?P<label>[^*]+)\*\*:?\s+(?P<rest>\S.*)$'
+)
+MAX_STANDALONE_TITLE_LEN = 30
 
 
 class SectionInfo(BaseModel):
@@ -174,7 +196,8 @@ KERNING_RE = re.compile(r'\b([A-Za-zÀ-Ý])(?:\s+([A-Za-zÀ-Ý]))+\b')
 def unkern(text: str) -> str:
     """
     Remove espaçamento artificial entre letras (kerning/tracking editorial).
-    Ex.: 'A B S T R A C T' -> 'ABSTRACT', 'A R T I C L E I N F O' -> 'ARTICLEINFO'
+    Ex.: 'A B S T R A C T' -> 'ABSTRACT',
+    'A R T I C L E I N F O' -> 'ARTICLEINFO'.
     """
     return KERNING_RE.sub(lambda m: m.group(0).replace(' ', ''), text)
 
@@ -443,12 +466,28 @@ def parse_headings_from_markdown(
         match = HEADING_PATTERN.match(stripped)
         if match:
             hashes, title = match.groups()
+            title_clean = title.strip()
+            run_in = RUN_IN_HEADING_RE.match(title_clean)
+            if run_in:
+                label = strip_markup(run_in.group('label')).strip().lower()
+                rest = run_in.group('rest').strip().lower()
+                if label in INLINE_SECTION_LABELS or any(
+                    p in rest for p in DECLARATION_PHRASES
+                ):
+                    continue
+            elif any(
+                p in title_clean.lower() for p in DECLARATION_PHRASES
+            ) and any(
+                lbl in title_clean.lower() for lbl in INLINE_SECTION_LABELS
+            ):
+                continue
+
             page = find_page_for_line(line_idx, page_map)
             headings.append(
                 Heading(
                     line_number=line_idx,
                     level=len(hashes),
-                    title=title.strip(),
+                    title=title_clean,
                     raw=stripped,
                     page=page,
                 )
@@ -471,7 +510,10 @@ def parse_headings_from_markdown(
             continue
 
         unk = unkern(stripped).strip().lower()
-        if unk in STANDALONE_SECTION_NAMES and len(stripped) <= 30:
+        if (
+            unk in STANDALONE_SECTION_NAMES
+            and len(stripped) <= MAX_STANDALONE_TITLE_LEN
+        ):
             page = find_page_for_line(line_idx, page_map)
             next_level = 2
             for ahead_line in lines[line_idx:]:

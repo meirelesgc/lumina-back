@@ -164,10 +164,14 @@ def test_adjacent_merger_never_merges_inline_label():
 
 def test_adjacent_merger_keeps_canonical_first_heading_apart():
     full_text = '## Methods\n\n### Study design\n'
-    lines = full_text.splitlines()
     headings = [
         Heading(line_number=1, level=2, title='Methods', raw='## Methods'),
-        Heading(line_number=3, level=3, title='Study design', raw='### Study design'),
+        Heading(
+            line_number=3,
+            level=3,
+            title='Study design',
+            raw='### Study design',
+        ),
     ]
     merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
     assert [h.title for h in merged] == ['Methods', 'Study design']
@@ -176,8 +180,18 @@ def test_adjacent_merger_keeps_canonical_first_heading_apart():
 def test_adjacent_merger_keeps_different_levels_apart():
     full_text = '## Visão Geral\n\n### Contexto Histórico\n'
     headings = [
-        Heading(line_number=1, level=2, title='Visão Geral', raw='## Visão Geral'),
-        Heading(line_number=3, level=3, title='Contexto Histórico', raw='### Contexto Histórico'),
+        Heading(
+            line_number=1,
+            level=2,
+            title='Visão Geral',
+            raw='## Visão Geral',
+        ),
+        Heading(
+            line_number=3,
+            level=3,
+            title='Contexto Histórico',
+            raw='### Contexto Histórico',
+        ),
     ]
     merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
     assert [h.title for h in merged] == ['Visão Geral', 'Contexto Histórico']
@@ -322,19 +336,55 @@ Texto com mais de trinta caracteres informando os requisitos.
 
 def test_clean_editorial_headings():
     headings = [
-        Heading(line_number=1, level=3, title='A R T I C L E I N F O', raw='### A R T I C L E I N F O'),
-        Heading(line_number=3, level=2, title='A B S T R A C T', raw='## A B S T R A C T'),
+        Heading(
+            line_number=1,
+            level=3,
+            title='A R T I C L E I N F O',
+            raw='### A R T I C L E I N F O',
+        ),
+        Heading(
+            line_number=3,
+            level=2,
+            title='A B S T R A C T',
+            raw='## A B S T R A C T',
+        ),
         Heading(line_number=5, level=4, title='Keywords', raw='#### Keywords'),
-        Heading(line_number=7, level=2, title='Introduction', raw='## Introduction'),
+        Heading(
+            line_number=7,
+            level=2,
+            title='Introduction',
+            raw='## Introduction',
+        ),
     ]
     res = clean_editorial_headings(headings, '')
     assert [h.title for h in res] == ['A B S T R A C T', 'Introduction']
 
 
 def test_parse_headings_detects_standalone_abstract():
-    content = "### A R T I C L E I N F O\n\nA B S T R A C T\n\nText of abstract.\n\n## Introduction"
+    content = (
+        '### A R T I C L E I N F O\n\nA B S T R A C T\n\n'
+        'Text of abstract.\n\n## Introduction'
+    )
     headings = parse_headings_from_markdown(content)
     titles = [h.title for h in headings]
     assert 'A B S T R A C T' in titles
-    abstract_heading = next(h for h in headings if h.title == 'A B S T R A C T')
+    abstract_heading = next(
+        h for h in headings if h.title == 'A B S T R A C T'
+    )
     assert abstract_heading.level == 2
+
+
+def test_parse_headings_ignores_inline_declarations():
+    content = """## Declarations
+
+**Ethics approval** Approved by ethics committee.
+
+### **Competing interests** The authors declare no competing interests.
+
+# References
+"""
+    headings = parse_headings_from_markdown(content)
+    titles = [h.title for h in headings]
+    assert 'Declarations' in titles
+    assert 'References' in titles
+    assert not any('Competing interests' in t for t in titles)
