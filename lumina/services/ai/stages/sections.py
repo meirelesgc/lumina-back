@@ -88,6 +88,17 @@ ROLE_ALIASES: Dict[SectionRole, List[str]] = {
 
 INLINE_LABEL_PATTERN = re.compile(r'^\*\*(?P<label>[^*]{2,60}?):\*\*\s*\S')
 
+TERMINAL_SECTION_PATTERNS: Tuple[re.Pattern[str], ...] = (
+    re.compile(
+        r'^(refer[êe]ncias|references|bibliography|notas|endnotes|footnotes)\b',
+        re.IGNORECASE,
+    ),
+)
+UNHASHED_NUMBERED_HEADING_RE = re.compile(
+    r'^\s*([*_`]{1,3})?\s*(\d+(?:\.\d+)*\.?)\s+([A-ZÀ-Ý“\"].*?)([*_`]{1,3})?\s*$'
+)
+TOP_NUM_RE = re.compile(r'^(\d+)(?:\.0+)?\.?\s+')
+
 INLINE_SECTION_LABELS = frozenset({
     'abstract',
     'resumo',
@@ -451,18 +462,129 @@ def find_page_for_line(
     return page_map[0]['page'] if page_map else None
 
 
-def parse_headings_from_markdown(
+def _is_valid_section_number(
+    parts: List[str], last_top_level: Optional[int]
+) -> bool:
+    """
+    Valida se a numeração segue a sequência monotônica esperada.
+    """
+    if len(parts) == 1:
+        try:
+            n = int(parts[0])
+            if last_top_level is None:
+                return n == 1
+            return n == last_top_level + 1
+        except ValueError:
+            return False
+    try:
+        parent_n = int(parts[0])
+        return last_top_level is not None and parent_n == last_top_level
+    except ValueError:
+        return False
+
+
+def _consume_multiline_unhashed_title(
+    lines: List[str], start_idx: int, total_lines: int
+) -> Tuple[str, int]:
+    """
+    Agrupa linhas subsequentes de um título dissertativo sem cerquilha.
+    """
+    full_title = lines[start_idx].strip()
+    end_idx = start_idx
+    while end_idx + 1 < total_lines and lines[end_idx + 1].strip():
+        next_stripped = lines[end_idx + 1].strip()
+        if HEADING_PATTERN.match(next_stripped) or inline_section_label(
+            next_stripped
+        ):
+            break
+        if UNHASHED_NUMBERED_HEADING_RE.match(next_stripped):
+            break
+        clean_next = strip_markup(next_stripped)
+        if clean_next.endswith((';', '.', ',')):
+            break
+        full_title = f'{full_title} {next_stripped}'
+        end_idx += 1
+    return full_title, end_idx
+
+
+def _try_parse_unhashed_heading(
+    lines: List[str],
+    i: int,
+    total_lines: int,
+    last_top_level_num: Optional[int],
+    page_map: Optional[List[Dict[str, Any]]],
+) -> Optional[Tuple[Heading, int, Optional[int]]]:
+    """
+    Tenta analisar a linha como título numerado sem cerquilha.
+    Retorna (heading, next_i, new_last_top_level_num) se bem-sucedido.
+    """
+    stripped = lines[i].strip()
+    if i > 0 and lines[i - 1].strip():
+        return None
+
+    m = UNHASHED_NUMBERED_HEADING_RE.match(stripped)
+    if not m:
+        return None
+
+    _, num_str, title_start, _ = m.groups()
+    clean_title = strip_markup(stripped)
+
+    if title_start.startswith(('“', '"')) and '.' not in num_str:
+        return None
+    if clean_title.endswith((';', '.', ',')):
+        return None
+
+    clean_num = num_str.strip().rstrip('.')
+    parts = clean_num.split('.')
+    if not _is_valid_section_number(parts, last_top_level_num):
+        return None
+
+    full_title, end_idx = _consume_multiline_unhashed_title(
+        lines, i, total_lines
+    )
+    clean_full = strip_markup(full_title)
+    lvl = 1
+    for pat, pattern_level in NUMBERING_PATTERNS:
+        if pat.search(clean_full):
+            lvl = pattern_level
+            break
+
+    new_top = int(parts[0]) if len(parts) == 1 else last_top_level_num
+    page = find_page_for_line(i + 1, page_map)
+    heading = Heading(
+        line_number=i + 1,
+        level=lvl,
+        title=clean_full,
+        raw=full_title,
+        page=page,
+        level_source='numbering_pattern',
+    )
+    return heading, end_idx + 1, new_top
+
+
+def parse_headings_from_markdown(  # noqa: PLR0912, PLR0914, PLR0915
     content: str, page_map: Optional[List[Dict[str, Any]]] = None
 ) -> List[Heading]:
     """
-    Identifica todos os cabeçalhos ('#') com linha e página associada, e
-    os rótulos conhecidos na mesma linha do texto (`**Funding:** ...`).
+    Identifica cabeçalhos com cerquilha ('#'), rótulos inline
+    (`**Funding:** ...`) e seções numeradas dissertativas sem cerquilha.
     """
     headings: List[Heading] = []
     lines = content.splitlines()
+    total_lines = len(lines)
+    in_terminal = False
+    last_top_level_num: Optional[int] = None
 
-    for line_idx, raw_line in enumerate(lines, start=1):
+    i = 0
+    while i < total_lines:
+        line_idx = i + 1
+        raw_line = lines[i]
         stripped = raw_line.strip()
+
+        if not stripped:
+            i += 1
+            continue
+
         match = HEADING_PATTERN.match(stripped)
         if match:
             hashes, title = match.groups()
@@ -474,24 +596,37 @@ def parse_headings_from_markdown(
                 if label in INLINE_SECTION_LABELS or any(
                     p in rest for p in DECLARATION_PHRASES
                 ):
+                    i += 1
                     continue
             elif any(
                 p in title_clean.lower() for p in DECLARATION_PHRASES
             ) and any(
                 lbl in title_clean.lower() for lbl in INLINE_SECTION_LABELS
             ):
+                i += 1
                 continue
 
             page = find_page_for_line(line_idx, page_map)
-            headings.append(
-                Heading(
-                    line_number=line_idx,
-                    level=len(hashes),
-                    title=title_clean,
-                    raw=stripped,
-                    page=page,
-                )
+            h = Heading(
+                line_number=line_idx,
+                level=len(hashes),
+                title=title_clean,
+                raw=stripped,
+                page=page,
             )
+            headings.append(h)
+            clean_title = strip_markup(h.title)
+            if any(p.search(clean_title) for p in TERMINAL_SECTION_PATTERNS):
+                in_terminal = True
+
+            m_top = TOP_NUM_RE.match(clean_title)
+            if m_top:
+                try:
+                    last_top_level_num = int(m_top.group(1))
+                except ValueError:
+                    pass
+
+            i += 1
             continue
 
         label = inline_section_label(stripped)
@@ -507,6 +642,7 @@ def parse_headings_from_markdown(
                     inline=True,
                 )
             )
+            i += 1
             continue
 
         unk = unkern(stripped).strip().lower()
@@ -533,6 +669,20 @@ def parse_headings_from_markdown(
                     level_source='standalone_title',
                 )
             )
+            i += 1
+            continue
+
+        if not in_terminal:
+            unhashed = _try_parse_unhashed_heading(
+                lines, i, total_lines, last_top_level_num, page_map
+            )
+            if unhashed:
+                h, next_i, last_top_level_num = unhashed
+                headings.append(h)
+                i = next_i
+                continue
+
+        i += 1
 
     return headings
 
