@@ -10,23 +10,91 @@ from lumina.utils.InstanceCounterAnonymizer import InstanceCounterAnonymizer
 
 PERSON_RECOGNIZER = 'PersonNameRecognizer'
 MIN_NAME_WORDS = 2
-NAME_CONNECTIVES = {'de', 'da', 'do', 'das', 'dos', 'e'}
+NAME_CONNECTIVES = {
+    'de',
+    'da',
+    'do',
+    'das',
+    'dos',
+    'e',
+    'van',
+    'von',
+    'der',
+    'del',
+}
+NON_PERSON_WORDS = {
+    'university',
+    'universidade',
+    'universitat',
+    'department',
+    'departamento',
+    'hospital',
+    'institute',
+    'instituto',
+    'faculty',
+    'faculdade',
+    'center',
+    'centro',
+    'journal',
+    'school',
+    'clinic',
+    'unit',
+    'unidade',
+}
 SUPERSCRIPT = re.compile(r'<sup>.*?</sup>')
 MARKUP = re.compile(r'<[^>]+>|[*#_`]')
-LIST_SEPARATOR = re.compile(r'[,;]|\s(?:and|e)\s')
+LIST_SEPARATOR = re.compile(r'[,;·•|]|\s(?:and|e)\s')
 UPPERCASE_RUN = re.compile(
     r"\b[A-ZÀ-Ý][A-ZÀ-Ý'-]+(?:[ \t]+[A-ZÀ-Ý][A-ZÀ-Ý'-]*)+\b"
 )
 NAME_END = re.compile(r"[^\w\s'.-]|\n")
 LOWERCASE_WORD = re.compile(r'\b[a-zà-ÿ][\w-]*')
 SECTION_NUMBER = re.compile(r'^\s*\d+(?:\.\d+)*\.?\s+')
+EMAIL_RE = re.compile(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b')
+URL_RE = re.compile(r'https?://\S+')
+AFFILIATION_DIGITS = re.compile(r'[\d¹²³⁴⁵⁶⁷⁸⁹*†‡§]+')
+
+_FLOATING_ACCENTS = {
+    '´a': 'á',
+    '´e': 'é',
+    '´i': 'í',
+    '´o': 'ó',
+    '´u': 'ú',
+    '´A': 'Á',
+    '´E': 'É',
+    '´I': 'Í',
+    '´O': 'Ó',
+    '´U': 'Ú',
+    'a´': 'á',
+    'e´': 'é',
+    'i´': 'í',
+    'o´': 'ó',
+    'u´': 'ú',
+    '`a': 'à',
+    '`e': 'è',
+    '`i': 'ì',
+    '`o': 'ò',
+    '`u': 'ù',
+    '~a': 'ã',
+    '~o': 'õ',
+    '^a': 'â',
+    '^e': 'ê',
+    '^o': 'ô',
+}
+
+
+def fix_floating_accents(text: str) -> str:
+    for k, v in _FLOATING_ACCENTS.items():
+        text = text.replace(k, v)
+    return text.replace('´', '').replace('`', '')
 
 
 def person_recognizer(names: list[str]) -> PatternRecognizer:
     """
     Reconhece os nomes coletados em qualquer caixa (o PatternRecognizer
-    ignora caixa por padrão) e com qualquer espaço entre as palavras. A
-    lista vem do mais longo para o mais curto, para o nome completo vencer
+    ignora caixa por padrão) e com qualquer espaço entre as palavras, além de
+    suportar marcadores de nota/afiliação anexados ao final do nome.
+    A lista vem do mais longo para o mais curto, para o nome completo vencer
     o parcial na mesma posição.
     """
     regex = '|'.join(
@@ -36,7 +104,11 @@ def person_recognizer(names: list[str]) -> PatternRecognizer:
         supported_entity='PERSON',
         name=PERSON_RECOGNIZER,
         patterns=[
-            Pattern(name='person_name', regex=rf'\b(?:{regex})\b', score=1)
+            Pattern(
+                name='person_name',
+                regex=rf'\b(?:{regex})(?:[0-9¹²³⁴⁵⁶⁷⁸⁹*†‡§]*)(?!\w)',
+                score=1,
+            )
         ],
         supported_language='pt',
     )
@@ -314,24 +386,40 @@ class PresidioAnonymizer:
         não reconhece nomes em caixa alta.
         """
         text = ' '.join(chunk.page_content for chunk in chunks)
-        lowercase_words = set(LOWERCASE_WORD.findall(text))
+        clean_text = URL_RE.sub(' ', EMAIL_RE.sub(' ', text))
+        lowercase_words = set(LOWERCASE_WORD.findall(clean_text))
         numbered_titles = {
             SECTION_NUMBER.sub('', title).casefold()
             for chunk in chunks
             if isinstance(title := chunk.metadata.get('section_title'), str)
             and SECTION_NUMBER.match(title)
         }
-        items = [
-            UPPERCASE_RUN.sub(
-                lambda match: match.group(0).title(),
-                MARKUP.sub(' ', SUPERSCRIPT.sub(' ', item)),
-            )
-            for chunk in chunks
-            if chunk.metadata.get('section_role') != 'references'
-            for line in chunk.page_content.splitlines()
-            for item in LIST_SEPARATOR.split(line)
-            if item.strip()
-        ]
+
+        raw_items = []
+        for chunk in chunks:
+            if chunk.metadata.get('section_role') == 'references':
+                continue
+            for line in chunk.page_content.splitlines():
+                raw_items.append(line)
+                raw_items.extend(LIST_SEPARATOR.split(line))
+            if title := chunk.metadata.get('section_title'):
+                if isinstance(title, str) and not SECTION_NUMBER.match(title):
+                    raw_items.append(title)
+                    raw_items.extend(LIST_SEPARATOR.split(title))
+
+        items = []
+        for item in raw_items:
+            item = item.strip()
+            if not item:
+                continue
+            item = fix_floating_accents(item)
+            item = SUPERSCRIPT.sub(' ', item)
+            item = MARKUP.sub(' ', item)
+            item = AFFILIATION_DIGITS.sub(' ', item)
+            item = UPPERCASE_RUN.sub(lambda match: match.group(0).title(), item)
+            item = ' '.join(item.split())
+            if item:
+                items.append(item)
 
         names = set()
         nlp = self.analyzer.nlp_engine.nlp['pt']
@@ -352,6 +440,9 @@ class PresidioAnonymizer:
                     and all(word[0].isupper() for word in core)
                     and any(
                         word.lower() not in lowercase_words for word in core
+                    )
+                    and not any(
+                        word.lower() in NON_PERSON_WORDS for word in core
                     )
                     and name.casefold() not in numbered_titles
                 ):

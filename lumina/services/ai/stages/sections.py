@@ -121,7 +121,10 @@ DECLARATION_PHRASES = (
     'não há conflito',
     'no conflict',
 )
-RUN_IN_HEADING_RE = re.compile(r'^\*\*(?P<label>[^*]+)\*\*:?\s+(?P<rest>\S.*)$')
+RUN_IN_HEADING_RE = re.compile(
+    r'^\*\*(?P<label>[^*]+)\*\*:?\s+(?P<rest>\S.*)$'
+)
+MAX_STANDALONE_TITLE_LEN = 30
 
 
 class SectionInfo(BaseModel):
@@ -187,6 +190,53 @@ def text_between(full_text: str, h1: Heading, h2: Heading) -> str:
     return '\n'.join(lines[start_line:end_line])
 
 
+KERNING_RE = re.compile(r'\b([A-Za-zÀ-Ý])(?:\s+([A-Za-zÀ-Ý]))+\b')
+
+
+def unkern(text: str) -> str:
+    """
+    Remove espaçamento artificial entre letras (kerning/tracking editorial).
+    Ex.: 'A B S T R A C T' -> 'ABSTRACT',
+    'A R T I C L E I N F O' -> 'ARTICLEINFO'.
+    """
+    return KERNING_RE.sub(lambda m: m.group(0).replace(' ', ''), text)
+
+
+EDITORIAL_HEADINGS = frozenset({
+    'article info',
+    'articleinfo',
+    'article history',
+    'articlehistory',
+    'keywords',
+    'index terms',
+    'palavras-chave',
+})
+
+STANDALONE_SECTION_NAMES = frozenset({
+    'abstract',
+    'resumo',
+    'resumen',
+    'summary',
+    'sinopse',
+})
+
+
+def clean_editorial_headings(
+    headings: List[Heading], full_text: str
+) -> List[Heading]:
+    """
+    Passo preliminar: Remove cabeçalhos que correspondem a blocos editoriais de
+    periódicos (ex.: 'A R T I C L E I N F O', 'Article History', 'Keywords').
+    """
+    filtered: List[Heading] = []
+    for h in headings:
+        norm = unkern(strip_markup(h.title)).strip().lower()
+        if norm in EDITORIAL_HEADINGS:
+            continue
+        filtered.append(h)
+    return filtered
+
+
 def clean_markup(headings: List[Heading], full_text: str) -> List[Heading]:
     """
     Passo 1 da Pipeline: Normaliza texto sem efeitos colaterais estruturais.
@@ -243,6 +293,14 @@ def stands_alone(heading: Heading) -> bool:
     )
 
 
+CONTINUATION_PUNCTUATION = (':', '-', '–', '—', '/', '...')
+
+
+def is_continuation_heading(heading: Heading) -> bool:
+    clean = strip_markup(heading.title).strip()
+    return clean.endswith(CONTINUATION_PUNCTUATION)
+
+
 def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
     """
     Passo 3 da Pipeline: Funde títulos adjacentes em linhas contínuas.
@@ -260,7 +318,13 @@ def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
         while i < total:
             current = headings[i]
             while i + 1 < total and not current.inline:
+                if stands_alone(current) and not is_continuation_heading(
+                    current
+                ):
+                    break
                 nxt = headings[i + 1]
+                if current.level != nxt.level:
+                    break
                 if stands_alone(nxt):
                     break
                 gap = text_between(full_text, current, nxt)
@@ -340,9 +404,10 @@ def make_orphan_cleaner(min_chars: int = 20) -> HeadingCleaner:
 
 def get_default_heading_cleaners() -> List[HeadingCleaner]:
     """
-    Retorna a sequência padrão ordenada dos 5 cleaners funcionais.
+    Retorna a sequência padrão ordenada dos cleaners funcionais.
     """
     return [
+        clean_editorial_headings,
         clean_markup,
         make_repeated_cleaner(min_occurrences=3),
         make_adjacent_merger(max_gap_chars=5),
@@ -412,7 +477,9 @@ def parse_headings_from_markdown(
                     continue
             elif any(
                 p in title_clean.lower() for p in DECLARATION_PHRASES
-            ) and any(lbl in title_clean.lower() for lbl in INLINE_SECTION_LABELS):
+            ) and any(
+                lbl in title_clean.lower() for lbl in INLINE_SECTION_LABELS
+            ):
                 continue
 
             page = find_page_for_line(line_idx, page_map)
@@ -438,6 +505,32 @@ def parse_headings_from_markdown(
                     page=find_page_for_line(line_idx, page_map),
                     level_source='inline_label',
                     inline=True,
+                )
+            )
+            continue
+
+        unk = unkern(stripped).strip().lower()
+        if (
+            unk in STANDALONE_SECTION_NAMES
+            and len(stripped) <= MAX_STANDALONE_TITLE_LEN
+        ):
+            page = find_page_for_line(line_idx, page_map)
+            next_level = 2
+            for ahead_line in lines[line_idx:]:
+                ahead_match = HEADING_PATTERN.match(ahead_line.strip())
+                if ahead_match:
+                    ahead_title = unkern(ahead_match.group(2)).strip().lower()
+                    if ahead_title not in EDITORIAL_HEADINGS:
+                        next_level = len(ahead_match.group(1))
+                        break
+            headings.append(
+                Heading(
+                    line_number=line_idx,
+                    level=next_level,
+                    title=stripped,
+                    raw=f'{"#" * next_level} {stripped}',
+                    page=page,
+                    level_source='standalone_title',
                 )
             )
 
@@ -672,6 +765,7 @@ def normalize_title_for_alias(title: str) -> str:
     Remove pontuações e numeração de outline para casamento de aliases.
     """
     cleaned = strip_markup(title)
+    cleaned = unkern(cleaned)
     cleaned = re.sub(r'^\d+[\.\d*]*\s*[-–:]?\s*', '', cleaned)
     cleaned = re.sub(r'[:\.\-_]+$', '', cleaned)
     return cleaned.strip().lower()
