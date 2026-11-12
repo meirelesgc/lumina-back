@@ -1,0 +1,337 @@
+# Expected retrieval for pode_o_indigena_falar_sobre_a_ditadura_de_1964_indigenizar_a_escrita_da_historia_no_combate_por_memoria_verdade_reparacao_e_justica_dos_povos_originarios_do_brasil.pdf
+# Páginas relativas ao PDF (1 = primeira página). Títulos de seção como no
+# .sections.yaml ao lado. Ensaio de história sem seções de método,
+# resultados ou discussão: as fontes (a audiência pública de 2022) são
+# descritas no Resumo e na seção 4; o argumento se desenvolve nas seções
+# 5 e 6; limitações, financiamento e conflitos de interesse não são
+# declarados. A disponibilidade de dados está na última página, depois das
+# notas, fora de qualquer seção.
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 1
+                contains: 'Analisa-se a potencialidade de uma Comissão Nacional Indígena da Verdade (CNIV) como espaço de reescrita da história das violações de direitos humanos'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 1
+                contains: 'A base documental do artigo é constituída pelos registros orais captados em audiência pública ocorrida no Ministério Público Federal de Minas Gerais em 2022'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: false
+            evidence:
+              - section: 'Resumo'
+                page: 1
+                contains: 'O artigo realiza um balanço da presença/ausência indígena na Comissão Nacional da Verdade (CNV), bem como discute quem serão o sujeito e o objeto da CNIV.'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: false
+            evidence:
+              - section: 'Resumo'
+                page: 2
+                contains: 'aponta para o horizonte de reavaliação crítica de conceitos e categorias como violência(s), trauma, etnogenocídio, ditadura militar'
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '1. Introdução'
+            fulfilled: true
+            evidence:
+              - section: '1. Introdução'
+                page: 2
+                contains: 'Os povos indígenas deste território – que viria a ser o Brasil – foram submetidos a um violento processo de conquista, expropriação e desintegração étnico-cultural.'
+              - section: '1. Introdução'
+                page: 2
+                contains: 'os povos indígenas foram as principais vítimas do “milagre econômico” da ditadura militar'
+              - section: '1. Introdução'
+                page: 3
+                contains: 'Na década de 1980, durante a redemocratização, intervieram decisivamente na Assembleia Nacional Constituinte'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '1. Introdução'
+            fulfilled: true
+            evidence:
+              - section: '1. Introdução'
+                page: 3
+                contains: 'pela primeira vez, os povos indígenas deixariam de ser objetos de relatórios oficiais para tornarem-se sujeitos de uma (re)escrita histórica indigenizada'
+              - section: '1. Introdução'
+                page: 4
+                contains: 'que futuro terá a historiografia quando remodulada pela oralidade indígena em diálogo com documentos oficiais?'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '1. Introdução'
+            fulfilled: true
+            evidence:
+              - section: '1. Introdução'
+                page: 3
+                contains: 'É nesse horizonte que se situa este ensaio. A criação da CNIV poderá marcar um ponto de inflexão histórico e historiográfico'
+              - section: '1. Introdução'
+                page: 4
+                contains: 'Com base nas falas da audiência pública de 2022, reflete-se sobre os caminhos de uma (re)escrita indigenizada da história'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+            fulfilled: false
+            evidence:
+              - section: '2. A presença indígena, da CNV à CNIV: da representação do indígena à inscrição da perspectiva e do protagonismo indígenas na história do Brasil contemporâneo'
+                page: 11
+                contains: 'Este é o objeto a ser destrinçado neste ensaio, segundo as vozes indígenas e de aliados'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 1
+                contains: 'A base documental do artigo é constituída pelos registros orais captados em audiência pública'
+              - section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+                page: 13
+                contains: 'A audiência teve como objetivo recolher informações para viabilizar as recomendações da CNV, sobretudo a criação da Comissão Nacional Indígena da Verdade'
+              - section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+                page: 13
+                contains: 'São essas vozes que serão retomadas como testemunhos e proposições centrais ao esforço de memória, verdade, reparação e justiça'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+            fulfilled: false
+            evidence:
+              - section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+                page: 13
+                contains: 'o Ministério Público Federal de Minas Gerais convocou uma audiência pública para tratar de uma das recomendações da CNV'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+            evidence: []
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+            evidence: []
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: '2. A presença indígena, da CNV à CNIV: da representação do indígena à inscrição da perspectiva e do protagonismo indígenas na história do Brasil contemporâneo'
+                page: 11
+                contains: 'Os indígenas, enfim, não só podem como devem falar sobre a ditadura de 1964, o que reposicionará, com protagonismo indígena, a compreensão da história social'
+              - section: '5.1. Objetos e sujeitos da história – e da reescrita – das violações anti-indígenas de direitos humanos durante a ditadura de 1964'
+                page: 14
+                contains: 'A novidade disruptiva, como adiantada, é o protagonismo e a centralidade indígenas: de objetos da escrita da história'
+              - section: '6. Repensar a transição da ditadura militar à democracia pós-1988 e o perfil anti-indígena da República brasileira'
+                page: 27
+                contains: 'A transição da ditadura militar à democracia pós-1988 – e a reciclagem das violações iniciadas naquela – deve ser repensada na (re)escrita histórica'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: '5. O horizonte histórico indígena: um outro futuro à historiografia?'
+            evidence: []
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Considerações finais'
+            fulfilled: true
+            evidence:
+              - section: '2. A presença indígena, da CNV à CNIV: da representação do indígena à inscrição da perspectiva e do protagonismo indígenas na história do Brasil contemporâneo'
+                page: 9
+                contains: 'alguns autores já começam a avaliar o impacto positivo do Relatório da CNV nos processos de memória, verdade e reparação aos povos indígenas após 2014'
+              - section: '6. Repensar a transição da ditadura militar à democracia pós-1988 e o perfil anti-indígena da República brasileira'
+                page: 28
+                contains: 'destacou que as violações anti-indígenas massivas não ocorrem apenas em períodos de “exceção” ou ditatoriais no continente'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Considerações finais'
+            evidence: []
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Considerações finais'
+            fulfilled: true
+            evidence:
+              - section: 'Considerações finais'
+                page: 30
+                contains: 'a comunidade acadêmica – em especial a das ciências humanas em geral e a da História em particular – deveria levar a sério a possibilidade de um novo futuro'
+              - section: 'Considerações finais'
+                page: 32
+                contains: 'a CNIV poderá impactar a reescrita não apenas da história indígena e do indigenismo, mas atingirá um vastíssimo campo historiográfico'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Considerações finais'
+            fulfilled: false
+            evidence:
+              - section: 'Considerações finais'
+                page: 30
+                contains: 'revelando a necessidade de redimensioná-lo a partir das memórias e histórias indígenas no quadro mais amplo da história do país'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Considerações finais'
+                page: 29
+                contains: 'Tal encruzilhada evidencia os enormes obstáculos que indígenas e aliados enfrentam para criar a CNIV'
+              - section: 'Considerações finais'
+                page: 32
+                contains: 'se os indígenas puderem falar sobre a ditadura militar de 1964, vencendo a resistência dos perpetradores de violações a seus direitos humanos e seus simpatizantes'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            evidence: []
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            evidence: []
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - page: 39
+                contains: 'Os dados de pesquisa estão disponíveis no corpo do documento.'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'REFERÊNCIAS'
+            fulfilled: true
+            evidence:
+              - section: 'REFERÊNCIAS'
+                page: 33
+                contains: 'O movimento indígena no Brasil: da tutela ao protagonismo'

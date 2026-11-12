@@ -1,0 +1,388 @@
+# Expected retrieval for development_of_the_facial_emotion_recognition_task_tarefe_methodological_aspects_and_initial_psychometric_indicators.pdf
+# Páginas relativas ao PDF (1 = primeira página). Títulos de seção como no
+# .sections.yaml ao lado. "Task operationalization" existe duas vezes (em
+# Method, p. 5, e em Results, p. 15); a página desambigua.
+# O resumo não traz conclusão rotulada; a conclusão do artigo fica dentro
+# de Discussion (p. 19). Sem declaração de financiamento no PDF.
+# Trechos sem `section` estão em legendas de tabela ou nas declarações
+# finais (Data availability) que antecedem o título "Declarations".
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'To present the development process of the “Facial Emotion Recognition Task” (TAREFE), a computer-based test designed to assess FER in Brazilian adults'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'A set of stimuli depicting Brazilian faces was used (n = 170, with diversity in sex and racial background).'
+              - section: 'Abstract'
+                page: 1
+                contains: 'Stimulus selection was based on Item Response Theory (1PL and 2PL), with analysis of infit and outfit indices'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'Twenty-eight stimuli were selected, showing excellent discrimination (46% moderate; 54% high or very high)'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            evidence: []
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'Facial emotion recognition (FER) constitutes one of the primary means of nonverbal communication in humans'
+              - section: 'Introduction'
+                page: 2
+                contains: 'Deficits in FER skills are associated with functional impairments across multiple domains of typical and atypical development'
+              - section: 'Introduction'
+                page: 3
+                contains: 'Examples of tasks widely recognized and used in research settings include the Penn Emotion Recognition Test'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 3
+                contains: 'Few resources are available for psychological and neuropsychological assessment in clinical practice, particularly in Brazil.'
+              - section: 'Introduction'
+                page: 3
+                contains: 'there are currently no tests available for this specific purpose'
+              - section: 'Introduction'
+                page: 3
+                contains: 'Therefore, developing a FER test adapted to the Brazilian context is warranted'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 3
+                contains: 'a computerized test designed to evaluate facial expression recognition of emotions in the Brazilian adult population'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: false
+            evidence:
+              - section: 'TAREFE development'
+                page: 4
+                contains: 'TAREFE was designed to consist of stimuli depicting the emotions of joy, sadness, disgust, anger, fear, surprise, and neutral'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Sample and data collection'
+                page: 4
+                contains: 'The sample consisted of 242 university students (78% women), aged between 18 and 40 years (mean age = 21.8 years).'
+              - section: 'Stimulus development'
+                page: 3
+                contains: 'In that study, 15 actors were selected through convenience sampling.'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Sample and data collection'
+                page: 4
+                contains: 'Stimuli were presented to participants on a 21.5-inch monitor using SuperLab software.'
+              - section: 'Stimulus development'
+                page: 3
+                contains: 'Images were captured using a Canon EOS Rebel T3i camera.'
+              - section: 'Stimulus development'
+                page: 3
+                contains: 'A total of 1,448 stimuli were generated, of which 170 were initially selected after a screening conducted by the researchers'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Data analysis'
+                page: 4
+                contains: 'Descriptive statistics were initially used to assess the frequency of errors and correct answers for each stimulus'
+              - section: 'Data analysis'
+                page: 4
+                contains: 'analyses were conducted using the Rasch Model (one-parameter logistic model; 1PL) to identify stimuli exhibiting misfit based on infit and outfit indices'
+              - section: 'Data analysis'
+                page: 5
+                contains: 'analyses were conducted using the two-parameter logistic (2PL) model to investigate the discrimination and difficulty parameters of each stimulus'
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Declarations'
+                page: 19
+                contains: 'The research project was reviewed and approved by the Institutional Review Board'
+              - section: 'Declarations'
+                page: 19
+                contains: 'All participants provided written informed consent to participate in the study and to have their images used for research purposes.'
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Stimulus Selection'
+                page: 9
+                contains: 'As a result, 149 photographs remained for evaluation using logistic models.'
+              - section: 'Stimulus Selection'
+                page: 9
+                contains: 'one stimulus exhibited misfit exclusively on the infit index, whereas 16 stimuli showed misfit only on the outfit index'
+              - section: 'Task operationalization'
+                page: 15
+                contains: 'Stage 1 consists of 28 stimuli, comprising four faces for each emotional category and four neutral faces.'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Results'
+            fulfilled: true
+            evidence:
+              - page: 6
+                contains: 'Table 1 Item fit indicators for different emotional stimuli under the one-parameter logistic IRT (Rasch) model'
+              - section: 'Stimulus Selection'
+                page: 9
+                contains: 'Table 1 presents the results of the 1PL IRT model for these stimuli.'
+              - section: 'Stimulus Selection'
+                page: 14
+                contains: 'Table 3 presents the stimuli selected through these analyses, which comprise the TAREFE.'
+              - section: 'Task operationalization'
+                page: 16
+                contains: 'Figure 1 presents examples of the TAREFE, showing faces displaying different intensities of emotional expression.'
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 16
+                contains: 'the use of a computerized instrument aligns with contemporary trends in the incorporation of digital technologies into psychological assessment in Brazil'
+              - section: 'Discussion'
+                page: 18
+                contains: 'fewer than 10% employed more sophisticated techniques, such as IRT, for the inclusion of faces in stimulus banks'
+              - section: 'Discussion'
+                page: 18
+                contains: 'Some authors argue that dynamic stimuli provide richer information about emotional intensity and authenticity'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 16
+                contains: 'Despite our efforts, there was a predominance of white faces.'
+              - section: 'Discussion'
+                page: 16
+                contains: 'However, a limitation of this stimulus set is the restriction to the young adult age group.'
+              - section: 'Discussion'
+                page: 18
+                contains: 'This distribution limited the inclusion of highly difficult stimuli, with 11% of the items classified as very easy'
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 19
+                contains: 'TAREFE is a promising tool applicable to both typical samples and clinical populations and can enrich psychological and neuropsychological assessment'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 19
+                contains: 'further studies are underway to expand evidence of the instrument’s validity and reliability and to support its adaptation for clinical use'
+              - section: 'Discussion'
+                page: 19
+                contains: 'Ongoing investigations include: (a) further empirical analyses of the internal structure of TAREFE'
+              - section: 'Discussion'
+                page: 16
+                contains: 'the impact of age-related variables on the response process should be examined in future psychometric studies of the instrument'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 19
+                contains: 'In conclusion, TAREFE appears to be a promising instrument. Its initial psychometric indicators, obtained through contemporary statistical techniques'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            evidence: []
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            fulfilled: true
+            evidence:
+              - section: 'Declarations'
+                page: 19
+                contains: 'Competing interests The authors declare no competing interests.'
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            fulfilled: true
+            evidence:
+              - page: 19
+                contains: 'The datasets used and/or analyzed in this study are available from the corresponding author upon request.'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'References'
+            fulfilled: true
+            evidence:
+              - section: 'References'
+                page: 21
+                contains: 'Facial emotion recognition in schizophrenia. Frontiers in Psychiatry, 12, Article 633717.'

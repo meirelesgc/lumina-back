@@ -1,0 +1,395 @@
+# Expected retrieval for validity_evidence_for_a_short_measure_of_left_wing_authoritarianism_among_brazilian_adults_and_adolescents.pdf
+# Páginas relativas ao PDF (1 = primeira página). Títulos de seção como no
+# .sections.yaml ao lado. O artigo reúne dois estudos; Method, Participants,
+# Measures, Adaptation procedures, Data analysis e Results and discussion
+# existem em Study 1 (p. 6 a 12) e em Study 2 (p. 12 a 15); a página
+# desambigua.
+# Trechos sem `section` estão em legendas de tabela ou nas declarações
+# finais (Funding, Data availability) que antecedem o título "Declarations".
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'measure of LWA for use with both adults and adolescents'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'In Study 1, 764 adults completed the original 39-item LWA instrument.'
+              - section: 'Abstract'
+                page: 1
+                contains: 'In Study 2, the resulting instrument was administered to 308 adolescents, and its three-factor structure was evaluated through Confirmatory Factor Analysis.'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'Results supported the proposed three-dimensional structure across both studies, as the abbreviated measure demonstrated adequate factor loadings'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Abstract'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'The findings thus provide evidence for the reliability and validity of a brief multidimensional measure of LWA in the Brazilian context.'
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'Evidence from more than 30 years of research describes the existence of Right-Wing Authoritarianism'
+              - section: 'The instrumental issue'
+                page: 2
+                contains: 'One of the major obstacles to LWA research has been the lack of psychometrically sound instruments capable of assessing it adequately.'
+              - section: 'The symmetry issue'
+                page: 4
+                contains: 'Early research on political ideology often suggested that conservatives exhibited higher levels of prejudice, intolerance'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Abstract'
+                page: 1
+                contains: 'research on the construct remains limited by the scarcity of instruments validated across different cultures and across the lifespan'
+              - section: 'The present study'
+                page: 5
+                contains: 'Although the original 39-item measure demonstrated promising psychometric properties, its length may limit its use in large-scale surveys'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'The present study'
+                page: 5
+                contains: 'the present research sought to develop and provide initial validation evidence for a brief LWA measure derived from the multidimensional instrument'
+              - section: 'The present study'
+                page: 5
+                contains: 'our objective was to identify a reduced set of items that adequately represented the three dimensions of the construct'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'The present study'
+                page: 5
+                contains: 'To examine the applicability of the resulting short form across developmental contexts, we conducted two studies.'
+              - section: 'The present study'
+                page: 5
+                contains: 'Study 1 involved an adult sample and focused on the selection of items and the evaluation of the factor structure'
+              - section: 'The present study'
+                page: 6
+                contains: 'Study 2 extended these analyses to an adolescent sample, providing evidence regarding the suitability of the short measure for use with younger respondents.'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Participants'
+                page: 6
+                contains: 'A total of 764 adult Brazilian participants were included in the final sample, and 521 (68.2%) identified as female.'
+              - section: 'Participants'
+                page: 6
+                contains: 'Participants were recruited through convenience sampling via a link advertised on Instagram'
+              - section: 'Participants'
+                page: 12
+                contains: 'resulting in a final sample of 308 participants. The sample comprised 48.4% female participants aged 11–19 years'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Measures'
+                page: 6
+                contains: 'Responses were given on a 7-point agreement scale ranging from 1 (totally disagree) to 7 (totally agree).'
+              - section: 'Measures'
+                page: 7
+                contains: 'Participants also responded to the Authoritarianism–Conservatism–Traditionalism (ACT) scale indexing RWA'
+              - section: 'Adaptation procedures'
+                page: 8
+                contains: 'The original 39-item scale was first translated into Brazilian Portuguese by two independent political psychologists'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Data analysis'
+                page: 8
+                contains: 'first an ESEM using the Weighted Least Squares Mean and Variance adjusted (WLSMV) estimator with Target rotation was conducted using Mplus version 6.12'
+              - section: 'Data analysis'
+                page: 8
+                contains: 'To assess criterion validity, Pearson correlations were calculated between the mean scores of each LWA dimension and political self-categorization.'
+              - section: 'Data analysis'
+                page: 13
+                contains: 'First, a Confirmatory Factor Analysis (CFA) was conducted using the WLSMV estimation method in RStudio version 2023.06.1.'
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Method'
+            fulfilled: true
+            evidence:
+              - section: 'Declarations'
+                page: 20
+                contains: 'The design of Study 1 was approved by the ethics committee of the Pontifícia Universidade Católica do Rio Grande do Sul'
+              - section: 'Participants'
+                page: 6
+                contains: 'Before answering the instruments, participants expressed their consent by providing their agreement to an Informed Consent Form.'
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Validity evidence of the LWA scale'
+                page: 9
+                contains: 'The three-factor ESEM model showed a mixed pattern of fit indices, with RMSEA meeting the predefined criterion for adequate fit'
+              - section: 'Criterion validity of the short LWA scale for adults'
+                page: 11
+                contains: 'right-wing self-categorization was negatively correlated with Anti-Conventionalism'
+              - section: 'Validity evidence of the short LWA scale for youth'
+                page: 13
+                contains: 'CFA indicated that the three-dimensional structure of the 9-item LWA was adequate for the adolescent sample'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Results and discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Validity evidence of the LWA scale'
+                page: 9
+                contains: 'Table 3 presents the rotated factor loadings obtained through ESEM for all items.'
+              - page: 7
+                contains: 'Table 1 Sociodemographic characterization of the sample (Study 1)'
+              - section: 'Criterion validity of the short LWA scale for adults'
+                page: 11
+                contains: 'as shown in Table 4, all three LWA dimensions were negatively associated with RWA, SDO'
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'General discussion'
+            fulfilled: true
+            evidence:
+              - section: 'General discussion'
+                page: 15
+                contains: 'pro-environmental attitudes that were consistent with those reported in previous investigations using the original instrument'
+              - section: 'General discussion'
+                page: 15
+                contains: 'These rates were comparable to, and in some instances exceeded, those observed for RWA and SDO in the same samples'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'General discussion'
+            fulfilled: true
+            evidence:
+              - section: 'General discussion'
+                page: 18
+                contains: 'Despite the aforementioned contributions, several limitations of our studies should be acknowledged.'
+              - section: 'General discussion'
+                page: 18
+                contains: 'the use of convenience sampling through social media in both studies may limit the representativeness of the samples'
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'General discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Conclusion'
+                page: 19
+                contains: 'the abbreviated scale offers researchers a practical alternative for the assessment of LWA in large-scale surveys, studies including multiple constructs'
+              - section: 'General discussion'
+                page: 15
+                contains: 'the prevalence of authoritarian attitudes at the individual level does not necessarily translate into equivalent political influence'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'General discussion'
+            fulfilled: true
+            evidence:
+              - section: 'General discussion'
+                page: 18
+                contains: 'Future studies could investigate whether the factor structure, reliability, and validity of the instrument are replicated among individuals affiliated with parties'
+              - section: 'General discussion'
+                page: 17
+                contains: 'Future research should therefore seek to refine the construct by more clearly distinguishing between these two components'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Conclusion'
+                page: 19
+                contains: 'The findings indicate that the proposed 9-item version preserves the multidimensional nature of the original instrument'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            fulfilled: true
+            evidence:
+              - page: 20
+                contains: 'This research was supported by the Brazilian National Research Council (CNPq) through a Post-Doc scholarship awarded to the first author'
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            fulfilled: true
+            evidence:
+              - section: 'Declarations'
+                page: 20
+                contains: 'Competing interests The authors declare no competing interests.'
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declarations'
+            fulfilled: true
+            evidence:
+              - page: 20
+                contains: 'Datasets of Studies 1 and 2, as well as the final version of the instrument are available at'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'References'
+            fulfilled: true
+            evidence:
+              - section: 'References'
+                page: 20
+                contains: 'the dimensions of generalized prejudice: A longitudinal test. European Journal of Personality, 24, 324–340.'

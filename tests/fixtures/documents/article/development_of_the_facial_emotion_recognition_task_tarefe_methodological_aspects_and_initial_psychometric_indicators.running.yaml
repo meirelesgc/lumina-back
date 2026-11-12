@@ -1,0 +1,30 @@
+# Cabeçalhos e rodapés corridos de development_of_the_facial_emotion_recognition_task_tarefe_methodological_aspects_and_initial_psychometric_indicators.pdf
+# Salvar como <nome>.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Rodapé "Psicologia: Reflexão e Crítica": todas as 23 páginas. Na página 1
+# o nome da revista é o banner (conteúdo); na página 22 ele aparece numa
+# referência (Sartes & Souza-Formigoni, 2013).
+# Cabeçalho das páginas 2 a 23: "Article in Press" e o DOI, alternando os
+# lados. Na página 1 "Article in Press" é o rótulo do tipo de artigo e a
+# nota "This Article in Press is shared early"; o DOI fecha a página. Na
+# página 19 o DOI aparece no texto de "Supplementary Information".
+# Os números de página ficam de fora.
+# As legendas das tabelas 1 e 3 e da figura 1 abrem as páginas 6, 15 e 17
+# e são conteúdo.
+
+running_lines:
+  - text: 'Psicologia: Reflexão e Crítica'
+    keep_on_pages: [1, 22]
+  - text: 'https://doi.org/10.1186/s41155-026-00410-4'
+    keep_on_pages: [1, 19]
+  - text: 'Article in Press'
+    keep_on_pages: [1]
+
+keep_lines:
+  - text: 'Table 1 Item fit indicators for different emotional stimuli under the one-parameter logistic IRT (Rasch) model'
+    page: 6
+  - text: 'Table 3 Stimuli selected for the composition of the TAREFE instrument'
+    page: 15
+  - text: 'Fig. 1 Illustrative example of the TAREFE showing different intensities of a facial expression of disgust.'
+    page: 17

@@ -1,0 +1,25 @@
+# Cabeçalhos e rodapés corridos de perceptions_and_beliefs_of_physical_therapists_regarding_the_mechanisms_of_manual_therapy.pdf
+# Salvar como <nome>.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Cabeçalho das páginas 2 a 8: autor abreviado à esquerda e a referência da
+# revista à direita. A página 1 traz outro cabeçalho ("Braz J Phys Ther 29
+# (2025) 101231", o banner da revista) e o bloco de autores completo, que
+# não repetem o texto corrido. A linha de autores só começa a repetir na
+# página 2, então a página 2 guarda a primeira ocorrência. Os números de
+# página ficam de fora.
+# As legendas das figuras 1 a 3 estão no topo das páginas 4 a 6 e são
+# conteúdo.
+
+running_lines:
+  - text: 'G.F. Carvalho et al.'
+    keep_on_pages: [2]
+  - text: 'Brazilian Journal of Physical Therapy 29 (2025) 101231'
+
+keep_lines:
+  - text: 'Fig. 1. National representation of participants, subdivided into the various German federal states.'
+    page: 4
+  - text: 'Fig. 2. Prevalence of responses for each anatomical structure involved with manual therapy.'
+    page: 5
+  - text: 'Fig. 3. Prevalence of responses for each mechanism involved on with manual therapy.'
+    page: 6

@@ -1,0 +1,62 @@
+# Seções esperadas para oscillacoes_do_poder_naval_brasileiro_no_seculo_xix_medidas_e_fatores_explicativos.pdf
+# Salvar como <nome>.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página; o PDF imprime
+# "n / 51", então a numeração coincide).
+# Artigo da revista Dados, em coluna única. A página 1 é a capa (título,
+# autores, DOI, disponibilidade de dados e agradecimentos). As seções não
+# são numeradas; "Hipóteses" é a única subseção. Os gráficos 1 a 6 e as
+# tabelas 1 e 2 têm título próprio nas páginas 14, 18, 25, 26, 29, 32, 33,
+# 40 e 41, mas não são seções.
+
+# Autores da capa, repetidos no cabeçalho das páginas ímpares.
+person_names:
+  - Octavio Amorim Neto
+  - Sílvia Lemgruber Julianele Anciães
+
+sections:
+  - title: Resumo
+    page: 2
+    starts_with: Este trabalho procura medir e explicar a variação do poder naval do Brasil entre 1822 e 1900.
+  - title: Abstract
+    page: 2
+    starts_with: This study seeks to measure and explain the variation in Brazil’s naval power between 1822 and 1900.
+  - title: Résumé
+    page: 3
+    starts_with: Ce travail cherche à mesurer et expliquer la variation de la puissance navale du Brésil
+  - title: Resumen
+    page: 3
+    starts_with: Este trabajo busca medir y explicar la variación del poder naval de Brasil entre 1822 y 1900.
+  - title: Introdução
+    page: 4
+    starts_with: Na primeira metade do século XIX, a Marinha brasileira era a oitava maior do mundo
+  - title: 'Poder Naval: Conceituação e Fatores Explicativos'
+    page: 7
+    starts_with: As bases do debate moderno sobre poder naval foram lançadas por
+    subsections:
+      - title: Hipóteses
+        page: 10
+        starts_with: Elaboramos a seguir cinco hipóteses, todas do tipo ceteris paribus.
+  - title: Medindo o Poder Naval do Brasil
+    page: 12
+    starts_with: Adotamos a medida de poder naval proposta por
+  - title: O Poder Político da Armada e do Exército
+    page: 21
+    starts_with: Nesta seção, verificamos H1 (Quanto maior o poder político da Marinha
+  - title: A Marinha e a Economia Brasileira
+    page: 28
+    starts_with: Esta seção aborda H2 (Quanto maior o crescimento da economia, maior deve ser o poder naval).
+  - title: O Contexto Internacional e o Poder Naval do Brasil
+    page: 34
+    starts_with: Esta seção trata de H3 (sobre guerras), H4 (sobre as ameaças da Grã-Bretanha)
+  - title: Sistematização das Verificações Empíricas
+    page: 39
+    starts_with: A Tabela 2 a seguir sistematiza os principais episódios de variação do poder naval relativo do Brasil.
+  - title: Conclusão
+    page: 45
+    starts_with: Este artigo teve como objetivo estimar e explicar a variação do poder naval entre a Independência
+  - title: Notas
+    page: 47
+    starts_with: Como afirma uma vez mais Arias Neto (2015), o fim do tráfico de escravizados
+  - title: Referências
+    page: 48
+    starts_with: Abreu, Marcelo de Paiva; Lago, Luiz Aranha Correa; Villela, André Arruda. (2022), A Passos Lentos

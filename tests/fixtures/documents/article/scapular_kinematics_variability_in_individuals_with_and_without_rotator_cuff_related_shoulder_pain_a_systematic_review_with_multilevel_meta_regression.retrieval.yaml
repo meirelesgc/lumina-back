@@ -1,0 +1,384 @@
+# Expected retrieval for scapular_kinematics_variability_in_individuals_with_and_without_rotator_cuff_related_shoulder_pain_a_systematic_review_with_multilevel_meta_regression.pdf
+# Páginas relativas ao PDF (1 = primeira página). Títulos de seção como no
+# .sections.yaml ao lado. Revisão sistemática publicada como artigo; a
+# árvore é a de artigo científico, então "participantes" cobre os critérios
+# de elegibilidade e "coleta" cobre a busca, a triagem e a extração.
+# Trechos sem `section` estão em legendas de tabela ou figura.
+# Sem aprovação ética (revisão) nem declaração de financiamento no PDF.
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'variability of scapular position and movement in individuals'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'were included, with a focus on 3D non-surface tracking systems'
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'during arm elevation in healthy individuals and those with RCRSP were included'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'Twenty studies were included. In asymptomatic individuals, the estimated scapular position at rest was'
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'The estimated scapulohumeral rhythm for humerothoracic elevation and scapular UR ranged from 2.86:1 to 3.13:1.'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'This meta-analysis has debunked the myth of the setting phase and the constant 3:1 scapulohumeral rhythm.'
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 1
+                contains: 'Rotator cuff related shoulder pain (RCRSP) is the most common musculoskeletal shoulder disorder'
+              - section: 'Introduction'
+                page: 2
+                contains: 'The quality of research investigating scapular kinematics has improved over time as a consequence of the implementation of three dimensional tracking systems.'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'previously published meta-analyses have failed also to account for the multilevel nature of the data'
+              - section: 'Introduction'
+                page: 2
+                contains: 'could shed some light in all these gaps of knowledge within the current literature'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'The aim of this study was to systematically review current literature regarding scapular kinematics during arm elevation'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Design'
+                page: 2
+                contains: 'This systematic review followed the recommendations of the Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA) statement.'
+              - section: 'Design'
+                page: 2
+                contains: 'The protocol of the study was prospectively registered in PROSPERO database (CRD42021259479).'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Eligibility criteria'
+                page: 2
+                contains: 'All study designs except case reports, case series, abstracts, editorials, narrative reviews, and systematic reviews/meta-analysis studies were considered eligible'
+              - section: 'Inclusion criteria'
+                page: 2
+                contains: 'scapular kinematics measured with 3D non-surface motion tracking devices during arm elevation or lowering in sitting or standing positions'
+              - section: 'Exclusion criteria'
+                page: 2
+                contains: 'scapular posture was measured at static positions'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Search strategy'
+                page: 2
+                contains: 'A systematic literature search was performed on the following databases: Medline/Pubmed, EMBASE, Web of Science, Scopus, SciELO'
+              - section: 'Screening procedure'
+                page: 2
+                contains: 'Both title/abstract and full-text screening were conducted by two independent reviewers'
+              - section: 'Data extraction'
+                page: 2
+                contains: 'A standardized Excel template was used for data extraction.'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Quality assessment'
+                page: 2
+                contains: 'The Appraisal tool for Cross-Sectional Studies (AXIS) was used, which is composed of 20 items.'
+              - section: 'Data analysis'
+                page: 2
+                contains: 'a multilevel restricted maximum-likelihood meta-regression analysis was conducted'
+              - section: 'Data analysis'
+                page: 3
+                contains: 'the presence of pain was included as a moderator within the model, as well as its interaction with shoulder elevation'
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            evidence: []
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Results'
+                page: 3
+                contains: 'The systematic search retrieved 36,970 records.'
+              - section: 'Differences between individuals with and without rotator cuff related shoulder pain'
+                page: 5
+                contains: 'Individuals with RCRSP showed less scapular upward rotation at rest'
+              - section: 'Discussion'
+                page: 6
+                contains: 'There was a great variability in estimated scapular kinematic patterns, and limited evidence to draw conclusions'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Results'
+            fulfilled: true
+            evidence:
+              - section: 'Characteristics of scapular kinematic measurement procedures'
+                page: 3
+                contains: 'The full description of the measurement procedures is presented in Table 1.'
+              - page: 3
+                contains: 'Fig. 1. PRISMA flow diagram.'
+              - page: 4
+                contains: 'Table 1 Description of the measurement procedures for scapular kinematic analysis.'
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Scapular kinematics in healthy individuals'
+                page: 6
+                contains: 'These results are similar to those obtained in studies using non-surface tracking devices'
+              - section: 'Scapular kinematics in healthy individuals'
+                page: 7
+                contains: 'All these results are in agreement with those obtained in studies using surface tracking systems.'
+              - section: 'Scapular kinematics in healthy individuals'
+                page: 8
+                contains: 'Therefore, the current meta-analysis does not support the classical constant value of the SHR (3:1) for humerothoracic elevation'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Limitations'
+                page: 8
+                contains: 'First, all the included studies had small sample sizes, maybe due to the complexity and potential risks of the measurement procedures.'
+              - section: 'Limitations'
+                page: 8
+                contains: 'meta-analysis of individual participant data could not be performed due to the impossibility of accessing individual data from included studies'
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Clinical implications'
+                page: 8
+                contains: 'this study provides data regarding normal scapular kinematic patterns, and differences between individuals with and without RCRSP, that could help clinicians'
+              - section: 'Scapular kinematics in healthy individuals'
+                page: 7
+                contains: 'clinicians should stop labelling scapular dysfunction based merely on the presence of early movement of the scapula during arm elevation'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Clinical implications'
+                page: 8
+                contains: 'future studies should improve content reporting of the methods employed to measure scapular kinematics, such as arm dominance or speed of movement'
+              - section: 'Conclusion'
+                page: 8
+                contains: 'Future studies should improve sample size and consider using non-linear multilevel models for a better estimation of scapular kinematics.'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Conclusion'
+                page: 8
+                contains: 'The results of this review show that the scapula moves towards upward rotation and posterior tilt during all the range of arm elevation'
+              - section: 'Conclusion'
+                page: 8
+                contains: 'current data do not support the existence of the setting phase of the scapula and challenge the classical fixed scapulohumeral rhythm magnitude of 3:1'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interest'
+            evidence: []
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interest'
+            fulfilled: true
+            evidence:
+              - section: 'Declaration of competing interest'
+                page: 8
+                contains: 'The authors declare that they have no competing interests.'
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interest'
+            fulfilled: true
+            evidence:
+              - section: 'Data sharing statement'
+                page: 8
+                contains: 'All data relevant to the study are included in the article or are available as supplementary files.'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'References'
+            fulfilled: true
+            evidence:
+              - section: 'References'
+                page: 9
+                contains: 'The PRISMA 2020 statement: an updated guideline for reporting systematic reviews. BMJ.'

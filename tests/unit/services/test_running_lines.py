@@ -66,6 +66,21 @@ def test_numero_de_pagina_que_muda_conta_como_a_mesma_linha():
     assert find_running_boxes(pages) == {(0, 1), (1, 1)}
 
 
+def test_espacamento_de_pontuacao_que_muda_conta_como_a_mesma_linha():
+    pages = [
+        make_page(
+            body(0),
+            ('page-footer', BOTTOM, '40 / 51 , Rio de Janeiro : e2026'),
+        ),
+        make_page(
+            body(1),
+            ('page-footer', BOTTOM, '41 /51 , Rio de Janeiro :e2026'),
+        ),
+    ]
+
+    assert find_running_boxes(pages) == {(0, 1), (1, 1)}
+
+
 def test_linha_de_texto_corrida_na_faixa_sai_menos_a_primeira():
     authors = ('text', TOP, 'Robson Lopes Cardoso, Níbia Sales Damasceno')
     pages = [make_page(authors, body(n)) for n in range(4)]

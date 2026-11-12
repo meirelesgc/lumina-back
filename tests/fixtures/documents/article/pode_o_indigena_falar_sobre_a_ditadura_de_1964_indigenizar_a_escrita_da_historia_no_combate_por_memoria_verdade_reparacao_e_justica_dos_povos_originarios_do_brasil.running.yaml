@@ -1,0 +1,23 @@
+# Cabeçalhos e rodapés corridos de pode_o_indigena_falar_sobre_a_ditadura_de_1964_indigenizar_a_escrita_da_historia_no_combate_por_memoria_verdade_reparacao_e_justica_dos_povos_originarios_do_brasil.pdf
+# Salvar como <nome>.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Cabeçalho: nome do autor nas páginas pares (2 a 38) e título curto nas
+# páginas ímpares (3 a 39). Na página 1 o título curto está contido no
+# título do artigo e o nome do autor é a assinatura, por isso ela fica de
+# fora da verificação. O rodapé é só o número de página e fica de fora.
+# A referência da revista ("Artigo – Revista Brasileira de História...")
+# só existe na página 1 e é conteúdo, assim como a declaração de
+# disponibilidade de dados ao fim da página 39.
+
+running_lines:
+  - text: 'Rodolfo Costa Machado'
+    keep_on_pages: [1]
+  - text: 'Pode o indígena falar sobre a ditadura de 1964?'
+    keep_on_pages: [1]
+
+keep_lines:
+  - text: 'Artigo – Revista Brasileira de História. São Paulo, v. 46, 2026 – e-301115'
+    page: 1
+  - text: 'Os dados de pesquisa estão disponíveis no corpo do documento.'
+    page: 39

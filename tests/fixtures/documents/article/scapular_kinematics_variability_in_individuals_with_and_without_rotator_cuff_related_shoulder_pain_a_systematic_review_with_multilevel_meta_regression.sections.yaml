@@ -1,0 +1,122 @@
+# Seções esperadas para scapular_kinematics_variability_in_individuals_with_and_without_rotator_cuff_related_shoulder_pain_a_systematic_review_with_multilevel_meta_regression.pdf
+# Salvar como <nome>.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+# Artigo em duas colunas (Brazilian Journal of Physical Therapy). O título
+# do resumo é impresso com letras espaçadas ("A B S T R A C T"). "Methods"
+# é um título sem texto próprio. "Inclusion criteria" e "Exclusion criteria"
+# são subdivisões de "Eligibility criteria"; o gabarito só tem um nível de
+# subseção, então aparecem lado a lado sob "Methods".
+
+# Autores da página 1; o cabeçalho das páginas 2 a 10 traz só
+# "R. Fernández-Matías et al.".
+person_names:
+  - Rubén Fernández-Matías
+  - Jorge Ballesteros-Frutos
+  - Pablo Gallardo-Zamora
+  - Néstor Requejo-Salinas
+  - Iván Caballero-Pozo
+  - Paula Ludewig
+  - Enrique Lluch-Girbés
+
+sections:
+  - title: A B S T R A C T
+    page: 1
+    starts_with: 'Background: Traditionally, great importance has been placed on abnormal scapula kinematics'
+  - title: Introduction
+    page: 1
+    starts_with: Rotator cuff related shoulder pain (RCRSP) is the most common musculoskeletal shoulder disorder
+  - title: Methods
+    page: 2
+    subsections:
+      - title: Design
+        page: 2
+        starts_with: This systematic review followed the recommendations of the Preferred Reporting Items
+      - title: Search strategy
+        page: 2
+        starts_with: 'A systematic literature search was performed on the following databases: Medline/Pubmed, EMBASE'
+      - title: Eligibility criteria
+        page: 2
+        starts_with: All study designs except case reports, case series, abstracts, editorials, narrative reviews
+      - title: Inclusion criteria
+        page: 2
+        starts_with: The articles were included in this review if they met the following inclusion criteria
+      - title: Exclusion criteria
+        page: 2
+        starts_with: The articles were excluded if they met any of the following exclusion criteria
+      - title: Screening procedure
+        page: 2
+        starts_with: Duplicates were removed using Covidence and Rayyan QCRI webpage applications
+      - title: Data extraction
+        page: 2
+        starts_with: A standardized Excel template was used for data extraction.
+      - title: Quality assessment
+        page: 2
+        starts_with: The Appraisal tool for Cross-Sectional Studies (AXIS) was used, which is composed of 20 items.
+      - title: Data analysis
+        page: 2
+        starts_with: For the descriptive analysis of the data, the mean and standard deviation (SD) were used
+  - title: Results
+    page: 3
+    starts_with: The inter-examiner agreement value of Gwet’s AC1 after the pilot screening was 0.90.
+    subsections:
+      - title: Characteristics of included studies and individuals
+        page: 3
+        starts_with: Overall, studies included mid-age female and male individuals with and without shoulder pain.
+      - title: Characteristics of scapular kinematic measurement procedures
+        page: 3
+        starts_with: The full description of the measurement procedures is presented in Table 1.
+      - title: Scapular kinematics
+        page: 3
+        starts_with: The model performance statistics are presented in Supplementary Material 5
+      - title: Scapular upward rotation in healthy individuals
+        page: 3
+        starts_with: The results of the meta-regressions showed a similar pattern of scapular upward rotation during arm raising
+      - title: Scapular anterior-posterior tilt in healthy individuals
+        page: 4
+        starts_with: The results of the meta-regressions showed a similar pattern of scapular posterior tilt during arm raising
+      - title: Scapular internal-external rotation in healthy individuals
+        page: 5
+        starts_with: For scapular internal-external rotation, the meta-regressions showed some differences
+      - title: Differences between individuals with and without rotator cuff related shoulder pain
+        page: 5
+        starts_with: using the AC coordinate system in scapular plane elevation could be meta-analyzed for the comparison
+      - title: Factors associated with scapular kinematics in healthy individuals
+        page: 6
+        starts_with: Due to the small number of studies, incomplete reported data, and methodological heterogeneity
+  - title: Discussion
+    page: 6
+    starts_with: This systematic review with meta-regression summarizes the evidence of 20 studies
+    subsections:
+      - title: Scapular kinematics in healthy individuals
+        page: 6
+        starts_with: The estimated mean scapular position at rest showed considerable variability in upward rotation
+      - title: Differences between individuals with rotator cuff disorders and healthy controls
+        page: 8
+        starts_with: Only two studies from the same research group were found comparing scapular kinematics
+      - title: Limitations
+        page: 8
+        starts_with: This is the first systematic review with meta-regression evaluating
+      - title: Clinical implications
+        page: 8
+        starts_with: In summary, this study provides data regarding normal scapular kinematic patterns
+  - title: Conclusion
+    page: 8
+    starts_with: The results of this review show that the scapula moves towards upward rotation and posterior tilt
+  - title: Patient involvement statement
+    page: 8
+    starts_with: Not applicable.
+  - title: Data sharing statement
+    page: 8
+    starts_with: All data relevant to the study are included in the article or are available as supplementary files.
+  - title: Declaration of competing interest
+    page: 8
+    starts_with: The authors declare that they have no competing interests.
+  - title: Acknowledgements
+    page: 8
+    starts_with: The authors would like to thank all the people who supported them while conducting this research
+  - title: Supplementary materials
+    page: 9
+    starts_with: Supplementary material associated with this article can be found, in the online version
+  - title: References
+    page: 9
+    starts_with: 'Lewis J. Rotator cuff related shoulder pain: assessment, management and uncertainties.'

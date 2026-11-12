@@ -1,0 +1,60 @@
+# Seções esperadas para development_of_the_facial_emotion_recognition_task_tarefe_methodological_aspects_and_initial_psychometric_indicators.pdf
+# Salvar como <nome>.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+# Artigo "in press" da Psicologia: Reflexão e Crítica, em coluna única.
+# "Task operationalization" existe duas vezes: como subseção de Method
+# (p. 5) e de Results (p. 15). As tabelas 1 e 2 ocupam as páginas 6 a 8 e
+# 10 a 13; "Results" é um título sem texto próprio.
+
+# Autores da página 1, repetidos em "Authors and Affiliations" na página 23.
+person_names:
+  - Flávia de Lima Osório
+  - Diego Alves Ferreira
+  - Nelson Torro-Alves
+
+sections:
+  - title: Abstract
+    page: 1
+    starts_with: Background Facial Emotion Recognition (FER) is a core component of social cognition
+  - title: Abbreviations
+    page: 1
+    starts_with: Theory of Mind
+  - title: Introduction
+    page: 2
+    starts_with: Facial emotion recognition (FER) constitutes one of the primary means of nonverbal communication in humans
+  - title: Method
+    page: 3
+    subsections:
+      - title: Stimulus development
+        page: 3
+        starts_with: The images used in the TAREFE instrument were derived from a photographic database
+      - title: TAREFE development
+        page: 4
+        starts_with: TAREFE was designed to consist of stimuli depicting the emotions of joy, sadness, disgust
+      - title: Sample and data collection
+        page: 4
+        starts_with: The sample consisted of 242 university students (78% women), aged between 18 and 40 years
+      - title: Data analysis
+        page: 4
+        starts_with: Descriptive statistics were initially used to assess the frequency of errors and correct answers
+      - title: Task operationalization
+        page: 5
+        starts_with: The selection of stimuli comprising the final instrument followed these main criteria
+  - title: Results
+    page: 9
+    subsections:
+      - title: Stimulus Selection
+        page: 9
+        starts_with: Based on the analysis of response frequencies, 21 stimuli (1.8% of the total) were excluded
+      - title: Task operationalization
+        page: 15
+        starts_with: The task consists of two distinct stages. Stage 1 is mandatory, whereas Stage 2 is optional
+  - title: Discussion
+    page: 16
+    starts_with: TAREFE is a computerized instrument developed to assess facial emotion recognition (FER)
+  - title: Declarations
+    page: 19
+    starts_with: Ethics approval and consent to participate This study was conducted in accordance with the ethical principles
+  - title: References
+    page: 20
+    starts_with: Abrosoft (2016). Fantamorph version 5.4.8 [Computer software].

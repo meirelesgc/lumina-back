@@ -1,0 +1,376 @@
+# Expected retrieval for oscillacoes_do_poder_naval_brasileiro_no_seculo_xix_medidas_e_fatores_explicativos.pdf
+# Páginas relativas ao PDF (1 = primeira página; o PDF imprime "n / 51").
+# Títulos de seção como no .sections.yaml ao lado. Artigo de ciência
+# política sem seção de métodos: o desenho e a análise aparecem em
+# "Hipóteses" (p. 12), a fonte dos dados em "Medindo o Poder Naval do
+# Brasil" e a sistematização dos achados em "Sistematização das
+# Verificações Empíricas". Financiamento e disponibilidade de dados ficam
+# na capa (p. 1), fora de qualquer seção; conflitos de interesse não são
+# declarados. Trechos sem `section` estão na capa ou em fontes de gráfico.
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 2
+                contains: 'Este trabalho procura medir e explicar a variação do poder naval do Brasil entre 1822 e 1900.'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 2
+                contains: 'A medida de poder naval adotada é a tonelagem anual dos navios de combate, tanto em seu valor absoluto quanto como proporção relativa'
+              - section: 'Resumo'
+                page: 2
+                contains: 'Elaboramos cinco hipóteses explicativas da variação do poder naval brasileiro'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 2
+                contains: 'Verificamos que guerras tiveram peso determinante na expansão da capacidade bélica da Marinha do Brasil'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Resumo'
+            fulfilled: true
+            evidence:
+              - section: 'Resumo'
+                page: 2
+                contains: 'fatores políticos domésticos foram fundamentais para os principais episódios de queda acentuada do poder naval, sobretudo ao final do regime monárquico'
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introdução'
+            fulfilled: true
+            evidence:
+              - section: 'Introdução'
+                page: 4
+                contains: 'Na primeira metade do século XIX, a Marinha brasileira era a oitava maior do mundo e a segunda maior das Américas'
+              - section: 'Poder Naval: Conceituação e Fatores Explicativos'
+                page: 7
+                contains: 'o poder naval decorreria do comando do mar por meio de batalhas, as quais, por sua vez, seriam vencidas pela judiciosa concentração das armadas'
+              - section: 'Poder Naval: Conceituação e Fatores Explicativos'
+                page: 9
+                contains: 'A resenha bibliográfica feita acima deixa claro que o poder naval é multidimensional.'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introdução'
+            fulfilled: true
+            evidence:
+              - section: 'Poder Naval: Conceituação e Fatores Explicativos'
+                page: 10
+                contains: 'não existe um modelo estabelecido, na ciência política ou nas relações internacionais, que desenvolva hipóteses claras sobre as causas da variação do poder naval'
+              - section: 'Introdução'
+                page: 6
+                contains: 'essa comparação justifica-se pela importância do estudo das marinhas das potências médias e pequenas'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introdução'
+            fulfilled: true
+            evidence:
+              - section: 'Introdução'
+                page: 5
+                contains: 'este artigo tem como objetivo principal estimar e explicar a variação do poder naval do Brasil entre 1822 e 1900'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Medindo o Poder Naval do Brasil'
+            fulfilled: true
+            evidence:
+              - section: 'Hipóteses'
+                page: 12
+                contains: 'Trata-se de um estudo de caso nacional em que a análise é iterativa, isto é, transita entre as hipóteses (ou teoria) e a evidência'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Medindo o Poder Naval do Brasil'
+            fulfilled: true
+            evidence:
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 13
+                contains: 'construímos uma base de dados dos navios ativos da Marinha brasileira durante o período sob análise'
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 13
+                contains: 'Os dados da tonelagem dos navios da Marinha durante o período monárquico e a primeira década republicana foram obtidos no portal'
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 26
+                contains: 'Para identificar episódios de conflitos políticos envolvendo militares, consultou-se uma bibliografia extensa e abrangente.'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Medindo o Poder Naval do Brasil'
+            fulfilled: true
+            evidence:
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 12
+                contains: 'o poder naval brasileiro é medido de acordo com a tonelagem total anual dos navios de linha ou navios de guerra a serviço da Marinha brasileira'
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 13
+                contains: 'incluímos as seguintes categorias de embarcações: naus, fragatas, corvetas, corvetas mistas, cruzadores e encouraçados'
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 24
+                contains: 'O Gráfico 2 a seguir exibe a participação de membros da Marinha e do Exército nos gabinetes da monarquia e da primeira década republicana.'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Medindo o Poder Naval do Brasil'
+            fulfilled: true
+            evidence:
+              - section: 'Hipóteses'
+                page: 12
+                contains: 'transita entre as hipóteses (ou teoria) e a evidência em consonância com o método da congruência'
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 26
+                contains: 'Cada tipo específico de crise militar corresponde a uma pontuação que varia entre a inatividade ou demora no cumprimento de ordens'
+              - section: 'Sistematização das Verificações Empíricas'
+                page: 39
+                contains: 'Para cada episódio, qualificamos a variação do poder naval em cinco categorias: crescimento expressivo, crescimento médio, crescimento pequeno'
+              - section: 'Sistematização das Verificações Empíricas'
+                page: 39
+                contains: 'Qualificamos também a influência dos fatores explicativos sobre o poder naval em quatro categorias: influência positiva, mínima, nula ou negativa'
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Medindo o Poder Naval do Brasil'
+            evidence: []
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 13
+                contains: 'há uma tendência de constante crescimento da tonelagem absoluta da Armada'
+              - section: 'Sistematização das Verificações Empíricas'
+                page: 44
+                contains: 'constata-se a predominância dos fatores de natureza externa para elucidar os principais episódios de variação do poder naval brasileiro ao longo do século XIX'
+              - section: 'Sistematização das Verificações Empíricas'
+                page: 44
+                contains: 'O colapso do poder naval brasileiro na década de 1890 deveu-se mormente à ascensão política do Exército.'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Sistematização das Verificações Empíricas'
+            fulfilled: true
+            evidence:
+              - page: 14
+                contains: 'Fonte: Elaborado pelos autores a partir dos dados da base de navios da Diretoria do Patrimônio Histórico e Documentação da Marinha (DPHDM).'
+              - section: 'Medindo o Poder Naval do Brasil'
+                page: 17
+                contains: 'A Tabela 1 a seguir demonstra a evolução da tonelagem da Marinha brasileira como proporção da tonelagem das marinhas britânica e argentina'
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 24
+                contains: 'O Gráfico 2 a seguir exibe a participação de membros da Marinha e do Exército nos gabinetes da monarquia e da primeira década republicana.'
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Sistematização das Verificações Empíricas'
+            fulfilled: true
+            evidence:
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 27
+                contains: 'Os dados convergem com a literatura quanto à entrada dos militares – e, particularmente, do Exército – de forma mais intensa na vida política brasileira'
+              - section: 'A Marinha e a Economia Brasileira'
+                page: 29
+                contains: 'De fato, segundo literatura recente, foi somente a partir de 1850 que a economia brasileira começou a abandonar a letargia das primeiras décadas'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Sistematização das Verificações Empíricas'
+            fulfilled: false
+            evidence:
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 25
+                contains: 'o indicador de participação ministerial constitui uma variável mais apropriada aos Estados cujo processo de formação encontra-se consolidado'
+              - section: 'O Poder Político da Armada e do Exército'
+                page: 26
+                contains: 'Justamente por ser a participação ministerial das forças armadas uma medida limitada do poder político destas, recorremos a um segundo indicador.'
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Sistematização das Verificações Empíricas'
+            fulfilled: true
+            evidence:
+              - section: 'Conclusão'
+                page: 45
+                contains: 'A coleta e sistematização de dados quantitativos originais do Brasil e da Argentina para todo o século XIX é uma das principais contribuições desse artigo.'
+              - section: 'Conclusão'
+                page: 46
+                contains: 'nossa preocupação em identificar sistematicamente os fatores associados à variação no poder naval é inovadora em relação à literatura acadêmica'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Sistematização das Verificações Empíricas'
+            fulfilled: false
+            evidence:
+              - section: 'Conclusão'
+                page: 46
+                contains: 'certamente atrairá um público leitor mais amplo se seguir o caminho por nós delineado neste artigo'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Conclusão'
+                page: 45
+                contains: 'Este artigo teve como objetivo estimar e explicar a variação do poder naval entre a Independência e a primeira década republicana.'
+              - section: 'Conclusão'
+                page: 45
+                contains: 'fatores externos – nomeadamente guerras, o equilíbrio de poder no Prata e as pressões e ameaças provenientes da Grã-Bretanha e dos vizinhos da região'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - page: 1
+                contains: 'Os autores agradecem o apoio da Fundação de Amparo à Pesquisa do Estado do Rio de Janeiro (FAPERJ)'
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            evidence: []
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - page: 1
+                contains: 'Os autores afirmam que todos os dados utilizados na pesquisa foram disponibilizados publicamente e podem ser acessados por meio da plataforma Harvard Dataverse'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Referências'
+            fulfilled: true
+            evidence:
+              - section: 'Referências'
+                page: 48
+                contains: 'A Passos Lentos: uma História Econômica do Brasil Império. São Paulo, Edições 70.'

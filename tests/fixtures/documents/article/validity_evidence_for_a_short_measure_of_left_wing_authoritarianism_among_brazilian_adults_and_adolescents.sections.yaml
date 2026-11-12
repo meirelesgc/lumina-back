@@ -1,0 +1,117 @@
+# Seções esperadas para validity_evidence_for_a_short_measure_of_left_wing_authoritarianism_among_brazilian_adults_and_adolescents.pdf
+# Salvar como <nome>.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+# Artigo "in press" da Psicologia: Reflexão e Crítica, em coluna única.
+# O PDF tem três níveis (Study 1 > Method > Participants); o gabarito tem
+# dois, então Method, Participants, Measures etc. ficam lado a lado sob
+# "Study 1" e sob "Study 2". Os títulos repetidos nos dois estudos se
+# distinguem pela página. "Method" e "Results and discussion" são títulos
+# sem texto próprio.
+
+# Autores da página 1, repetidos em "Authors and Affiliations" na página 22.
+person_names:
+  - Felipe Vilanova
+  - Taciano L Milfont
+  - Agustin Espinosa
+  - Angelo Brandelli Costa
+
+sections:
+  - title: Abstract
+    page: 1
+    starts_with: Background Left-Wing Authoritarianism (LWA) has received increasing attention in recent years
+  - title: Introduction
+    page: 2
+    starts_with: Evidence from more than 30 years of research describes the existence of Right-Wing Authoritarianism
+    subsections:
+      - title: The instrumental issue
+        page: 2
+        starts_with: One of the major obstacles to LWA research has been the lack of psychometrically sound instruments
+      - title: The theoretical midpoint issue
+        page: 3
+        starts_with: Despite its satisfactory psychometric properties
+      - title: The symmetry issue
+        page: 4
+        starts_with: Early research on political ideology often suggested that conservatives exhibited higher levels of prejudice
+      - title: The present study
+        page: 5
+        starts_with: Based on these successful previous adaptations, the present research sought to develop
+  - title: Study 1
+    page: 6
+    subsections:
+      - title: Method
+        page: 6
+      - title: Participants
+        page: 6
+        starts_with: Originally, 854 individuals responded to the survey, but 70 were excluded for being under 18 years old
+      - title: Measures
+        page: 6
+        starts_with: Participants completed a translated version of the LWA scale originally proposed by
+      - title: Adaptation procedures
+        page: 8
+        starts_with: The original 39-item scale was first translated into Brazilian Portuguese by two independent political psychologists
+      - title: Data analysis
+        page: 8
+        starts_with: To identify the items with the strongest psychometric properties for each LWA dimension
+      - title: Results and discussion
+        page: 8
+      - title: Cross-cultural adaptation
+        page: 8
+        starts_with: Disagreements between the independent translators emerged in 8 of the 39 items
+      - title: Validity evidence of the LWA scale
+        page: 9
+        starts_with: Table 3 presents the rotated factor loadings obtained through ESEM for all items.
+      - title: Reliability of the short LWA scale for adults
+        page: 11
+        starts_with: Cronbach’s α and McDonald’s ω values were adequate for Anti-Hierarchical Aggression
+      - title: Criterion validity of the short LWA scale for adults
+        page: 11
+        starts_with: Distinct patterns of associations provided evidence for the criterion validity of the 9-item LWA measure.
+      - title: Prevalence of left-wing authoritarianism among adults
+        page: 12
+        starts_with: Following previous studies that estimated the prevalence of authoritarian dispositions
+  - title: Study 2
+    page: 12
+    subsections:
+      - title: Method
+        page: 12
+      - title: Participants
+        page: 12
+        starts_with: A convenience sample was recruited as part of a broader research project investigating social attitudes in Brazil.
+      - title: Measures
+        page: 12
+        starts_with: Because the present study was embedded within a broader project on social attitudes
+      - title: Adaptation procedures
+        page: 13
+        starts_with: Before administering the questionnaire to the adolescent sample, a pilot study was conducted
+      - title: Data analysis
+        page: 13
+        starts_with: First, a Confirmatory Factor Analysis (CFA) was conducted using the WLSMV estimation method
+      - title: Results and discussion
+        page: 13
+      - title: Validity evidence of the short LWA scale for youth
+        page: 13
+        starts_with: Similarly to the results observed in the adult sample, CFA indicated that the three-dimensional structure
+      - title: Reliability of the short LWA scale for youth
+        page: 14
+        starts_with: Cronbach’s α and McDonald’s ω coefficients were slightly higher than those observed in the adult sample
+      - title: Criterion validity of the short LWA scale for youth
+        page: 14
+        starts_with: Similarly to Study 1, Pearson correlations indicated that more left-wing political self-categorization
+      - title: Prevalence of left-wing authoritarianism among youth
+        page: 14
+        starts_with: Based on the proportion of individuals scoring above the theoretical midpoint of the scale, 37.0% of adolescents
+  - title: General discussion
+    page: 15
+    starts_with: The present findings provide evidence for the validity and reliability of a brief measure of left-wing authoritarianism
+  - title: Conclusion
+    page: 19
+    starts_with: To the best of our knowledge, this study provides the first adaptation and validation of a measure of LWA
+  - title: Abbreviations
+    page: 19
+    starts_with: AC Anti-Conventionalism
+  - title: Declarations
+    page: 20
+    starts_with: Ethics approval and consent to participate The design of Study 1 was approved by the ethics committee
+  - title: References
+    page: 20
+    starts_with: Adorno, T., Frenkel-Brunswick, E., Levinson, D., & Sanford, N. (1950). The authoritarian personality.
