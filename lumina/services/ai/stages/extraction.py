@@ -21,13 +21,14 @@ SETTINGS = Settings()
 
 # Cabecalhos e rodapes corridos: caixas que se repetem no topo ou na base
 LAYOUT_RUNNING_CLASSES = frozenset({'page-header', 'page-footer'})
-RUNNING_BAND = 0.12
+RUNNING_BAND = 0.15
 MIN_LAYOUT_RUNNING_PAGES = 2
 MIN_TEXT_RUNNING_PAGES = 3
 MIN_TEXT_RUNNING_RATIO = 0.3
 
 _KEY_MARKUP_RE = re.compile(r'<[^>]+>|[*_`#|>\\]+')
 _DIGITS_RE = re.compile(r'\d+')
+_PUNCT_SPACES_RE = re.compile(r'\s*([:;,.!?/\\-])\s*')
 
 BoxRef = Tuple[int, int]
 
@@ -35,10 +36,12 @@ BoxRef = Tuple[int, int]
 def running_key(text: str) -> str:
     """
     Chave de comparacao de uma caixa: sem markup, digitos trocados por '#'
-    (numero de pagina muda), espacos juntos e sem diferenca de caixa.
+    (numero de pagina muda), espacos normalizados ao redor de pontuacao,
+    espacos juntos e sem diferenca de caixa.
     """
     text = _KEY_MARKUP_RE.sub(' ', text)
     text = _DIGITS_RE.sub('#', text)
+    text = _PUNCT_SPACES_RE.sub(r' \1 ', text)
     return ' '.join(text.split()).casefold()
 
 
