@@ -1,10 +1,12 @@
 # ruff: noqa: PLR2004
 from lumina.services.ai.stages.section_models import Heading
 from lumina.services.ai.stages.sections import (
+    clean_editorial_headings,
     clean_markup,
     make_adjacent_merger,
     make_orphan_cleaner,
     make_repeated_cleaner,
+    parse_headings_from_markdown,
     reclassify_numbering_level,
     run_heading_pipeline,
     strip_markup,
@@ -295,3 +297,23 @@ Texto com mais de trinta caracteres informando os requisitos.
     assert res[0].title == '1.0. DO OBJETO: AQUISIÇÃO DE MEDICAMENTOS'
     assert res[0].level == 1
     assert res[0].level_source == 'numbering_pattern'
+
+
+def test_clean_editorial_headings():
+    headings = [
+        Heading(line_number=1, level=3, title='A R T I C L E I N F O', raw='### A R T I C L E I N F O'),
+        Heading(line_number=3, level=2, title='A B S T R A C T', raw='## A B S T R A C T'),
+        Heading(line_number=5, level=4, title='Keywords', raw='#### Keywords'),
+        Heading(line_number=7, level=2, title='Introduction', raw='## Introduction'),
+    ]
+    res = clean_editorial_headings(headings, '')
+    assert [h.title for h in res] == ['A B S T R A C T', 'Introduction']
+
+
+def test_parse_headings_detects_standalone_abstract():
+    content = "### A R T I C L E I N F O\n\nA B S T R A C T\n\nText of abstract.\n\n## Introduction"
+    headings = parse_headings_from_markdown(content)
+    titles = [h.title for h in headings]
+    assert 'A B S T R A C T' in titles
+    abstract_heading = next(h for h in headings if h.title == 'A B S T R A C T')
+    assert abstract_heading.level == 2
