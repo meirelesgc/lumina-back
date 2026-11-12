@@ -160,6 +160,27 @@ def test_adjacent_merger_never_merges_inline_label():
     assert [h.title for h in merged] == ['Abbreviations', 'Funding']
 
 
+def test_adjacent_merger_keeps_canonical_first_heading_apart():
+    full_text = '## Methods\n\n### Study design\n'
+    lines = full_text.splitlines()
+    headings = [
+        Heading(line_number=1, level=2, title='Methods', raw='## Methods'),
+        Heading(line_number=3, level=3, title='Study design', raw='### Study design'),
+    ]
+    merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
+    assert [h.title for h in merged] == ['Methods', 'Study design']
+
+
+def test_adjacent_merger_keeps_different_levels_apart():
+    full_text = '## Visão Geral\n\n### Contexto Histórico\n'
+    headings = [
+        Heading(line_number=1, level=2, title='Visão Geral', raw='## Visão Geral'),
+        Heading(line_number=3, level=3, title='Contexto Histórico', raw='### Contexto Histórico'),
+    ]
+    merged = make_adjacent_merger(max_gap_chars=5)(headings, full_text)
+    assert [h.title for h in merged] == ['Visão Geral', 'Contexto Histórico']
+
+
 def test_reclassify_numbering_level():
     headings = [
         Heading(
