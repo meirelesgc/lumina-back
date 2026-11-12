@@ -1,0 +1,58 @@
+# Seções esperadas para pode_o_indigena_falar_sobre_a_ditadura_de_1964_indigenizar_a_escrita_da_historia_no_combate_por_memoria_verdade_reparacao_e_justica_dos_povos_originarios_do_brasil.pdf
+# Salvar como <nome>.sections.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+# Artigo da Revista Brasileira de História, em coluna única; só o resumo e o
+# abstract da página 1 ficam lado a lado em duas colunas. As seções são
+# numeradas; a seção 5 tem as subseções 5.1 a 5.4. Depois das referências
+# vêm as notas de fim (p. 35 a 39).
+
+# Autor único da página 1, repetido no cabeçalho das páginas pares.
+person_names:
+  - Rodolfo Costa Machado
+
+sections:
+  - title: Resumo
+    page: 1
+    starts_with: Analisa-se a potencialidade de uma Comissão Nacional Indígena da Verdade (CNIV) como espaço de reescrita
+  - title: Abstract
+    page: 1
+    starts_with: This article examines the potential of a National Indigenous Truth Commission (CNIV) as a forum for rewriting
+  - title: 1. Introdução
+    page: 2
+    starts_with: Os povos indígenas deste território – que viria a ser o Brasil – foram submetidos a um violento processo
+  - title: '2. A presença indígena, da CNV à CNIV: da representação do indígena à inscrição da perspectiva e do protagonismo indígenas na história do Brasil contemporâneo'
+    page: 4
+    starts_with: Doze anos depois da entrega do Relatório da CNV, em dezembro de 2014
+  - title: '3. Etnogenocídio na ditadura militar de 1964: a “Violação dos direitos humanos dos povos indígenas” segundo a Comissão Nacional da Verdade (CNV)'
+    page: 11
+    starts_with: A inclusão dos povos indígenas nos processos de memória e verdade sobre os crimes da ditadura militar
+  - title: '4. A retomada histórica: por uma Comissão Nacional Indígena da Verdade (CNIV)'
+    page: 12
+    starts_with: Nenhuma das Recomendações apresentadas pela CNV foi implementada pelo Estado brasileiro.
+  - title: '5. O horizonte histórico indígena: um outro futuro à historiografia?'
+    page: 13
+    subsections:
+      - title: 5.1. Objetos e sujeitos da história – e da reescrita – das violações anti-indígenas de direitos humanos durante a ditadura de 1964
+        page: 13
+        starts_with: O objeto da escrita histórica de uma eventual CNIV será a realidade das violações de direitos humanos
+      - title: 5.2. Para quê reescrever a história indigenizada? Memória e verdade histórica como armas de combate por reparação e justiça para os povos originários
+        page: 16
+        starts_with: Mas para que reescrever essa história de forma indigenizada? Para desvelar a verdade histórica do período?
+      - title: '5.3. Metodologia interétnica, escuta sensível e fontes históricas: oralidade indígena e arquivos da repressão do Estado, igrejas e empresas'
+        page: 20
+        starts_with: Discutiu-se acima o perfil interétnico da CNIV, com a centralidade e autonomia indígenas em sua composição.
+      - title: '5.4. Mapear os agentes violadores de direitos indígenas e rediscutir a tipologia das violações e reparações: militares, Estado, empresários e religiosos'
+        page: 24
+        starts_with: Desafio central da (re)escrita indigenizada da ditadura de 1964 será mapear os agentes responsáveis
+  - title: 6. Repensar a transição da ditadura militar à democracia pós-1988 e o perfil anti-indígena da República brasileira
+    page: 27
+    starts_with: Com a implementação e trabalhos futuros da CNIV, certamente, “o próprio conceito de ditadura precisa ser reavaliado”
+  - title: Considerações finais
+    page: 28
+    starts_with: A partir da audiência pública de 27 de outubro de 2022 – base deste artigo –, articulou-se a luta de indígenas e aliados
+  - title: REFERÊNCIAS
+    page: 33
+    starts_with: 'ACAMPAMENTO TERRA LIVRE. Plenária Memória, Verdade, Reparação e Justiça:'
+  - title: NOTAS
+    page: 35
+    starts_with: “Embora séculos de conflitos e violações tenham ocorrido desde o período colonial

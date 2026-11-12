@@ -1,0 +1,380 @@
+# Expected retrieval for perceptions_and_beliefs_of_physical_therapists_regarding_the_mechanisms_of_manual_therapy.pdf
+# Páginas relativas ao PDF (1 = primeira página). Títulos de seção como no
+# .sections.yaml ao lado. Artigo em duas colunas; o resumo é impresso como
+# "A B S T R A C T" e está anotado com esse título.
+# Trechos sem `section` estão em legendas de tabela ou figura. Trechos
+# evitam "(n = ...)" e intervalos de anos, que a anonimização mascara.
+# Sem declaração de financiamento no PDF; o artigo só oferece o
+# questionário sob pedido, não os dados.
+
+tree:
+  - typification: Artigo Científico
+    taxonomies:
+
+      - title: Resumo
+        branches:
+          - id: resumo-objetivo
+            title: Objetivo no resumo
+            description: >-
+              O resumo informa o objetivo do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'this study explores the beliefs and perceptions of physical therapists regarding the mechanisms underlying MT through an online survey design'
+
+          - id: resumo-metodo
+            title: Método no resumo
+            description: >-
+              O resumo descreve o método adotado (desenho, participantes, fontes ou procedimento de análise)?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'The study involved a national cross-sectional survey of 569 physical therapists'
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'participants rated on a scale from 0 % to 100 %, the involvement of anatomical structures and physiological mechanisms'
+
+          - id: resumo-resultados
+            title: Resultados no resumo
+            description: >-
+              O resumo apresenta os principais resultados ou achados do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'The majority of responders attributed significant involvement to the brain (75 %), myofascial structures (71 %), peripheral nervous system (68 %)'
+
+          - id: resumo-conclusao
+            title: Conclusão no resumo
+            description: >-
+              O resumo apresenta a conclusão do estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'A B S T R A C T'
+            fulfilled: true
+            evidence:
+              - section: 'A B S T R A C T'
+                page: 1
+                contains: 'This study provides valuable insights into the current landscape of beliefs among German physical therapists'
+
+
+      - title: Introdução
+        branches:
+          - id: contextualizacao-tema
+            title: Contextualização do tema
+            description: >-
+              A introdução contextualiza o tema com base na literatura da área?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 1
+                contains: 'Manual therapy is a preferred therapeutic choice among physical therapists, chiropractors, and osteopaths'
+              - section: 'Introduction'
+                page: 1
+                contains: 'In the last three decades, however, there has been a paradigm shift in the understanding of the mechanisms underlying responses to manual therapy'
+              - section: 'Introduction'
+                page: 2
+                contains: 'studies point towards a neurophysiological explanatory model that includes biomechanical influences'
+
+          - id: lacuna-justificativa
+            title: Lacuna e justificativa
+            description: >-
+              A introdução identifica a lacuna de conhecimento ou a justificativa que motiva o estudo?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'The extent to which the translation of these mechanistic scientific findings on manual therapy into the clinical practice of physical therapists is successful, is still unclear'
+
+          - id: objetivo-explicito
+            title: Objetivo explícito
+            description: >-
+              O objetivo ou a pergunta de pesquisa está formulado de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Introduction'
+            fulfilled: true
+            evidence:
+              - section: 'Introduction'
+                page: 2
+                contains: 'The aim of this national survey is therefore to explore the beliefs and perceptions of German physical therapists regarding the underlying mechanisms'
+
+
+      - title: Metodologia
+        branches:
+          - id: desenho-estudo
+            title: Desenho do estudo
+            description: >-
+              O desenho ou a abordagem do estudo está descrito de forma explícita?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Study design'
+                page: 2
+                contains: 'In this cross-sectional and Germany-wide online survey, physical therapists were asked about their perceptions and beliefs'
+              - section: 'Study design'
+                page: 2
+                contains: 'The data collection period lasted three months in total, from July to October 2023.'
+
+          - id: participantes-fontes
+            title: Participantes ou fontes
+            description: >-
+              Os participantes, a amostra ou as fontes do estudo estão descritos, com os critérios de seleção?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Participants'
+                page: 2
+                contains: 'German adults with a degree in physical therapy were invited to participate in this study.'
+              - section: 'Participants'
+                page: 2
+                contains: 'A snowball method was used, encouraging participants to distribute the invitation to further colleagues.'
+              - section: 'Participants'
+                page: 2
+                contains: 'which yielded a minimum requirement of 384 participants for the survey'
+
+          - id: instrumentos-coleta
+            title: Instrumentos e coleta
+            description: >-
+              Os instrumentos e os procedimentos de coleta de dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Online survey'
+                page: 2
+                contains: 'Using a case scenario, physical therapists were asked to assess the involvement of anatomical structures and physiological mechanisms'
+              - section: 'Online survey'
+                page: 2
+                contains: 'questions were to be rated on a scale from 0 = "not involved at all" to 100 = "maximally involved"'
+              - section: 'Online survey'
+                page: 2
+                contains: 'an online tool for research projects not conducted on behalf of companies or cooperations (www.soscisurvey.de), was used for the online questionnaire'
+
+          - id: analise-dados
+            title: Análise dos dados
+            description: >-
+              Os procedimentos de análise dos dados estão descritos?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Data analysis'
+                page: 3
+                contains: 'Exploratory-descriptive analyses were performed using the IBM Statistical Package for the Social Sciences'
+              - section: 'Data analysis'
+                page: 3
+                contains: 'Multiple linear regression analyses with backward selection for variable exclusion were used to identify potential predictors'
+
+          - id: aprovacao-etica
+            title: Aprovação ética
+            description: >-
+              O estudo informa a aprovação por comitê de ética e o consentimento dos participantes?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Methods'
+            fulfilled: true
+            evidence:
+              - section: 'Study design'
+                page: 2
+                contains: 'this study was approved by the Ethics Committee of the University of Luebeck (reference number: 2023–512)'
+              - section: 'Study design'
+                page: 2
+                contains: 'Participation in the survey was anonymous, voluntary, and no incentives were offered.'
+
+
+      - title: Resultados
+        branches:
+          - id: resultados-respondem-objetivo
+            title: Resultados respondem ao objetivo
+            description: >-
+              Os resultados apresentados respondem ao objetivo do estudo?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Involved anatomical structures'
+                page: 3
+                contains: 'Most of the participating physical therapists rated the brain'
+              - section: 'Involved physiological mechanisms'
+                page: 4
+                contains: 'Joint biomechanics, inflammatory mediators and intervertebral disc biomechanics only played a subordinate role'
+              - section: 'Factors explaining perceived effectiveness of manual therapy'
+                page: 4
+                contains: 'being male, having a manual therapy training, less contact-time with patients and greater application of hands-on techniques could predict 14.1 %'
+
+          - id: tabelas-figuras
+            title: Tabelas e figuras
+            description: >-
+              Tabelas, gráficos e figuras têm título, fonte ou legenda e são referidos no texto?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Results'
+            fulfilled: true
+            evidence:
+              - section: 'Characteristics'
+                page: 3
+                contains: 'Details of participants and further characteristics can be found in Table 1 and in Fig. 1.'
+              - page: 4
+                contains: 'Table 2 Prevalence of responses for each anatomical structures and physiological mechanisms involved on manual therapy'
+              - page: 5
+                contains: 'Fig. 2. Prevalence of responses for each anatomical structure involved with manual therapy.'
+
+
+      - title: Discussão
+        branches:
+          - id: interpretacao-literatura
+            title: Interpretação à luz da literatura
+            description: >-
+              Os resultados são interpretados em diálogo com a literatura existente?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Discussion'
+                page: 5
+                contains: 'The majority of the physical therapists selected the anatomical structures and physiological mechanisms in accordance with previous mechanistic research findings.'
+              - section: 'Discussion'
+                page: 7
+                contains: 'The results of recently published systematic reviews indicate that passive joint mobilization has the capacity to directly alter muscle function.'
+
+          - id: limitacoes
+            title: Limitações
+            description: >-
+              As limitações do estudo são reconhecidas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Strengths and limitations'
+                page: 7
+                contains: 'the generalizability of our results is limited. Within Germany, participants with academic background would have been over-represented.'
+              - section: 'Strengths and limitations'
+                page: 7
+                contains: 'The sample was mainly composed of younger physical therapists and the questionnaire used was not a standardized instrument'
+
+          - id: implicacoes
+            title: Implicações
+            description: >-
+              São apresentadas implicações práticas, teóricas ou clínicas dos resultados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: true
+            evidence:
+              - section: 'Conclusion'
+                page: 7
+                contains: 'Physical therapists are encouraged to critically reflect on explanations for manual therapy mechanisms and become aware of the influence of contextual factors'
+              - section: 'Discussion'
+                page: 7
+                contains: 'our study also evidences a discrepancy between research and clinical practice regarding current known mechanisms of pain and manual therapy'
+
+          - id: pesquisas-futuras
+            title: Pesquisas futuras
+            description: >-
+              São indicadas direções para pesquisas futuras?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Discussion'
+            fulfilled: false
+            evidence:
+              - section: 'Discussion'
+                page: 7
+                contains: 'there is a significant requirement for high-quality research studies on the influence of blood flow and the role of the peripheral nervous system'
+
+
+      - title: Conclusão
+        branches:
+          - id: conclusao-coerente
+            title: Conclusão coerente
+            description: >-
+              A conclusão retoma o objetivo e é coerente com os resultados apresentados?
+            section_requirement:
+              scope: ENTIRE_DOCUMENT
+            fulfilled: true
+            evidence:
+              - section: 'Conclusion'
+                page: 7
+                contains: 'Physical therapists’ beliefs about the mechanisms of manual therapy encompass both well-supported neurophysiological mechanisms'
+              - section: 'Conclusion'
+                page: 7
+                contains: 'These beliefs show weak associations with socio-demographic and work-related factors.'
+
+
+      - title: Transparência Científica
+        branches:
+          - id: financiamento-declarado
+            title: Financiamento declarado
+            description: >-
+              As fontes de financiamento ou de apoio à pesquisa são declaradas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interests'
+            evidence: []
+
+          - id: conflitos-interesse
+            title: Conflitos de interesse declarados
+            description: >-
+              Os conflitos de interesse são explicitamente declarados?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interests'
+            fulfilled: true
+            evidence:
+              - section: 'Declaration of competing interests'
+                page: 7
+                contains: 'The authors declare no competing interests.'
+
+          - id: disponibilidade-dados
+            title: Dados disponíveis
+            description: >-
+              A disponibilidade dos dados da pesquisa é informada?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'Declaration of competing interests'
+            fulfilled: false
+            evidence:
+              - section: 'Online survey'
+                page: 2
+                contains: 'Both the German version of the complete questionnaire and its English translation can be provided by the authors upon request.'
+
+
+      - title: Referências
+        branches:
+          - id: referencias-listadas
+            title: Referências listadas
+            description: >-
+              O artigo apresenta a lista de referências das obras citadas?
+            section_requirement:
+              scope: SPECIFIC_SECTION
+              expected_section: 'References'
+            fulfilled: true
+            evidence:
+              - section: 'References'
+                page: 8
+                contains: 'Unraveling the mechanisms of manual therapy: modeling an approach. J Orthop Sports Phys Ther. 2018;48(1):8–18.'

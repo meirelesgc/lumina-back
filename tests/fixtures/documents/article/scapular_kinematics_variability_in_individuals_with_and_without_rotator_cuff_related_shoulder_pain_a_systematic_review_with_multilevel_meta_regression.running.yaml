@@ -1,0 +1,24 @@
+# Cabeçalhos e rodapés corridos de scapular_kinematics_variability_in_individuals_with_and_without_rotator_cuff_related_shoulder_pain_a_systematic_review_with_multilevel_meta_regression.pdf
+# Salvar como <nome>.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Cabeçalho das páginas 2 a 10: autor abreviado à esquerda e a referência
+# da revista à direita. A página 1 traz outro cabeçalho ("Braz J Phys Ther
+# 29 (2025) 101261", o banner da revista) e o bloco de autores completo.
+# Os números de página ficam de fora.
+# A legenda da figura 1 está na base da página 3; as das figuras 2 a 4
+# estão no topo das páginas 5 a 7. Todas são conteúdo.
+
+running_lines:
+  - text: 'R. Fernández-Matías et al.'
+  - text: 'Brazilian Journal of Physical Therapy 29 (2025) 101261'
+
+keep_lines:
+  - text: 'Fig. 1. PRISMA flow diagram.'
+    page: 3
+  - text: 'Meta-analytic scatter plots of scapular upward rotation in asymptomatic individuals during arm raising'
+    page: 5
+  - text: 'Fig. 3. Meta-analytic scatter plots of scapular anterior-posterior tilt in asymptomatic individuals during arm elevation'
+    page: 6
+  - text: 'Meta-analytic scatter plots of scapular internal-external rotation in asymptomatic individuals during arm elevation'
+    page: 7

@@ -1,0 +1,28 @@
+# Cabeçalhos e rodapés corridos de oscillacoes_do_poder_naval_brasileiro_no_seculo_xix_medidas_e_fatores_explicativos.pdf
+# Salvar como <nome>.running.yaml ao lado do PDF
+# Páginas conferidas contra o PDF (1 = primeira página).
+#
+# Cabeçalho: título curto nas páginas pares (2 a 50) e nome dos autores nas
+# páginas ímpares (3 a 51). Na página 1 o título é o título do artigo e na
+# página 2 abre o Resumo, por isso as duas ficam de fora da verificação.
+# Rodapé: logo da revista (imagem) seguido de ", Rio de Janeiro Vol.69 N.1
+# Ano 2026: e20240087" em todas as 51 páginas, inclusive na capa; a página
+# 1 guarda a primeira ocorrência. O "n / 51" é número de página e fica de
+# fora.
+# As fontes dos gráficos 1, 3 e 4 ficam logo abaixo do título do gráfico,
+# no topo das páginas 14, 26 e 29, e são conteúdo.
+
+running_lines:
+  - text: 'Oscilações do Poder Naval Brasileiro no Século XIX'
+    keep_on_pages: [1, 2]
+  - text: 'Octavio Amorim Neto e Sílvia Lemgruber Julianele Anciães'
+  - text: ', Rio de Janeiro Vol.69 N.1 Ano 2026: e20240087'
+    keep_on_pages: [1]
+
+keep_lines:
+  - text: 'Fonte: Elaborado pelos autores a partir dos dados da base de navios da Diretoria do Patrimônio Histórico e Documentação da Marinha (DPHDM).'
+    page: 14
+  - text: 'Fonte: Elaborado a partir da tipologia desenvolvida por Amorim Neto e Acácio (2019).'
+    page: 26
+  - text: 'Fonte: Elaborado pelos autores a partir de Tombolo e Sampaio (2013).'
+    page: 29
