@@ -224,6 +224,14 @@ def stands_alone(heading: Heading) -> bool:
     )
 
 
+CONTINUATION_PUNCTUATION = (':', '-', '–', '—', '/', '...')
+
+
+def is_continuation_heading(heading: Heading) -> bool:
+    clean = strip_markup(heading.title).strip()
+    return clean.endswith(CONTINUATION_PUNCTUATION)
+
+
 def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
     """
     Passo 3 da Pipeline: Funde títulos adjacentes em linhas contínuas.
@@ -241,7 +249,13 @@ def make_adjacent_merger(max_gap_chars: int = 5) -> HeadingCleaner:
         while i < total:
             current = headings[i]
             while i + 1 < total and not current.inline:
+                if stands_alone(current) and not is_continuation_heading(
+                    current
+                ):
+                    break
                 nxt = headings[i + 1]
+                if current.level != nxt.level:
+                    break
                 if stands_alone(nxt):
                     break
                 gap = text_between(full_text, current, nxt)
