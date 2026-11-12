@@ -5,6 +5,7 @@ from lumina.services.ai.stages.sections import (
     make_adjacent_merger,
     make_orphan_cleaner,
     make_repeated_cleaner,
+    parse_headings_from_markdown,
     reclassify_numbering_level,
     run_heading_pipeline,
     strip_markup,
@@ -295,3 +296,19 @@ Texto com mais de trinta caracteres informando os requisitos.
     assert res[0].title == '1.0. DO OBJETO: AQUISIÇÃO DE MEDICAMENTOS'
     assert res[0].level == 1
     assert res[0].level_source == 'numbering_pattern'
+
+
+def test_parse_headings_ignores_inline_declarations():
+    content = """## Declarations
+
+**Ethics approval** Approved by ethics committee.
+
+### **Competing interests** The authors declare no competing interests.
+
+# References
+"""
+    headings = parse_headings_from_markdown(content)
+    titles = [h.title for h in headings]
+    assert 'Declarations' in titles
+    assert 'References' in titles
+    assert not any('Competing interests' in t for t in titles)
